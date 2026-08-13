@@ -1,0 +1,99 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
+
+import { copy } from "../lib/copy";
+import type { Language } from "../lib/demo-data";
+import { LanguageSwitcher } from "./language-switcher";
+
+export function DemoLogin({
+  mode,
+}: {
+  mode: "student" | "teacher";
+}) {
+  const router = useRouter();
+  const [language, setLanguage] = useState<Language>("en");
+  const t = copy[language];
+  const isTeacher = mode === "teacher";
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    router.push(isTeacher ? "/teacher" : "/student");
+  }
+
+  return (
+    <main className="min-h-screen bg-ivory text-ink">
+      <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-5 sm:px-6 lg:px-8">
+        <header className="flex items-center justify-between gap-4">
+          <Link href="/" className="text-sm font-semibold text-forest hover:text-forest-light">
+            {t.backHome}
+          </Link>
+          <LanguageSwitcher language={language} onChange={setLanguage} />
+        </header>
+
+        <section className="grid flex-1 items-center gap-6 py-10 lg:grid-cols-[0.9fr_1.1fr]">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-forest">
+              {t.appName}
+            </p>
+            <h1 className="mt-3 text-4xl font-semibold text-ink sm:text-5xl">
+              {isTeacher ? t.teacherLoginTitle : t.studentLoginTitle}
+            </h1>
+            <p className="mt-4 max-w-xl text-base leading-7 text-ink-soft">
+              {isTeacher ? t.teacherLoginText : t.studentLoginText}
+            </p>
+          </div>
+
+          <form
+            onSubmit={handleSubmit}
+            className={`rounded-md border bg-offwhite p-5 shadow-md sm:p-6 ${
+              isTeacher ? "border-forest/30" : "border-stone-200"
+            }`}
+          >
+            <div className="mb-5">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-ink-muted">
+                {isTeacher ? t.teacher : t.student}
+              </p>
+              <h2 className="mt-2 text-2xl font-semibold text-ink">
+                {isTeacher ? t.teacherDashboard : t.studentDashboard}
+              </h2>
+            </div>
+
+            <label className="block">
+              <span className="text-sm font-semibold text-ink">
+                {isTeacher ? t.teacherEmail : t.nameOrEmail}
+              </span>
+              <input
+                type={isTeacher ? "email" : "text"}
+                name="identifier"
+                required
+                className="mt-2 w-full rounded-sm border border-stone-200 bg-ivory-light px-4 py-3 text-sm text-ink outline-none transition focus:border-forest focus:ring-2 focus:ring-forest/15"
+              />
+            </label>
+
+            {isTeacher ? (
+              <label className="mt-4 block">
+                <span className="text-sm font-semibold text-ink">{t.password}</span>
+                <input
+                  type="password"
+                  name="password"
+                  required
+                  className="mt-2 w-full rounded-sm border border-stone-200 bg-ivory-light px-4 py-3 text-sm text-ink outline-none transition focus:border-forest focus:ring-2 focus:ring-forest/15"
+                />
+              </label>
+            ) : null}
+
+            <button
+              type="submit"
+              className="mt-6 w-full rounded-sm bg-forest px-4 py-3 text-sm font-bold text-ivory transition hover:bg-forest-light"
+            >
+              {t.continue}
+            </button>
+          </form>
+        </section>
+      </div>
+    </main>
+  );
+}

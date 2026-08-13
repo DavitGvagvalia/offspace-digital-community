@@ -1,26 +1,246 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ==========================================================================
+   OFFSPACE DIGITAL COMMUNITY
+   Global Design System
+   ========================================================================== */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* ------------------------------------------------------------------------
+     TYPOGRAPHY
+     ------------------------------------------------------------------------ */
+
+  --font-sans: var(--font-manrope);
+  --font-display: var(--font-cormorant);
+
+  /* ------------------------------------------------------------------------
+     CORE BRAND COLORS
+     ------------------------------------------------------------------------ */
+
+  --color-forest: #123524;
+  --color-forest-dark: #0a2318;
+  --color-forest-deep: #061a11;
+  --color-forest-light: #234d38;
+  --color-forest-soft: #365f49;
+
+  --color-ivory: #f5f1e8;
+  --color-ivory-light: #faf8f3;
+  --color-ivory-dark: #e9e3d7;
+
+  --color-offwhite: #fffefb;
+
+  /* ------------------------------------------------------------------------
+     SAGE
+     ------------------------------------------------------------------------ */
+
+  --color-sage-50: #f3f6f1;
+  --color-sage-100: #e4ebe1;
+  --color-sage-200: #d1ddcc;
+  --color-sage-300: #b8c9b1;
+  --color-sage-400: #9bad92;
+  --color-sage-500: #7f9277;
+  --color-sage-600: #65765e;
+  --color-sage-700: #505d4b;
+  --color-sage-800: #424c3e;
+  --color-sage-900: #373f34;
+
+  /* ------------------------------------------------------------------------
+     SKY
+     ------------------------------------------------------------------------ */
+
+  --color-sky-50: #f4f9fb;
+  --color-sky-100: #e5f0f4;
+  --color-sky-200: #d4e6ed;
+  --color-sky-300: #b6d5e1;
+  --color-sky-400: #8ebbcf;
+  --color-sky-500: #719fb4;
+  --color-sky-600: #5c8296;
+  --color-sky-700: #4c6979;
+  --color-sky-800: #425864;
+  --color-sky-900: #3a4b55;
+
+  /* ------------------------------------------------------------------------
+     STONE
+     ------------------------------------------------------------------------ */
+
+  --color-stone-50: #f8f7f4;
+  --color-stone-100: #eeeae4;
+  --color-stone-200: #ded8cf;
+  --color-stone-300: #c9c0b4;
+  --color-stone-400: #afa497;
+  --color-stone-500: #96897c;
+  --color-stone-600: #7c7065;
+  --color-stone-700: #665c53;
+  --color-stone-800: #564e47;
+  --color-stone-900: #49433e;
+
+  /* ------------------------------------------------------------------------
+     COPPER / WARM ACCENT
+     ------------------------------------------------------------------------ */
+
+  --color-copper-50: #fcf6f2;
+  --color-copper-100: #f7e8dc;
+  --color-copper-200: #efd0ba;
+  --color-copper-300: #e3ad89;
+  --color-copper-400: #d2875b;
+  --color-copper-500: #b56f45;
+  --color-copper-600: #9b5938;
+  --color-copper-700: #7d4630;
+  --color-copper-800: #683c2d;
+  --color-copper-900: #583429;
+
+  /* ------------------------------------------------------------------------
+     SEMANTIC COLORS
+     ------------------------------------------------------------------------ */
+
+  --color-success: #47735a;
+  --color-warning: #bd8537;
+  --color-danger: #a84b43;
+  --color-info: #5d8798;
+
+  /* ------------------------------------------------------------------------
+     TEXT
+     ------------------------------------------------------------------------ */
+
+  --color-ink: #17211b;
+  --color-ink-soft: #4f5a53;
+  --color-ink-muted: #7b837d;
+
+  /* ------------------------------------------------------------------------
+     RADII
+     ------------------------------------------------------------------------ */
+
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.625rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.125rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-3xl: 2.75rem;
+  --radius-4xl: 4rem;
+
+  /* ------------------------------------------------------------------------
+     SHADOWS
+     ------------------------------------------------------------------------ */
+
+  --shadow-xs:
+    0 1px 2px rgb(18 53 36 / 0.04);
+
+  --shadow-sm:
+    0 4px 12px rgb(18 53 36 / 0.06);
+
+  --shadow-md:
+    0 8px 30px rgb(18 53 36 / 0.08);
+
+  --shadow-lg:
+    0 16px 48px rgb(18 53 36 / 0.12);
+
+  --shadow-xl:
+    0 30px 80px rgb(18 53 36 / 0.16);
+
+  /* ------------------------------------------------------------------------
+     BREAKPOINT
+     ------------------------------------------------------------------------ */
+
+  --breakpoint-3xl: 120rem;
+
+  /* ------------------------------------------------------------------------
+     ANIMATION
+     ------------------------------------------------------------------------ */
+
+  --animate-fade-in: fade-in 500ms ease-out;
+  --animate-fade-up: fade-up 600ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-float: float 6s ease-in-out infinite;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+
+/* ==========================================================================
+   BASE
+   ========================================================================== */
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply min-h-screen bg-ivory text-ink font-sans antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+  }
+
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  ::selection {
+    @apply bg-forest text-ivory;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+
+/* ==========================================================================
+   ANIMATIONS
+   ========================================================================== */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+
+/* ==========================================================================
+   UTILITIES
+   Only styles that are awkward to express with standard Tailwind.
+   ========================================================================== */
+
+@utility text-balance {
+  text-wrap: balance;
+}
+
+@utility text-pretty {
+  text-wrap: pretty;
 }
