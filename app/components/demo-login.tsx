@@ -7,6 +7,7 @@ import { FormEvent, useState } from "react";
 import { copy } from "../lib/copy";
 import type { Language } from "../lib/demo-data";
 import { LanguageSwitcher } from "./language-switcher";
+import { MascotBackground } from "./mascot-background";
 
 export function DemoLogin({
   mode,
@@ -24,8 +25,22 @@ export function DemoLogin({
   }
 
   return (
-    <main className="min-h-screen bg-ivory text-ink">
-      <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-5 sm:px-6 lg:px-8">
+    <main className="relative min-h-screen overflow-hidden bg-ivory text-ink">
+      <MascotBackground
+        className={
+          isTeacher
+            ? "-bottom-20 -left-44 h-[22rem] w-[44rem] rotate-6"
+            : "-bottom-20 -right-44 h-[22rem] w-[44rem] rotate-[-5deg]"
+        }
+      />
+      <div
+        aria-hidden="true"
+        className={`pointer-events-none absolute h-72 w-[36rem] bg-contain bg-center bg-no-repeat opacity-20 ${
+          isTeacher ? "-bottom-8 -right-28 rotate-180" : "-right-24 top-10"
+        }`}
+        style={{ backgroundImage: "url('/offspace-vines.svg')" }}
+      />
+      <div className="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-5 sm:px-6 lg:px-8">
         <header className="flex items-center justify-between gap-4">
           <Link href="/" className="text-sm font-semibold text-forest hover:text-forest-light">
             {t.backHome}
@@ -63,27 +78,27 @@ export function DemoLogin({
 
             <label className="block">
               <span className="text-sm font-semibold text-ink">
-                {isTeacher ? t.teacherEmail : t.nameOrEmail}
+                {isTeacher ? t.teacherEmail : t.studentEmail}
               </span>
               <input
-                type={isTeacher ? "email" : "text"}
-                name="identifier"
+                type="email"
+                name="email"
                 required
+                autoComplete="email"
                 className="mt-2 w-full rounded-sm border border-stone-200 bg-ivory-light px-4 py-3 text-sm text-ink outline-none transition focus:border-forest focus:ring-2 focus:ring-forest/15"
               />
             </label>
 
-            {isTeacher ? (
-              <label className="mt-4 block">
-                <span className="text-sm font-semibold text-ink">{t.password}</span>
-                <input
-                  type="password"
-                  name="password"
-                  required
-                  className="mt-2 w-full rounded-sm border border-stone-200 bg-ivory-light px-4 py-3 text-sm text-ink outline-none transition focus:border-forest focus:ring-2 focus:ring-forest/15"
-                />
-              </label>
-            ) : null}
+            <label className="mt-4 block">
+              <span className="text-sm font-semibold text-ink">{t.password}</span>
+              <input
+                type="password"
+                name="password"
+                required
+                autoComplete="current-password"
+                className="mt-2 w-full rounded-sm border border-stone-200 bg-ivory-light px-4 py-3 text-sm text-ink outline-none transition focus:border-forest focus:ring-2 focus:ring-forest/15"
+              />
+            </label>
 
             <button
               type="submit"

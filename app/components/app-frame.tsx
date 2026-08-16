@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { copy } from "../lib/copy";
 import type { Language } from "../lib/demo-data";
 import { LanguageSwitcher } from "./language-switcher";
+import { MascotBackground } from "./mascot-background";
 
 export function AppFrame({
   language,
@@ -20,8 +21,14 @@ export function AppFrame({
   const t = copy[language];
 
   return (
-    <main className="min-h-screen bg-ivory text-ink">
-      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-5 sm:px-6 lg:px-8">
+    <main className="relative min-h-screen overflow-hidden bg-ivory text-ink">
+      <MascotBackground className="-bottom-16 -right-52 h-[24rem] w-[48rem] rotate-[-6deg]" />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-28 top-2 h-60 w-[32rem] bg-contain bg-center bg-no-repeat opacity-15"
+        style={{ backgroundImage: "url('/offspace-vines.svg')" }}
+      />
+      <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-5 sm:px-6 lg:px-8">
         <header className="flex flex-col gap-5 border-b border-stone-200 pb-5 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-forest">

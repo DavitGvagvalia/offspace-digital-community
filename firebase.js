@@ -1,12 +1,16 @@
 import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDKtCfZBdHbAE_Zlc-2hVyFxFa_lhN_fw0",
-  authDomain: "offspacedigitalcommunity.firebaseapp.com",
-  projectId: "offspacedigitalcommunity",
-  storageBucket: "offspacedigitalcommunity.firebasestorage.app",
-  messagingSenderId: "271734673213",
-  appId: "1:271734673213:web:02b02d05b1e4113d83bf54"
+  apiKey: process.env.NEXT_PUBLIC_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_APP_ID,
 };
 
-export const app = initializeApp(firebaseConfig);
+export const firebase = initializeApp(firebaseConfig);
+
+
+export const db = getFirestore(firebase);

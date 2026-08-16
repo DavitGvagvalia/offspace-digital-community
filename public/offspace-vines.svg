@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 360" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Decorative vine lines with small leaves</title>
+  <desc id="desc">Thin organic vine curves with small leaves, designed as a subtle Offspace decorative SVG asset.</desc>
+  <g opacity="0.9">
+    <path d="M16 298C82 245 125 292 188 240C246 192 203 126 274 92C344 58 388 131 456 94C523 58 523 2 618 18C664 26 694 54 708 74" stroke="#123524" stroke-width="3" stroke-linecap="round"/>
+    <path d="M44 330C104 286 154 316 213 270C266 229 239 176 292 148C362 110 407 174 470 139C520 111 547 66 608 69C647 71 681 91 704 120" stroke="#365F49" stroke-width="1.6" stroke-linecap="round" opacity="0.65"/>
+    <path d="M91 267C98 242 111 229 130 224C132 245 119 261 91 267Z" fill="#47735A"/>
+    <path d="M149 259C170 244 189 241 207 251C194 270 174 274 149 259Z" fill="#7F9277"/>
+    <path d="M210 219C206 195 214 178 232 168C241 189 234 207 210 219Z" fill="#47735A"/>
+    <path d="M254 113C235 96 228 78 236 58C255 69 263 88 254 113Z" fill="#7F9277"/>
+    <path d="M302 82C324 65 345 61 365 72C351 94 329 98 302 82Z" fill="#47735A"/>
+    <path d="M379 119C386 95 400 82 420 78C421 101 407 116 379 119Z" fill="#7F9277"/>
+    <path d="M443 105C429 84 427 64 439 47C456 63 458 84 443 105Z" fill="#47735A"/>
+    <path d="M511 61C536 46 560 45 582 59C564 82 540 84 511 61Z" fill="#7F9277"/>
+    <path d="M606 20C628 5 649 4 668 17C652 38 630 40 606 20Z" fill="#47735A"/>
+    <path d="M643 60C666 52 687 57 701 74C679 88 660 83 643 60Z" fill="#7F9277"/>
+    <path d="M67 307C57 288 57 271 69 258C83 274 83 291 67 307Z" fill="#7F9277"/>
+    <path d="M177 288C196 279 214 281 228 294C209 307 191 305 177 288Z" fill="#47735A"/>
+    <path d="M297 151C313 134 332 129 351 137C341 158 322 164 297 151Z" fill="#7F9277"/>
+    <path d="M485 136C480 113 487 96 504 85C515 105 509 123 485 136Z" fill="#47735A"/>
+    <path d="M570 71C586 87 592 105 583 123C565 112 560 94 570 71Z" fill="#7F9277"/>
+  </g>
+</svg>

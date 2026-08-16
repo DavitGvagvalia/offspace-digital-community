@@ -1,9 +1,22 @@
 import Link from "next/link";
 
+import { MascotBackground } from "./components/mascot-background";
+
 export default function Home() {
   return (
-    <main className="min-h-screen bg-ivory text-ink">
-      <section className="mx-auto flex min-h-screen w-full max-w-4xl flex-col justify-center px-4 py-12 sm:px-6 lg:px-8">
+    <main className="relative min-h-screen overflow-hidden bg-ivory text-ink">
+      <MascotBackground className="-right-40 bottom-20 h-[26rem] w-[52rem] rotate-[-4deg] opacity-[0.1]" />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-24 top-8 h-72 w-[36rem] bg-contain bg-center bg-no-repeat opacity-20"
+        style={{ backgroundImage: "url('/offspace-vines.svg')" }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-8 -left-28 h-72 w-[36rem] rotate-180 bg-contain bg-center bg-no-repeat opacity-15"
+        style={{ backgroundImage: "url('/offspace-vines.svg')" }}
+      />
+      <section className="relative mx-auto flex min-h-screen w-full max-w-4xl flex-col justify-center px-4 py-12 sm:px-6 lg:px-8">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-forest">
           Offspace Digital Community
         </p>

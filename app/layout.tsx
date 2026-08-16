@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope, Cormorant_Garamond } from "next/font/google";
+import { Manrope,Quicksand } from "next/font/google";
 
 import "./globals.css";
 
@@ -9,9 +9,9 @@ const manrope = Manrope({
   display: "swap",
 });
 
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin", "cyrillic"],
-  variable: "--font-cormorant",
+const quicksand = Quicksand({
+  subsets: ["latin"],
+  variable: "--font-quicksand",
   display: "swap",
   weight: ["400", "500", "600", "700"],
 });
@@ -87,7 +87,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${manrope.variable} ${cormorant.variable}`}
+      className={`${manrope.variable} ${quicksand.variable}`}
     >
       <body>{children}</body>
     </html>
