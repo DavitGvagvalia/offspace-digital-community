@@ -55,7 +55,7 @@ export function ScheduleList({
   );
 }
 
-export function TeacherAttendance({
+export function MentorAttendance({
   lessons,
   students,
   language,

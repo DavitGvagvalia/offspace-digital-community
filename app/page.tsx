@@ -34,10 +34,10 @@ export default function Home() {
             Student login
           </Link>
           <Link
-            href="/teacher/login"
+            href="/mentor/login"
             className="rounded-sm border border-stone-200 bg-offwhite px-5 py-3 text-sm font-bold text-ink-soft transition hover:border-sage-300 hover:text-ink"
           >
-            Teacher login
+            Mentor login
           </Link>
         </div>
       </section>

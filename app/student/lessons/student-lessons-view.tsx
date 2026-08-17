@@ -1,13 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 
+import { AccessError, LoadingState } from "../../components/auth-states";
+import { useRequiredProfile } from "../../components/use-required-profile";
 import { CourseTabs, LessonsPanel, StatePanel } from "./lesson-components";
 import { sortAttendedLessons } from "./lesson-utils";
 import { getStudentLessonCourses } from "./student-lessons-data";
 import type { StudentCourse } from "./lesson-types";
 
-export function StudentLessonsView({ studentId }: { studentId: string }) {
+export function StudentLessonsView() {
+  const { user, profile, isLoading: isAuthLoading, error: authError } =
+    useRequiredProfile("student");
   const [studentCourses, setStudentCourses] = useState<StudentCourse[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -17,11 +22,15 @@ export function StudentLessonsView({ studentId }: { studentId: string }) {
     let isMounted = true;
 
     async function loadStudentCourses() {
+      if (!user) {
+        return;
+      }
+
       try {
         setIsLoading(true);
         setError(null);
 
-        const nextStudentCourses = await getStudentLessonCourses(studentId);
+        const nextStudentCourses = await getStudentLessonCourses(user.uid);
 
         if (!isMounted) {
           return;
@@ -47,7 +56,7 @@ export function StudentLessonsView({ studentId }: { studentId: string }) {
     return () => {
       isMounted = false;
     };
-  }, [studentId]);
+  }, [user]);
 
   const selectedCourse = studentCourses.find(
     (item) => item.id === selectedCourseId,
@@ -57,10 +66,26 @@ export function StudentLessonsView({ studentId }: { studentId: string }) {
     return sortAttendedLessons(selectedCourse?.lessons ?? []);
   }, [selectedCourse]);
 
+  if (isAuthLoading) {
+    return <LoadingState title="Loading lessons" />;
+  }
+
+  if (authError || !user || !profile) {
+    return (
+      <AccessError
+        message={authError ?? "We could not load your student profile."}
+        loginHref="/student/login"
+      />
+    );
+  }
+
   return (
     <main className="min-h-screen bg-ivory px-4 py-6 text-ink sm:px-6 lg:px-8">
       <section className="mx-auto flex max-w-5xl flex-col gap-6">
         <header className="rounded-md border border-stone-200 bg-offwhite p-5 shadow-sm">
+          <Link href="/student" className="text-sm font-semibold text-forest hover:text-forest-light">
+            Student hub
+          </Link>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-ink-muted">
             Student lessons
           </p>

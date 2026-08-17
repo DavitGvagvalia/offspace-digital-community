@@ -1,5 +1,5 @@
-import { DemoLogin } from "../../components/demo-login";
+import { PortalLogin } from "../../components/portal-login";
 
 export default function StudentLoginPage() {
-  return <DemoLogin mode="student" />;
+  return <PortalLogin role="student" />;
 }

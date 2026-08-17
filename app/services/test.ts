@@ -248,15 +248,15 @@ async function createSampleAttendance(
 }
 
 async function seedSampleData() {
-    let students = [{id:"Hd36HDkyVQcIg1z6g9ef"}] as Awaited<ReturnType<typeof createSampleStudents>>;
-    let groups = [{courseId: "KoYWoE48553iO7XIEHe0",id: "XxeApJI3o2NPNJX0FV0r",
+    const students = [{id:"Hd36HDkyVQcIg1z6g9ef"}] as Awaited<ReturnType<typeof createSampleStudents>>;
+    const groups = [{courseId: "KoYWoE48553iO7XIEHe0",id: "XxeApJI3o2NPNJX0FV0r",
       mentorId:"eMvX8joQo1xrJEHSPrQr"}] as Awaited<ReturnType<typeof createSampleGroups>>;
 //   const courses = await createSampleCourses();
 //   const mentors = await createSampleMentors();
 //   const students = await createSampleStudents();
 //   const groups = await createSampleGroups(courses, mentors);
 //   const lessons = await createSampleLessons(groups);
-  const enrollments = await createSampleEnrollments(students, groups);
+  await createSampleEnrollments(students, groups);
 //   const attendance = await createSampleAttendance(students, groups, lessons);
 
 //   return {

@@ -8,10 +8,8 @@ import { getCourse } from "../../services/courses.services";
 import type { Course } from "../../types/course.types";
 import type { StudentCourse } from "./lesson-types";
 
-export const STUDENT_ID = "Hd36HDkyVQcIg1z6g9ef";
-
 export async function getStudentLessonCourses(
-  studentId = STUDENT_ID,
+  studentId: string,
 ): Promise<StudentCourse[]> {
   const enrollments = await getEnrollmentsByStudent(studentId);
   const attendedLessons = await getAttendedLessonsByStudent(studentId);

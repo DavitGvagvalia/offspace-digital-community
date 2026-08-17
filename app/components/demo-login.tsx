@@ -12,23 +12,23 @@ import { MascotBackground } from "./mascot-background";
 export function DemoLogin({
   mode,
 }: {
-  mode: "student" | "teacher";
+  mode: "student" | "mentor";
 }) {
   const router = useRouter();
   const [language, setLanguage] = useState<Language>("en");
   const t = copy[language];
-  const isTeacher = mode === "teacher";
+  const isMentor = mode === "mentor";
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    router.push(isTeacher ? "/teacher" : "/student");
+    router.push(isMentor ? "/mentor" : "/student");
   }
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-ivory text-ink">
       <MascotBackground
         className={
-          isTeacher
+          isMentor
             ? "-bottom-20 -left-44 h-[22rem] w-[44rem] rotate-6"
             : "-bottom-20 -right-44 h-[22rem] w-[44rem] rotate-[-5deg]"
         }
@@ -36,7 +36,7 @@ export function DemoLogin({
       <div
         aria-hidden="true"
         className={`pointer-events-none absolute h-72 w-[36rem] bg-contain bg-center bg-no-repeat opacity-20 ${
-          isTeacher ? "-bottom-8 -right-28 rotate-180" : "-right-24 top-10"
+          isMentor ? "-bottom-8 -right-28 rotate-180" : "-right-24 top-10"
         }`}
         style={{ backgroundImage: "url('/offspace-vines.svg')" }}
       />
@@ -54,31 +54,31 @@ export function DemoLogin({
               {t.appName}
             </p>
             <h1 className="mt-3 text-4xl font-semibold text-ink sm:text-5xl">
-              {isTeacher ? t.teacherLoginTitle : t.studentLoginTitle}
+              {isMentor ? t.mentorLoginTitle : t.studentLoginTitle}
             </h1>
             <p className="mt-4 max-w-xl text-base leading-7 text-ink-soft">
-              {isTeacher ? t.teacherLoginText : t.studentLoginText}
+              {isMentor ? t.mentorLoginText : t.studentLoginText}
             </p>
           </div>
 
           <form
             onSubmit={handleSubmit}
             className={`rounded-md border bg-offwhite p-5 shadow-md sm:p-6 ${
-              isTeacher ? "border-forest/30" : "border-stone-200"
+              isMentor ? "border-forest/30" : "border-stone-200"
             }`}
           >
             <div className="mb-5">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-ink-muted">
-                {isTeacher ? t.teacher : t.student}
+                {isMentor ? t.mentor : t.student}
               </p>
               <h2 className="mt-2 text-2xl font-semibold text-ink">
-                {isTeacher ? t.teacherDashboard : t.studentDashboard}
+                {isMentor ? t.mentorDashboard : t.studentDashboard}
               </h2>
             </div>
 
             <label className="block">
               <span className="text-sm font-semibold text-ink">
-                {isTeacher ? t.teacherEmail : t.studentEmail}
+                {isMentor ? t.mentorEmail : t.studentEmail}
               </span>
               <input
                 type="email"

@@ -42,7 +42,7 @@ export type PrivateAssignment = {
   courseId: string;
 };
 
-export type TeacherAssignment = GroupAssignment | PrivateAssignment;
+export type MentorAssignment = GroupAssignment | PrivateAssignment;
 
 export const languages: { id: Language; label: string }[] = [
   { id: "en", label: "EN" },
@@ -63,7 +63,7 @@ export const students: Student[] = [
   { id: "nika", name: "Nika T." },
 ];
 
-export const teacherAssignments: TeacherAssignment[] = [
+export const mentorAssignments: MentorAssignment[] = [
   {
     id: "group-web-a",
     type: "group",
@@ -164,7 +164,7 @@ export function getCourse(courseId: string) {
   return courses.find((course) => course.id === courseId) ?? courses[0];
 }
 
-export function getAssignmentTitle(assignment: TeacherAssignment) {
+export function getAssignmentTitle(assignment: MentorAssignment) {
   if (assignment.type === "group") {
     return assignment.name;
   }
@@ -176,7 +176,7 @@ export function getLessonsForAssignment(assignmentId: string) {
   return lessons.filter((lesson) => lesson.assignmentId === assignmentId);
 }
 
-export function getStudentsForAssignment(assignment: TeacherAssignment) {
+export function getStudentsForAssignment(assignment: MentorAssignment) {
   if (assignment.type === "private") {
     return students.filter((student) => student.id === assignment.studentId);
   }

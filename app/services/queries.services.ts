@@ -1,13 +1,21 @@
-import { collection, getDocs, query, where } from "firebase/firestore";
+import {
+  collection,
+  collectionGroup,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
 
 import { db } from "../../firebase";
 import type { Attendance } from "../types/attendance.types";
 import type { Enrollment } from "../types/enrollment.types";
+import type { Group } from "../types/group.types";
 import type { Lesson } from "../types/lesson.types";
 import { getLesson } from "./lessons.services";
 
 const ATTENDANCES_COLLECTION = "Attendances";
 const ENROLLMENTS_COLLECTION = "Enrollments";
+const GROUPS_COLLECTION = "Groups";
 
 type AttendedLesson = {
   attendance: Attendance;
@@ -77,6 +85,45 @@ async function getEnrollmentsByStudent(
   })) as Enrollment[];
 }
 
+async function getEnrollmentsByGroup(groupId: string): Promise<Enrollment[]> {
+  const enrollmentsQuery = query(
+    collection(db, ENROLLMENTS_COLLECTION),
+    where("groupId", "==", groupId),
+  );
+  const enrollmentsSnapshot = await getDocs(enrollmentsQuery);
+
+  return enrollmentsSnapshot.docs.map((document) => ({
+    id: document.id,
+    ...document.data(),
+  })) as Enrollment[];
+}
+
+async function getAttendancesByGroup(groupId: string): Promise<Attendance[]> {
+  const attendancesQuery = query(
+    collection(db, ATTENDANCES_COLLECTION),
+    where("groupId", "==", groupId),
+  );
+  const attendancesSnapshot = await getDocs(attendancesQuery);
+
+  return attendancesSnapshot.docs.map((document) => ({
+    id: document.id,
+    ...document.data(),
+  })) as Attendance[];
+}
+
+async function getGroupsByMentor(mentorId: string): Promise<Group[]> {
+  const groupsQuery = query(
+    collectionGroup(db, GROUPS_COLLECTION),
+    where("mentorId", "==", mentorId),
+  );
+  const groupsSnapshot = await getDocs(groupsQuery);
+
+  return groupsSnapshot.docs.map((document) => ({
+    id: document.id,
+    ...document.data(),
+  })) as Group[];
+}
+
 
 
 
@@ -101,8 +148,11 @@ async function getEnrollmentsByStudent(
 
 
 export {
+  getAttendancesByGroup,
   getAttendedLessonDatesByStudent,
   getAttendedLessonsByStudent,
   getEnrollmentsByStudent,
+  getEnrollmentsByGroup,
+  getGroupsByMentor,
   type AttendedLesson,
 };
