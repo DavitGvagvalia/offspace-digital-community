@@ -1,7 +1,39 @@
-import { db } from "../../firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { Timestamp } from "firebase/firestore";
+
+import type { CreateStudent, Student } from "../types/student.types";
+import {
+  createDocument,
+  deleteDocument,
+  getDocument,
+  listDocuments,
+  updateDocument,
+} from "./utils";
+
+const STUDENTS_COLLECTION = "Students";
+
+const getStudents = async () => listDocuments<Student>(STUDENTS_COLLECTION);
+
+const getStudent = async (id: string) =>
+  getDocument<Student>(STUDENTS_COLLECTION, id);
+
+const addStudent = async (student: CreateStudent) =>
+  createDocument<Student, CreateStudent>(STUDENTS_COLLECTION, student, {
+    createdAt: Timestamp.now(),
+  });
+
+const updateStudent = async (id: string, student: Partial<CreateStudent>) =>
+  updateDocument<Student>(STUDENTS_COLLECTION, id, student, {
+    updatedAt: Timestamp.now(),
+  });
+
+const deleteStudent = async (id: string) =>
+  deleteDocument(STUDENTS_COLLECTION, id);
 
 
-const Students = collection(db, "Students");
-
-
+export {
+  addStudent,
+  deleteStudent,
+  getStudent,
+  getStudents,
+  updateStudent,
+};

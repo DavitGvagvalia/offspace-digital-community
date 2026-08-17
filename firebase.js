@@ -1,5 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import {getAuth} from "firebase/auth";
+import dotenv from "dotenv";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_API_KEY,
@@ -12,5 +14,5 @@ const firebaseConfig = {
 
 export const firebase = initializeApp(firebaseConfig);
 
-
+export const auth = getAuth(firebase);
 export const db = getFirestore(firebase);
