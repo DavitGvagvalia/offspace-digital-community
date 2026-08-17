@@ -1,64 +1,64 @@
-import { db } from "../../firebase.js";
-import { collection, getDocs, doc, getDoc, setDoc } from "firebase/firestore";
+import { collection, getDoc, getDocs, doc, Timestamp } from "firebase/firestore";
 
+import { db } from "../../firebase";
+import type { Course, CreateCourse } from "../types/course.types";
+import {
+  createDocument,
+  deleteDocument,
+  getDocument,
+  listDocuments,
+  updateDocument,
+} from "./utils";
 
-const Courses = collection(db, "Courses");
+const COURSES_COLLECTION = "Courses";
 
-const getCourse = async (id: string) => {
-    const docRef = doc(Courses, id);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-        return docSnap.data();
-    } else {
-        // doc.data() will be undefined in this case
-        console.log("No such document!");
-        return null;
-    }
-};
+const getCourses = async () => listDocuments<Course>(COURSES_COLLECTION);
 
+const getCourse = async (id: string) => getDocument<Course>(COURSES_COLLECTION, id);
 
-const getCourses = async () => {
-    const querySnapshot = await getDocs(Courses);
-    const courses: any[] = [];
-    querySnapshot.forEach((doc) => {
-        // doc.data() is never undefined for query doc snapshots
-        courses.push({ id: doc.id, ...doc.data() });
-    });
+const addCourse = async (course: CreateCourse) =>
+  createDocument<Course, CreateCourse>(COURSES_COLLECTION, course, {
+    createdAt: Timestamp.now(),
+  });
 
-    if (courses.length === 0) {
-        console.log("No courses!");
-        return null;
-    }
+const updateCourse = async (id: string, course: Partial<CreateCourse>) =>
+  updateDocument<Course>(COURSES_COLLECTION, id, course, {
+    updatedAt: Timestamp.now(),
+  });
 
-    return courses;
-
-};
-
+const deleteCourse = async (id: string) =>
+  deleteDocument(COURSES_COLLECTION, id);
 
 const getPrivateStudents = async (courseId: string) => {
-    const privateStudents = collection(db, courseId, "PrivateStudents");
-    const querySnapshot = await getDocs(privateStudents);
-    const students: any[] = [];
-    querySnapshot.forEach((doc) => {
-        // doc.data() is never undefined for query doc snapshots
-        students.push({ id: doc.id, ...doc.data() });
-    });
-    return students;
+  const privateStudents = collection(db, "Courses", courseId, "PrivateStudents");
+  const querySnapshot = await getDocs(privateStudents);
 
-}
-
-
-const getPrivateStudent = async (courseId: string,studentId: string) => {
-    const docRef = doc(db,"Courses",courseId,"PrivateStudents",studentId);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-        return docSnap.data();
-    }
-    console.log(docSnap.data());
-    return null;
+  return querySnapshot.docs.map((document) => ({
+    id: document.id,
+    ...document.data(),
+  }));
 };
 
+const getPrivateStudent = async (courseId: string, studentId: string) => {
+  const docRef = doc(db, "Courses", courseId, "PrivateStudents", studentId);
+  const docSnap = await getDoc(docRef);
 
+  if (!docSnap.exists()) {
+    return null;
+  }
 
+  return {
+    id: docSnap.id,
+    ...docSnap.data(),
+  };
+};
 
-export { getCourse, getCourses, getPrivateStudents, getPrivateStudent };
+export {
+  addCourse,
+  deleteCourse,
+  getCourse,
+  getCourses,
+  getPrivateStudent,
+  getPrivateStudents,
+  updateCourse,
+};

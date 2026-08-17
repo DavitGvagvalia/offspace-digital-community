@@ -1,42 +1,26 @@
-"use client";
+import { StudentLessonsView } from "./student-lessons-view";
 
-import { useState, useEffect } from "react";
-import { getPrivateStudent } from "../../services/courses.services";
-import { formatFirebaseDate } from "../../services/utils";
-function LessonsPage() {
-  const [lessons, setLessons] = useState<any[]>([]);
+const DEFAULT_STUDENT_ID = "Hd36HDkyVQcIg1z6g9ef";
 
-  const getLessons = async (courseId: string, studentId: string) => {
-    const privateStudent = await getPrivateStudent(courseId, studentId);
+type LessonsPageProps = {
+  searchParams?: Promise<{
+    studentId?: string | string[];
+  }>;
+};
 
-    const lessons = privateStudent?.lessons ?? [];
+function getStudentId(searchParams?: { studentId?: string | string[] }) {
+  const studentId = searchParams?.studentId;
 
-    setLessons(lessons);
-  };
+  if (Array.isArray(studentId)) {
+    return studentId[0] ?? DEFAULT_STUDENT_ID;
+  }
 
-  useEffect(() => {
-    getLessons(
-      "j8WNaTj5rfNNUgUOYjSL",
-      "rQl31kkEd7fp7l40muVQVM5wSUk2"
-    );
-  }, []);
-
-  return (
-    <main className="min-h-screen p-5 bg-offwhite flex flex-col justify-center items-center">
-      <h1>Lessons</h1>
-
-      {lessons.map((lesson, index) => {
-        console.log(lesson);
-        const date = formatFirebaseDate(lesson.date);
-        return (
-          <div key={index}>
-            <p>{date}</p>
-          </div>
-        );
-
-      })}
-    </main>
-  );
+  return studentId ?? DEFAULT_STUDENT_ID;
 }
 
-export default LessonsPage;
+export default async function LessonsPage({ searchParams }: LessonsPageProps) {
+  const params = await searchParams;
+  const studentId = getStudentId(params);
+
+  return <StudentLessonsView studentId={studentId} />;
+}
