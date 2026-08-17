@@ -5,7 +5,7 @@ import { getCourse } from "./courses.services";
 import { getLessons } from "./lessons.services";
 import {
   getAttendancesByGroup,
-  getEnrollmentsByGroup,
+  getEnrollmentsByAssignedGroup,
   getGroupsByMentor,
 } from "./queries.services";
 import { getStudent } from "./students.services";
@@ -20,8 +20,8 @@ export async function getMentorGroupWorkspaces(
       const [course, lessons, enrollments, attendances] = await Promise.all([
         getCourse(group.courseId),
         getLessons(group.courseId, group.id),
-        getEnrollmentsByGroup(group.id),
-        getAttendancesByGroup(group.id),
+        getEnrollmentsByAssignedGroup(group.courseId, group.id, group.mentorId),
+        getAttendancesByGroup(group.courseId, group.id),
       ]);
       const students = await Promise.all(
         enrollments.map((enrollment) => getStudent(enrollment.studentId)),

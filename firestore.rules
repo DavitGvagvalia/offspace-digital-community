@@ -1,0 +1,156 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function hasStudentProfile() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/Students/$(request.auth.uid));
+    }
+
+    function hasMentorProfile() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/Mentors/$(request.auth.uid));
+    }
+
+    function isPortalUser() {
+      return hasStudentProfile() || hasMentorProfile();
+    }
+
+    function enrollmentId(studentId, groupId) {
+      return studentId + "_" + groupId;
+    }
+
+    function enrollmentPath(studentId, groupId) {
+      return /databases/$(database)/documents/Enrollments/$(enrollmentId(studentId, groupId));
+    }
+
+    function isStudentEnrolledInGroup(studentId, courseId, groupId) {
+      return signedIn()
+        && exists(enrollmentPath(studentId, groupId))
+        && get(enrollmentPath(studentId, groupId)).data.studentId == studentId
+        && get(enrollmentPath(studentId, groupId)).data.courseId == courseId
+        && get(enrollmentPath(studentId, groupId)).data.groupId == groupId
+        && get(enrollmentPath(studentId, groupId)).data.status == "active";
+    }
+
+    function isCurrentStudentEnrolledInGroup(courseId, groupId) {
+      return isStudentEnrolledInGroup(request.auth.uid, courseId, groupId);
+    }
+
+    function groupPath(courseId, groupId) {
+      return /databases/$(database)/documents/Courses/$(courseId)/Groups/$(groupId);
+    }
+
+    function isGroupMentor(courseId, groupId) {
+      return signedIn()
+        && exists(groupPath(courseId, groupId))
+        && get(groupPath(courseId, groupId)).data.mentorId == request.auth.uid;
+    }
+
+    function isAttendanceReader() {
+      return signedIn()
+        && (
+          resource.data.studentId == request.auth.uid
+          || isGroupMentor(resource.data.courseId, resource.data.groupId)
+        );
+    }
+
+    function isValidAttendanceWrite() {
+      return request.resource.data.keys().hasOnly([
+          "studentId",
+          "courseId",
+          "groupId",
+          "lessonId",
+          "attendedAt"
+        ])
+        && request.resource.data.studentId is string
+        && request.resource.data.courseId is string
+        && request.resource.data.groupId is string
+        && request.resource.data.lessonId is string
+        && request.resource.data.attendedAt is timestamp
+        && isGroupMentor(
+          request.resource.data.courseId,
+          request.resource.data.groupId
+        )
+        && isStudentEnrolledInGroup(
+          request.resource.data.studentId,
+          request.resource.data.courseId,
+          request.resource.data.groupId
+        );
+    }
+
+    match /Students/{studentId} {
+      allow get: if signedIn()
+        && (
+          request.auth.uid == studentId
+          || hasMentorProfile()
+        );
+      allow list: if false;
+      allow write: if false;
+    }
+
+    match /Mentors/{mentorId} {
+      allow get: if signedIn()
+        && (
+          request.auth.uid == mentorId
+          || isPortalUser()
+        );
+      allow list: if false;
+      allow write: if false;
+    }
+
+    match /Courses/{courseId} {
+      allow get: if isPortalUser();
+      allow list: if false;
+      allow write: if false;
+
+      match /Groups/{groupId} {
+        allow get, list: if isGroupMentor(courseId, groupId)
+          || isCurrentStudentEnrolledInGroup(courseId, groupId);
+        allow write: if false;
+
+        match /Lessons/{lessonId} {
+          allow get, list: if isGroupMentor(courseId, groupId)
+            || isCurrentStudentEnrolledInGroup(courseId, groupId);
+          allow create, update, delete: if isGroupMentor(courseId, groupId);
+        }
+
+        match /{document=**} {
+          allow read, write: if false;
+        }
+      }
+
+      match /PrivateStudents/{studentId} {
+        allow read, write: if false;
+      }
+
+      match /{document=**} {
+        allow read, write: if false;
+      }
+    }
+
+    match /Enrollments/{enrollmentId} {
+      allow get, list: if signedIn()
+        && (
+          resource.data.studentId == request.auth.uid
+          || resource.data.mentorId == request.auth.uid
+        );
+      allow write: if false;
+    }
+
+    match /Attendances/{attendanceId} {
+      allow get, list: if isAttendanceReader();
+      allow create, update: if isValidAttendanceWrite();
+      allow delete: if isAttendanceReader()
+        && isGroupMentor(resource.data.courseId, resource.data.groupId);
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

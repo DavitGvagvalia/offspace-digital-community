@@ -1,13 +1,13 @@
 import type { Timestamp } from "firebase/firestore";
 
-import type { AttendedLesson } from "../../services/queries.services";
 import type { Course } from "../../types/course.types";
+import type { StudentLesson } from "./lesson-types";
 
 export function getCourseTitle(course: Course) {
   return course.name || course.id;
 }
 
-export function sortAttendedLessons(lessons: AttendedLesson[]) {
+export function sortStudentLessons(lessons: StudentLesson[]) {
   return [...lessons].sort((firstLesson, secondLesson) => {
     return (
       firstLesson.lesson.date.toMillis() - secondLesson.lesson.date.toMillis()

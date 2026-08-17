@@ -6,7 +6,7 @@ import Link from "next/link";
 import { AccessError, LoadingState } from "../../components/auth-states";
 import { useRequiredProfile } from "../../components/use-required-profile";
 import { CourseTabs, LessonsPanel, StatePanel } from "./lesson-components";
-import { sortAttendedLessons } from "./lesson-utils";
+import { sortStudentLessons } from "./lesson-utils";
 import { getStudentLessonCourses } from "./student-lessons-data";
 import type { StudentCourse } from "./lesson-types";
 
@@ -63,7 +63,7 @@ export function StudentLessonsView() {
   );
 
   const selectedLessons = useMemo(() => {
-    return sortAttendedLessons(selectedCourse?.lessons ?? []);
+    return sortStudentLessons(selectedCourse?.lessons ?? []);
   }, [selectedCourse]);
 
   if (isAuthLoading) {
@@ -93,7 +93,7 @@ export function StudentLessonsView() {
             My enrolled courses
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-ink-soft">
-            Choose an enrolled course to see its attendance-connected lessons.
+            Choose an enrolled course to see scheduled lessons and your attendance.
           </p>
         </header>
 
@@ -118,7 +118,7 @@ export function StudentLessonsView() {
         ) : (
           <StatePanel
             title="No course selected"
-            text="Choose an active course to see attended lessons."
+            text="Choose an active course to see scheduled lessons."
           />
         )}
       </section>

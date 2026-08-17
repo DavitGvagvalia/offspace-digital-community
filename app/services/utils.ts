@@ -13,13 +13,10 @@ import {
 
 import { signInWithEmailAndPassword } from "firebase/auth";
 
+import { auth, db } from "../lib/firebase";
 
-import { db,auth } from "../../firebase";
-
-
-
-
-
+type CollectionPath = string | string[];
+type DocumentMapper<T> = (id: string, data: DocumentData) => T | null;
 
 function formatFirebaseDate(timestamp: Timestamp): string {
   const date = timestamp.toDate();
@@ -30,8 +27,6 @@ function formatFirebaseDate(timestamp: Timestamp): string {
 
   return `${day}/${month}/${year}`;
 }
-
-type CollectionPath = string | string[];
 
 function getCollectionPath(collectionPath: CollectionPath) {
   if (Array.isArray(collectionPath)) {
@@ -48,20 +43,30 @@ function generateUUID(collectionName: CollectionPath) {
 
 async function listDocuments<T extends { id: string }>(
   collectionName: CollectionPath,
+  mapDocument?: DocumentMapper<T>,
 ): Promise<T[]> {
   const querySnapshot = await getDocs(
     collection(db, getCollectionPath(collectionName)),
   );
 
-  return querySnapshot.docs.map((document) => ({
-    id: document.id,
-    ...document.data(),
-  })) as T[];
+  return querySnapshot.docs
+    .map((document) => {
+      if (mapDocument) {
+        return mapDocument(document.id, document.data());
+      }
+
+      return {
+        id: document.id,
+        ...document.data(),
+      } as T;
+    })
+    .filter((document): document is T => Boolean(document));
 }
 
 async function getDocument<T extends { id: string }>(
   collectionName: CollectionPath,
   id: string,
+  mapDocument?: DocumentMapper<T>,
 ): Promise<T | null> {
   const documentSnapshot = await getDoc(
     doc(db, getCollectionPath(collectionName), id),
@@ -69,6 +74,10 @@ async function getDocument<T extends { id: string }>(
 
   if (!documentSnapshot.exists()) {
     return null;
+  }
+
+  if (mapDocument) {
+    return mapDocument(documentSnapshot.id, documentSnapshot.data());
   }
 
   return {
@@ -139,5 +148,6 @@ export {
   getDocument,
   listDocuments,
   updateDocument,
-  loginWithEmailAndPassword
+  loginWithEmailAndPassword,
+  type DocumentMapper,
 };

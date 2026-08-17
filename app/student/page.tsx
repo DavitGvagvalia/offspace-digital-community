@@ -9,7 +9,7 @@ const navItems = [
   {
     href: "/student/lessons",
     title: "Lessons",
-    text: "Review lesson dates connected to your attendance records.",
+    text: "Review scheduled lessons and your attendance status.",
   },
   {
     href: "/student/courses",

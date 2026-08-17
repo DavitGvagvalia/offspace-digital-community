@@ -1,6 +1,7 @@
 import { Timestamp } from "firebase/firestore";
 
 import type { Attendance, CreateAttendance } from "../types/attendance.types";
+import { mapAttendance } from "./firestore-mappers";
 import {
   createDocument,
   deleteDocument,
@@ -12,10 +13,10 @@ import {
 const ATTENDANCES_COLLECTION = "Attendances";
 
 const getAttendances = async () =>
-  listDocuments<Attendance>(ATTENDANCES_COLLECTION);
+  listDocuments<Attendance>(ATTENDANCES_COLLECTION, mapAttendance);
 
 const getAttendance = async (id: string) =>
-  getDocument<Attendance>(ATTENDANCES_COLLECTION, id);
+  getDocument<Attendance>(ATTENDANCES_COLLECTION, id, mapAttendance);
 
 const addAttendance = async (attendance: CreateAttendance) => {
   const attendanceId = `${attendance.studentId}_${attendance.lessonId}`;

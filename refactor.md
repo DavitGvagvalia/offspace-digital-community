@@ -15,14 +15,6 @@ npm test
 npm run build
 ```
 
-Results:
-
-- `npm run lint` passed.
-- `npx tsc --noEmit` passed.
-- `npm test` failed because `package.json` currently has no `test` script.
-- `npm run build` failed with a Turbopack internal error while processing `app/globals.css`: `creating new process`, `binding to a port`, `Operation not permitted (os error 1)`.
-
-The build failure may be environment/tooling related because the panic log does not include an application stack trace beyond CSS transformation. Recheck after dependency cleanup and in the intended local/CI environment.
 
 ## High Priority
 
@@ -50,20 +42,6 @@ Evidence:
 - No Firebase rules/config files found by local file search.
 - Reference: https://firebase.google.com/docs/rules/basics
 
-### Missing Test Script
-
-`package.json` does not define a `test` script, so `npm test` fails with `Missing script: "test"`.
-
-Recommended direction:
-
-- Add a real test script using a runner such as Vitest for units and Playwright for browser flows, or temporarily set a truthful placeholder that does not pretend tests exist.
-- Add tests for auth gating, route access, student lesson visibility, mentor group scoping, and Firestore service aggregation.
-
-Evidence:
-
-- `package.json`
-- `npm test`
-- Local Next docs: `node_modules/next/dist/docs/01-app/02-guides/testing/index.md`
 
 ### Student Lessons Omit Unattended Schedule Items
 
@@ -123,22 +101,6 @@ Evidence:
 - `git show HEAD:AGENTS.md`
 - Local Next docs: `node_modules/next/dist/docs/01-app/02-guides/ai-agents.md`
 
-### Private Student Scope Is Not Implemented In Active UI
-
-The product scope includes private / 1-on-1 student workspaces, and `courses.services.ts` has `PrivateStudents` helpers, but the active mentor dashboard only lists groups.
-
-Recommended direction:
-
-- Decide the private assignment Firestore model before implementation.
-- Add private assignments to mentor navigation only after the data shape and rules are explicit.
-- Share schedule/attendance rendering with group workspaces where possible.
-
-Evidence:
-
-- `AGENTS.md`
-- `app/services/courses.services.ts`
-- `app/mentor/mentor-dashboard.tsx`
-- `app/mentor/mentor-workspace-components.tsx`
 
 ### Demo And Authenticated Flows Coexist
 
@@ -151,8 +113,8 @@ Why it matters:
 
 Recommended direction:
 
-- Either remove demo-only components/data or move them under an explicit demo-only route/folder.
-- Keep authenticated pages free of demo fallbacks unless they are explicitly test doubles.
+- remove demo-only components/data.
+- Keep authenticated pages free of demo fallbacks.
 
 Evidence:
 
@@ -163,25 +125,6 @@ Evidence:
 - `app/components/app-frame.tsx`
 - `app/student/discover/page.tsx`
 
-### Seed Script Has App-Service Side Effects
-
-`app/services/test.ts` contains seed helpers and calls `seedSampleData()` at module top level.
-
-Why it matters:
-
-- Importing the module can mutate Firestore.
-- It lives under `app/services`, which makes it look like production service code.
-- It contains hard-coded IDs and partially commented sample seeding.
-
-Recommended direction:
-
-- Move seeding to a clearly named script folder such as `scripts/seed-sample-data.ts`.
-- Remove top-level execution from importable modules.
-- Require explicit environment loading and a deliberate command to seed.
-
-Evidence:
-
-- `app/services/test.ts`
 
 ### Firebase Initialization Is Untyped Root JavaScript
 

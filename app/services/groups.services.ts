@@ -1,6 +1,7 @@
 import { Timestamp } from "firebase/firestore";
 
 import type { CreateGroup, Group } from "../types/group.types";
+import { mapGroup } from "./firestore-mappers";
 import {
   createDocument,
   deleteDocument,
@@ -16,10 +17,10 @@ function getGroupsCollection(courseId: string) {
 }
 
 const getGroups = async (courseId: string) =>
-  listDocuments<Group>(getGroupsCollection(courseId));
+  listDocuments<Group>(getGroupsCollection(courseId), mapGroup);
 
 const getGroup = async (courseId: string, id: string) =>
-  getDocument<Group>(getGroupsCollection(courseId), id);
+  getDocument<Group>(getGroupsCollection(courseId), id, mapGroup);
 
 const addGroup = async (group: CreateGroup) =>
   createDocument<Group, CreateGroup>(getGroupsCollection(group.courseId), group, {

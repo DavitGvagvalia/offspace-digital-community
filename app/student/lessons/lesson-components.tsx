@@ -1,5 +1,4 @@
-import type { AttendedLesson } from "../../services/queries.services";
-import type { StudentCourse } from "./lesson-types";
+import type { StudentCourse, StudentLesson } from "./lesson-types";
 import { formatLessonDate, getCourseTitle } from "./lesson-utils";
 
 export function CourseTabs({
@@ -43,7 +42,7 @@ export function LessonsPanel({
   lessons,
 }: {
   selectedCourse: StudentCourse;
-  lessons: AttendedLesson[];
+  lessons: StudentLesson[];
 }) {
   return (
     <section className="rounded-md border border-stone-200 bg-offwhite p-5 shadow-sm">
@@ -66,13 +65,13 @@ export function LessonsPanel({
 
       {lessons.length === 0 ? (
         <StatePanel
-          title="No attended lessons"
-          text="This course is connected to the student, but it does not have attended lessons yet."
+          title="No scheduled lessons"
+          text="This course is connected to the student, but no group lessons were found yet."
         />
       ) : (
         <div className="space-y-3">
           {lessons.map((lesson) => (
-            <LessonCard key={lesson.attendance.id} lesson={lesson} />
+            <LessonCard key={lesson.lesson.id} lesson={lesson} />
           ))}
         </div>
       )}
@@ -80,7 +79,9 @@ export function LessonsPanel({
   );
 }
 
-export function LessonCard({ lesson }: { lesson: AttendedLesson }) {
+export function LessonCard({ lesson }: { lesson: StudentLesson }) {
+  const attended = Boolean(lesson.attendance);
+
   return (
     <article className="rounded-sm border border-stone-200 bg-ivory-light p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -92,8 +93,14 @@ export function LessonCard({ lesson }: { lesson: AttendedLesson }) {
             {lesson.lesson.title ?? `Lesson ID: ${lesson.lesson.id}`}
           </p>
         </div>
-        <span className="inline-flex min-h-8 items-center rounded-xs bg-success/10 px-3 py-1 text-xs font-bold text-success ring-1 ring-success/20">
-          Attended
+        <span
+          className={`inline-flex min-h-8 items-center rounded-xs px-3 py-1 text-xs font-bold ring-1 ${
+            attended
+              ? "bg-success/10 text-success ring-success/20"
+              : "bg-stone-100 text-stone-600 ring-stone-200"
+          }`}
+        >
+          {attended ? "Present" : "Not marked"}
         </span>
       </div>
     </article>

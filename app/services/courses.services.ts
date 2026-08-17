@@ -1,7 +1,8 @@
 import { collection, getDoc, getDocs, doc, Timestamp } from "firebase/firestore";
 
-import { db } from "../../firebase";
+import { db } from "../lib/firebase";
 import type { Course, CreateCourse } from "../types/course.types";
+import { mapCourse } from "./firestore-mappers";
 import {
   createDocument,
   deleteDocument,
@@ -12,9 +13,10 @@ import {
 
 const COURSES_COLLECTION = "Courses";
 
-const getCourses = async () => listDocuments<Course>(COURSES_COLLECTION);
+const getCourses = async () => listDocuments<Course>(COURSES_COLLECTION, mapCourse);
 
-const getCourse = async (id: string) => getDocument<Course>(COURSES_COLLECTION, id);
+const getCourse = async (id: string) =>
+  getDocument<Course>(COURSES_COLLECTION, id, mapCourse);
 
 const addCourse = async (course: CreateCourse) =>
   createDocument<Course, CreateCourse>(COURSES_COLLECTION, course, {

@@ -1,6 +1,7 @@
 import { Timestamp } from "firebase/firestore";
 
 import type { CreateLesson, Lesson } from "../types/lesson.types";
+import { mapLesson } from "./firestore-mappers";
 import {
   createDocument,
   deleteDocument,
@@ -16,10 +17,10 @@ function getLessonsCollection(courseId: string, groupId: string) {
 }
 
 const getLessons = async (courseId: string, groupId: string) =>
-  listDocuments<Lesson>(getLessonsCollection(courseId, groupId));
+  listDocuments<Lesson>(getLessonsCollection(courseId, groupId), mapLesson);
 
 const getLesson = async (courseId: string, groupId: string, id: string) =>
-  getDocument<Lesson>(getLessonsCollection(courseId, groupId), id);
+  getDocument<Lesson>(getLessonsCollection(courseId, groupId), id, mapLesson);
 
 const addLesson = async (lesson: CreateLesson) =>
   createDocument<Lesson, CreateLesson>(

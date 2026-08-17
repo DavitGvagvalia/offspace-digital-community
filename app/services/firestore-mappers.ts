@@ -1,0 +1,214 @@
+import { Timestamp, type DocumentData } from "firebase/firestore";
+
+import type { Attendance } from "../types/attendance.types";
+import type { Course } from "../types/course.types";
+import type { Enrollment, EnrollmentStatus } from "../types/enrollment.types";
+import type { Group } from "../types/group.types";
+import type { Lesson } from "../types/lesson.types";
+import type { Mentor } from "../types/mentor.types";
+import type { Student } from "../types/student.types";
+
+type Mapper<T> = (id: string, data: DocumentData) => T | null;
+
+const enrollmentStatuses = new Set<EnrollmentStatus>([
+  "active",
+  "paused",
+  "completed",
+  "cancelled",
+]);
+
+function stringValue(data: DocumentData, key: string) {
+  const value = data[key];
+  return typeof value === "string" ? value : null;
+}
+
+function optionalStringValue(data: DocumentData, key: string) {
+  const value = data[key];
+  return typeof value === "string" ? value : undefined;
+}
+
+function booleanValue(data: DocumentData, key: string) {
+  const value = data[key];
+  return typeof value === "boolean" ? value : null;
+}
+
+function numberValue(data: DocumentData, key: string) {
+  const value = data[key];
+  return typeof value === "number" ? value : null;
+}
+
+function timestampValue(data: DocumentData, key: string) {
+  const value = data[key];
+  return value instanceof Timestamp ? value : null;
+}
+
+function optionalTimestampValue(data: DocumentData, key: string) {
+  const value = data[key];
+  return value instanceof Timestamp ? value : undefined;
+}
+
+function enrollmentStatusValue(data: DocumentData, key: string) {
+  const value = data[key];
+  return typeof value === "string" &&
+    enrollmentStatuses.has(value as EnrollmentStatus)
+    ? (value as EnrollmentStatus)
+    : null;
+}
+
+export const mapCourse: Mapper<Course> = (id, data) => {
+  const name = stringValue(data, "name");
+  const active = booleanValue(data, "active");
+  const createdAt = timestampValue(data, "createdAt");
+
+  if (!name || active === null || !createdAt) {
+    return null;
+  }
+
+  return {
+    id,
+    name,
+    description: optionalStringValue(data, "description"),
+    active,
+    createdAt,
+    updatedAt: optionalTimestampValue(data, "updatedAt"),
+  };
+};
+
+export const mapGroup: Mapper<Group> = (id, data) => {
+  const courseId = stringValue(data, "courseId");
+  const mentorId = stringValue(data, "mentorId");
+  const active = booleanValue(data, "active");
+  const createdAt = timestampValue(data, "createdAt");
+
+  if (!courseId || !mentorId || active === null || !createdAt) {
+    return null;
+  }
+
+  return {
+    id,
+    courseId,
+    name: optionalStringValue(data, "name"),
+    mentorId,
+    active,
+    createdAt,
+    updatedAt: optionalTimestampValue(data, "updatedAt"),
+  };
+};
+
+export const mapLesson: Mapper<Lesson> = (id, data) => {
+  const courseId = stringValue(data, "courseId");
+  const groupId = stringValue(data, "groupId");
+  const date = timestampValue(data, "date");
+  const createdAt = timestampValue(data, "createdAt");
+
+  if (!courseId || !groupId || !date || !createdAt) {
+    return null;
+  }
+
+  return {
+    id,
+    courseId,
+    groupId,
+    title: optionalStringValue(data, "title"),
+    description: optionalStringValue(data, "description"),
+    date,
+    createdAt,
+    updatedAt: optionalTimestampValue(data, "updatedAt"),
+  };
+};
+
+export const mapEnrollment: Mapper<Enrollment> = (id, data) => {
+  const studentId = stringValue(data, "studentId");
+  const courseId = stringValue(data, "courseId");
+  const groupId = stringValue(data, "groupId");
+  const mentorId = stringValue(data, "mentorId");
+  const price = numberValue(data, "price");
+  const status = enrollmentStatusValue(data, "status");
+  const enrolledAt = timestampValue(data, "enrolledAt");
+
+  if (
+    !studentId ||
+    !courseId ||
+    !groupId ||
+    !mentorId ||
+    price === null ||
+    !status ||
+    !enrolledAt
+  ) {
+    return null;
+  }
+
+  return {
+    id,
+    studentId,
+    courseId,
+    groupId,
+    mentorId,
+    price,
+    status,
+    enrolledAt,
+    completedAt: optionalTimestampValue(data, "completedAt"),
+  };
+};
+
+export const mapAttendance: Mapper<Attendance> = (id, data) => {
+  const studentId = stringValue(data, "studentId");
+  const courseId = stringValue(data, "courseId");
+  const groupId = stringValue(data, "groupId");
+  const lessonId = stringValue(data, "lessonId");
+  const attendedAt = timestampValue(data, "attendedAt");
+
+  if (!studentId || !courseId || !groupId || !lessonId || !attendedAt) {
+    return null;
+  }
+
+  return {
+    id,
+    studentId,
+    courseId,
+    groupId,
+    lessonId,
+    attendedAt,
+  };
+};
+
+export const mapStudent: Mapper<Student> = (id, data) => {
+  const name = stringValue(data, "name");
+  const lastName = stringValue(data, "lastName");
+  const createdAt = timestampValue(data, "createdAt");
+
+  if (!name || !lastName || !createdAt) {
+    return null;
+  }
+
+  return {
+    id,
+    name,
+    lastName,
+    email: optionalStringValue(data, "email"),
+    phone: optionalStringValue(data, "phone"),
+    createdAt,
+    updatedAt: optionalTimestampValue(data, "updatedAt"),
+  };
+};
+
+export const mapMentor: Mapper<Mentor> = (id, data) => {
+  const name = stringValue(data, "name");
+  const lastName = stringValue(data, "lastName");
+  const active = booleanValue(data, "active");
+  const createdAt = timestampValue(data, "createdAt");
+
+  if (!name || !lastName || active === null || !createdAt) {
+    return null;
+  }
+
+  return {
+    id,
+    name,
+    lastName,
+    email: optionalStringValue(data, "email"),
+    phone: optionalStringValue(data, "phone"),
+    active,
+    createdAt,
+  };
+};

@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run typecheck",
     "start": "next start",
     "lint": "eslint"
   },

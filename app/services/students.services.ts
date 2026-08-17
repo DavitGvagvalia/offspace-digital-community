@@ -1,6 +1,7 @@
 import { Timestamp } from "firebase/firestore";
 
 import type { CreateStudent, Student } from "../types/student.types";
+import { mapStudent } from "./firestore-mappers";
 import {
   createDocument,
   deleteDocument,
@@ -11,10 +12,10 @@ import {
 
 const STUDENTS_COLLECTION = "Students";
 
-const getStudents = async () => listDocuments<Student>(STUDENTS_COLLECTION);
+const getStudents = async () => listDocuments<Student>(STUDENTS_COLLECTION, mapStudent);
 
 const getStudent = async (id: string) =>
-  getDocument<Student>(STUDENTS_COLLECTION, id);
+  getDocument<Student>(STUDENTS_COLLECTION, id, mapStudent);
 
 const addStudent = async (student: CreateStudent) =>
   createDocument<Student, CreateStudent>(STUDENTS_COLLECTION, student, {

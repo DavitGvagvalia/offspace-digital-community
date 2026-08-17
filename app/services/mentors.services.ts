@@ -1,6 +1,7 @@
 import { Timestamp } from "firebase/firestore";
 
 import type { CreateMentor, Mentor } from "../types/mentor.types";
+import { mapMentor } from "./firestore-mappers";
 import {
   createDocument,
   deleteDocument,
@@ -11,10 +12,10 @@ import {
 
 const MENTORS_COLLECTION = "Mentors";
 
-const getMentors = async () => listDocuments<Mentor>(MENTORS_COLLECTION);
+const getMentors = async () => listDocuments<Mentor>(MENTORS_COLLECTION, mapMentor);
 
 const getMentor = async (id: string) =>
-  getDocument<Mentor>(MENTORS_COLLECTION, id);
+  getDocument<Mentor>(MENTORS_COLLECTION, id, mapMentor);
 
 const addMentor = async (mentor: CreateMentor) =>
   createDocument<Mentor, CreateMentor>(MENTORS_COLLECTION, mentor, {

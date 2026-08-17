@@ -4,6 +4,7 @@ import type {
   CreateEnrollment,
   Enrollment,
 } from "../types/enrollment.types";
+import { mapEnrollment } from "./firestore-mappers";
 import {
   createDocument,
   deleteDocument,
@@ -15,10 +16,10 @@ import {
 const ENROLLMENTS_COLLECTION = "Enrollments";
 
 const getEnrollments = async () =>
-  listDocuments<Enrollment>(ENROLLMENTS_COLLECTION);
+  listDocuments<Enrollment>(ENROLLMENTS_COLLECTION, mapEnrollment);
 
 const getEnrollment = async (id: string) =>
-  getDocument<Enrollment>(ENROLLMENTS_COLLECTION, id);
+  getDocument<Enrollment>(ENROLLMENTS_COLLECTION, id, mapEnrollment);
 
 const addEnrollment = async (enrollment: CreateEnrollment) => {
   const enrollmentId = `${enrollment.studentId}_${enrollment.groupId}`;

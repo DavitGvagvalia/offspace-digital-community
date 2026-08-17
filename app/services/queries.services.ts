@@ -6,68 +6,44 @@ import {
   where,
 } from "firebase/firestore";
 
-import { db } from "../../firebase";
+import { db } from "../lib/firebase";
 import type { Attendance } from "../types/attendance.types";
 import type { Enrollment } from "../types/enrollment.types";
 import type { Group } from "../types/group.types";
-import type { Lesson } from "../types/lesson.types";
-import { getLesson } from "./lessons.services";
+import { mapAttendance, mapEnrollment, mapGroup } from "./firestore-mappers";
 
 const ATTENDANCES_COLLECTION = "Attendances";
 const ENROLLMENTS_COLLECTION = "Enrollments";
 const GROUPS_COLLECTION = "Groups";
 
-type AttendedLesson = {
-  attendance: Attendance;
-  lesson: Lesson;
-};
-
-async function getAttendedLessonsByStudent(
-  studentId: string,
-): Promise<AttendedLesson[]> {
+async function getAttendancesByStudent(studentId: string): Promise<Attendance[]> {
   const attendanceQuery = query(
     collection(db, ATTENDANCES_COLLECTION),
     where("studentId", "==", studentId),
   );
   const attendanceSnapshot = await getDocs(attendanceQuery);
-  const attendanceRecords = attendanceSnapshot.docs.map((document) => ({
-    id: document.id,
-    ...document.data(),
-  })) as Attendance[];
 
-  const attendedLessons = await Promise.all(
-    attendanceRecords.map(async (attendance) => {
-      const lesson = await getLesson(
-        attendance.courseId,
-        attendance.groupId,
-        attendance.lessonId,
-      );
-
-      if (!lesson) {
-        return null;
-      }
-
-      return {
-        attendance,
-        lesson,
-      };
-    }),
-  );
-
-  return attendedLessons
-    .filter((attendedLesson): attendedLesson is AttendedLesson =>
-      Boolean(attendedLesson),
-    )
-    .sort(
-      (firstLesson, secondLesson) =>
-        firstLesson.lesson.date.toMillis() - secondLesson.lesson.date.toMillis(),
-    );
+  return attendanceSnapshot.docs
+    .map((document) => mapAttendance(document.id, document.data()))
+    .filter((attendance): attendance is Attendance => Boolean(attendance));
 }
 
-async function getAttendedLessonDatesByStudent(studentId: string) {
-  const attendedLessons = await getAttendedLessonsByStudent(studentId);
+async function getAttendancesByStudentGroup(
+  studentId: string,
+  courseId: string,
+  groupId: string,
+): Promise<Attendance[]> {
+  const attendanceQuery = query(
+    collection(db, ATTENDANCES_COLLECTION),
+    where("studentId", "==", studentId),
+    where("courseId", "==", courseId),
+    where("groupId", "==", groupId),
+  );
+  const attendanceSnapshot = await getDocs(attendanceQuery);
 
-  return attendedLessons.map((attendedLesson) => attendedLesson.lesson.date);
+  return attendanceSnapshot.docs
+    .map((document) => mapAttendance(document.id, document.data()))
+    .filter((attendance): attendance is Attendance => Boolean(attendance));
 }
 
 async function getEnrollmentsByStudent(
@@ -79,36 +55,43 @@ async function getEnrollmentsByStudent(
   );
   const enrollmentsSnapshot = await getDocs(enrollmentsQuery);
 
-  return enrollmentsSnapshot.docs.map((document) => ({
-    id: document.id,
-    ...document.data(),
-  })) as Enrollment[];
+  return enrollmentsSnapshot.docs
+    .map((document) => mapEnrollment(document.id, document.data()))
+    .filter((enrollment): enrollment is Enrollment => Boolean(enrollment));
 }
 
-async function getEnrollmentsByGroup(groupId: string): Promise<Enrollment[]> {
+async function getEnrollmentsByAssignedGroup(
+  courseId: string,
+  groupId: string,
+  mentorId: string,
+): Promise<Enrollment[]> {
   const enrollmentsQuery = query(
     collection(db, ENROLLMENTS_COLLECTION),
+    where("courseId", "==", courseId),
     where("groupId", "==", groupId),
+    where("mentorId", "==", mentorId),
   );
   const enrollmentsSnapshot = await getDocs(enrollmentsQuery);
 
-  return enrollmentsSnapshot.docs.map((document) => ({
-    id: document.id,
-    ...document.data(),
-  })) as Enrollment[];
+  return enrollmentsSnapshot.docs
+    .map((document) => mapEnrollment(document.id, document.data()))
+    .filter((enrollment): enrollment is Enrollment => Boolean(enrollment));
 }
 
-async function getAttendancesByGroup(groupId: string): Promise<Attendance[]> {
+async function getAttendancesByGroup(
+  courseId: string,
+  groupId: string,
+): Promise<Attendance[]> {
   const attendancesQuery = query(
     collection(db, ATTENDANCES_COLLECTION),
+    where("courseId", "==", courseId),
     where("groupId", "==", groupId),
   );
   const attendancesSnapshot = await getDocs(attendancesQuery);
 
-  return attendancesSnapshot.docs.map((document) => ({
-    id: document.id,
-    ...document.data(),
-  })) as Attendance[];
+  return attendancesSnapshot.docs
+    .map((document) => mapAttendance(document.id, document.data()))
+    .filter((attendance): attendance is Attendance => Boolean(attendance));
 }
 
 async function getGroupsByMentor(mentorId: string): Promise<Group[]> {
@@ -118,10 +101,9 @@ async function getGroupsByMentor(mentorId: string): Promise<Group[]> {
   );
   const groupsSnapshot = await getDocs(groupsQuery);
 
-  return groupsSnapshot.docs.map((document) => ({
-    id: document.id,
-    ...document.data(),
-  })) as Group[];
+  return groupsSnapshot.docs
+    .map((document) => mapGroup(document.id, document.data()))
+    .filter((group): group is Group => Boolean(group));
 }
 
 
@@ -149,10 +131,9 @@ async function getGroupsByMentor(mentorId: string): Promise<Group[]> {
 
 export {
   getAttendancesByGroup,
-  getAttendedLessonDatesByStudent,
-  getAttendedLessonsByStudent,
+  getAttendancesByStudent,
+  getAttendancesByStudentGroup,
   getEnrollmentsByStudent,
-  getEnrollmentsByGroup,
+  getEnrollmentsByAssignedGroup,
   getGroupsByMentor,
-  type AttendedLesson,
 };
