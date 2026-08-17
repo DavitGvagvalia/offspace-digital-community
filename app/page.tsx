@@ -39,6 +39,12 @@ export default function Home() {
           >
             Mentor login
           </Link>
+          <Link
+            href="/student/register"
+            className="rounded-sm border border-stone-200 bg-offwhite px-5 py-3 text-sm font-bold text-ink-soft transition hover:border-sage-300 hover:text-ink"
+          >
+            Student registration
+          </Link>
         </div>
       </section>
     </main>

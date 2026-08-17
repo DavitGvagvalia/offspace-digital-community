@@ -5,6 +5,7 @@ Role-based schedule and attendance MVP for Offspace Digital Community.
 The current product scope is limited to:
 
 - student login, hub, lessons, enrolled courses, and read-only profile
+- student email/password registration with profile document creation
 - mentor login and assigned group schedule/attendance workspace
 - Firebase Auth email/password
 - Firestore-backed courses, groups, lessons, enrollments, students, mentors, and attendance

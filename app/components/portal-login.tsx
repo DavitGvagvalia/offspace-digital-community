@@ -143,6 +143,18 @@ export function PortalLogin({ role }: { role: PortalRole }) {
             >
               {isSubmitting ? "Signing in..." : "Continue"}
             </button>
+
+            {role === "student" ? (
+              <p className="mt-4 text-center text-sm text-ink-soft">
+                New student?{" "}
+                <Link
+                  href="/student/register"
+                  className="font-semibold text-forest hover:text-forest-light"
+                >
+                  Create an account
+                </Link>
+              </p>
+            ) : null}
           </form>
         </section>
       </div>

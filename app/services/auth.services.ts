@@ -1,12 +1,19 @@
-import { onAuthStateChanged, signOut, type User } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  deleteUser,
+  onAuthStateChanged,
+  signOut,
+  type User,
+} from "firebase/auth";
 
 import { auth } from "../lib/firebase";
 import type {
   PortalProfileByRole,
   PortalRole,
 } from "../types/auth.types";
+import type { Student } from "../types/student.types";
 import { getMentor } from "./mentors.services";
-import { getStudent } from "./students.services";
+import { addStudentWithId, getStudent } from "./students.services";
 import { loginWithEmailAndPassword } from "./utils";
 
 export const loginPath: Record<PortalRole, string> = {
@@ -16,6 +23,43 @@ export const loginPath: Record<PortalRole, string> = {
 
 export async function loginToPortal(email: string, password: string) {
   return loginWithEmailAndPassword(email, password);
+}
+
+export async function registerStudentAccount({
+  email,
+  password,
+  name,
+  lastName,
+  phone,
+}: {
+  email: string;
+  password: string;
+  name: string;
+  lastName: string;
+  phone?: string;
+}): Promise<Student> {
+  const credential = await createUserWithEmailAndPassword(
+    auth,
+    email,
+    password,
+  );
+
+  try {
+    return await addStudentWithId(credential.user.uid, {
+      name,
+      lastName,
+      email,
+      ...(phone ? { phone } : {}),
+    });
+  } catch (profileError) {
+    try {
+      await deleteUser(credential.user);
+    } catch {
+      await signOut(auth);
+    }
+
+    throw profileError;
+  }
 }
 
 export function subscribeToAuthState(callback: (user: User | null) => void) {

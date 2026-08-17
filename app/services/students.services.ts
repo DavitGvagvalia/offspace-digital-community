@@ -22,6 +22,16 @@ const addStudent = async (student: CreateStudent) =>
     createdAt: Timestamp.now(),
   });
 
+const addStudentWithId = async (id: string, student: CreateStudent) =>
+  createDocument<Student, CreateStudent>(
+    STUDENTS_COLLECTION,
+    student,
+    {
+      createdAt: Timestamp.now(),
+    },
+    id,
+  );
+
 const updateStudent = async (id: string, student: Partial<CreateStudent>) =>
   updateDocument<Student>(STUDENTS_COLLECTION, id, student, {
     updatedAt: Timestamp.now(),
@@ -33,6 +43,7 @@ const deleteStudent = async (id: string) =>
 
 export {
   addStudent,
+  addStudentWithId,
   deleteStudent,
   getStudent,
   getStudents,
