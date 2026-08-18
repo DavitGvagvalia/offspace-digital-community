@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
-import { registerStudentAccount } from "../../services/auth.services";
+import { registerStudentAccount } from "../_data/auth";
 import { MascotBackground } from "../../components/mascot-background";
 
 export function StudentRegistration() {

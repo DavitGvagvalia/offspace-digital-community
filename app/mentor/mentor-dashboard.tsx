@@ -5,9 +5,9 @@ import { useEffect, useMemo, useState } from "react";
 import { AccessError, LoadingState } from "../components/auth-states";
 import { StatePanel } from "../components/state-panel";
 import { useRequiredProfile } from "../components/use-required-profile";
-import { addAttendance, deleteAttendance } from "../services/attendance.services";
-import { getMentorGroupWorkspaces } from "../services/mentor-workspace.services";
-import type { MentorGroupWorkspace } from "../types/mentor-workspace.types";
+import { addAttendance, deleteAttendance } from "./_data/attendance";
+import { getMentorGroupWorkspaces } from "./_data/workspace";
+import type { MentorGroupWorkspace } from "./_types/workspace";
 import {
   GroupWorkspace,
   MentorGroupList,

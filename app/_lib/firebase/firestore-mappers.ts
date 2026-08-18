@@ -1,12 +1,12 @@
 import { Timestamp, type DocumentData } from "firebase/firestore";
 
-import type { Attendance } from "../types/attendance.types";
-import type { Course } from "../types/course.types";
-import type { Enrollment, EnrollmentStatus } from "../types/enrollment.types";
-import type { Group } from "../types/group.types";
-import type { Lesson } from "../types/lesson.types";
-import type { Mentor } from "../types/mentor.types";
-import type { Student } from "../types/student.types";
+import type { Attendance } from "../../_types/attendance";
+import type { Course } from "../../_types/course";
+import type { Enrollment, EnrollmentStatus } from "../../_types/enrollment";
+import type { Group } from "../../_types/group";
+import type { Lesson } from "../../_types/lesson";
+import type { Mentor } from "../../_types/mentor";
+import type { Student } from "../../_types/student";
 
 type Mapper<T> = (id: string, data: DocumentData) => T | null;
 

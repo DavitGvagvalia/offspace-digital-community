@@ -1,14 +1,14 @@
-import type { MentorGroupWorkspace } from "../types/mentor-workspace.types";
-import type { Lesson } from "../types/lesson.types";
-import type { Student } from "../types/student.types";
-import { getCourse } from "./courses.services";
-import { getLessons } from "./lessons.services";
+import { getCourse } from "../../_data/courses.repository";
+import { getLessons } from "../../_data/lessons.repository";
 import {
   getAttendancesByGroup,
   getEnrollmentsByAssignedGroup,
   getGroupsByMentor,
-} from "./queries.services";
-import { getStudent } from "./students.services";
+} from "../../_data/queries.repository";
+import { getStudent } from "../../_data/students.repository";
+import type { Lesson } from "../../_types/lesson";
+import type { Student } from "../../_types/student";
+import type { MentorGroupWorkspace } from "../_types/workspace";
 
 export async function getMentorGroupWorkspaces(
   mentorId: string,

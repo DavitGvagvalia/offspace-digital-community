@@ -6,11 +6,15 @@ import {
   where,
 } from "firebase/firestore";
 
-import { db } from "../lib/firebase";
-import type { Attendance } from "../types/attendance.types";
-import type { Enrollment } from "../types/enrollment.types";
-import type { Group } from "../types/group.types";
-import { mapAttendance, mapEnrollment, mapGroup } from "./firestore-mappers";
+import { db } from "../_lib/firebase/client";
+import {
+  mapAttendance,
+  mapEnrollment,
+  mapGroup,
+} from "../_lib/firebase/firestore-mappers";
+import type { Attendance } from "../_types/attendance";
+import type { Enrollment } from "../_types/enrollment";
+import type { Group } from "../_types/group";
 
 const ATTENDANCES_COLLECTION = "Attendances";
 const ENROLLMENTS_COLLECTION = "Enrollments";

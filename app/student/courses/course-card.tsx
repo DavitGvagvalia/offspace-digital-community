@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import type { StudentCourseSummary } from "../../types/student-course-summary.types";
+import type { StudentCourseSummary } from "../_types/course-summary";
 
 export function CourseCard({ summary }: { summary: StudentCourseSummary }) {
   const { enrollment, course, group, mentor } = summary;

@@ -1,7 +1,7 @@
-import type { Attendance } from "../types/attendance.types";
-import type { Lesson } from "../types/lesson.types";
-import type { MentorGroupWorkspace } from "../types/mentor-workspace.types";
-import type { Student } from "../types/student.types";
+import type { Attendance } from "../_types/attendance";
+import type { Lesson } from "../_types/lesson";
+import type { MentorGroupWorkspace } from "./_types/workspace";
+import type { Student } from "../_types/student";
 
 export type AttendanceToggleRequest = {
   groupId: string;

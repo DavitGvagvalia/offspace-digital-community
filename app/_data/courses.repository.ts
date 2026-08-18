@@ -1,15 +1,15 @@
 import { collection, getDoc, getDocs, doc, Timestamp } from "firebase/firestore";
 
-import { db } from "../lib/firebase";
-import type { Course, CreateCourse } from "../types/course.types";
-import { mapCourse } from "./firestore-mappers";
+import { db } from "../_lib/firebase/client";
+import { mapCourse } from "../_lib/firebase/firestore-mappers";
+import type { Course, CreateCourse } from "../_types/course";
 import {
   createDocument,
   deleteDocument,
   getDocument,
   listDocuments,
   updateDocument,
-} from "./utils";
+} from "../_lib/firebase/firestore-utils";
 
 const COURSES_COLLECTION = "Courses";
 

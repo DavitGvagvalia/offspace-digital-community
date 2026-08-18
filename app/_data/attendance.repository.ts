@@ -1,14 +1,14 @@
 import { Timestamp } from "firebase/firestore";
 
-import type { Attendance, CreateAttendance } from "../types/attendance.types";
-import { mapAttendance } from "./firestore-mappers";
+import { mapAttendance } from "../_lib/firebase/firestore-mappers";
+import type { Attendance, CreateAttendance } from "../_types/attendance";
 import {
   createDocument,
   deleteDocument,
   getDocument,
   listDocuments,
   updateDocument,
-} from "./utils";
+} from "../_lib/firebase/firestore-utils";
 
 const ATTENDANCES_COLLECTION = "Attendances";
 

@@ -1,8 +1,8 @@
-import type { StudentCourseSummary } from "../types/student-course-summary.types";
-import { getCourse } from "./courses.services";
-import { getGroup } from "./groups.services";
-import { getMentor } from "./mentors.services";
-import { getEnrollmentsByStudent } from "./queries.services";
+import { getCourse } from "../../_data/courses.repository";
+import { getGroup } from "../../_data/groups.repository";
+import { getMentor } from "../../_data/mentors.repository";
+import { getEnrollmentsByStudent } from "../../_data/queries.repository";
+import type { StudentCourseSummary } from "../_types/course-summary";
 
 export async function getStudentCourseSummaries(
   studentId: string,

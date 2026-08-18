@@ -1,14 +1,14 @@
 import { Timestamp } from "firebase/firestore";
 
-import type { CreateLesson, Lesson } from "../types/lesson.types";
-import { mapLesson } from "./firestore-mappers";
+import { mapLesson } from "../_lib/firebase/firestore-mappers";
+import type { CreateLesson, Lesson } from "../_types/lesson";
 import {
   createDocument,
   deleteDocument,
   getDocument,
   listDocuments,
   updateDocument,
-} from "./utils";
+} from "../_lib/firebase/firestore-utils";
 
 const LESSONS_COLLECTION = "Lessons";
 

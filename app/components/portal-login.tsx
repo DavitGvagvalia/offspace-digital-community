@@ -6,11 +6,11 @@ import { FormEvent, useState } from "react";
 
 import {
   getFirebaseLoginMessage,
-  hasPortalAccess,
-  loginToPortal,
+  loginWithEmailAndPassword,
   signOutCurrentUser,
-} from "../services/auth.services";
-import type { PortalCopy, PortalRole } from "../types/auth.types";
+} from "../_lib/firebase/auth";
+import { hasPortalAccess } from "../_data/portal-access.repository";
+import type { PortalCopy, PortalRole } from "../_types/auth";
 import { MascotBackground } from "./mascot-background";
 
 const portalCopy: Record<PortalRole, PortalCopy> = {
@@ -47,7 +47,7 @@ export function PortalLogin({ role }: { role: PortalRole }) {
       setIsSubmitting(true);
       setError(null);
 
-      const user = await loginToPortal(email, password);
+      const user = await loginWithEmailAndPassword(email, password);
       const roleExists = await hasPortalAccess(role, user.uid);
 
       if (!roleExists) {

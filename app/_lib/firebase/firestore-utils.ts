@@ -11,9 +11,7 @@ import {
   type DocumentData,
 } from "firebase/firestore";
 
-import { signInWithEmailAndPassword } from "firebase/auth";
-
-import { auth, db } from "../lib/firebase";
+import { db } from "./client";
 
 type CollectionPath = string | string[];
 type DocumentMapper<T> = (id: string, data: DocumentData) => T | null;
@@ -133,13 +131,6 @@ async function deleteDocument(
   await deleteDoc(doc(db, getCollectionPath(collectionName), id));
 }
 
-
-const loginWithEmailAndPassword = async (email: string, password: string) => {
-  const { user } = await signInWithEmailAndPassword(auth, email, password);
-  return user;
-};
-
-
 export {
   createDocument,
   deleteDocument,
@@ -148,6 +139,5 @@ export {
   getDocument,
   listDocuments,
   updateDocument,
-  loginWithEmailAndPassword,
   type DocumentMapper,
 };

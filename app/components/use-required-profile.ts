@@ -3,17 +3,21 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { getPortalProfile } from "../_data/portal-access.repository";
 import {
-  getPortalProfile,
-  loginPath,
   signOutCurrentUser,
   subscribeToAuthState,
-} from "../services/auth.services";
+} from "../_lib/firebase/auth";
 import type {
   PortalProfileByRole,
   PortalRole,
   RequiredProfileState,
-} from "../types/auth.types";
+} from "../_types/auth";
+
+const loginPath: Record<PortalRole, string> = {
+  student: "/student/login",
+  mentor: "/mentor/login",
+};
 
 export function useRequiredProfile<T extends PortalRole>(
   role: T,

@@ -1,7 +1,7 @@
 import type { Timestamp } from "firebase/firestore";
 
-import type { Course } from "../../types/course.types";
-import type { StudentLesson } from "./lesson-types";
+import type { Course } from "../../_types/course";
+import type { StudentLesson } from "../_types/lessons";
 
 export function getCourseTitle(course: Course) {
   return course.name || course.id;

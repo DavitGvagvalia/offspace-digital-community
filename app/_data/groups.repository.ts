@@ -1,14 +1,14 @@
 import { Timestamp } from "firebase/firestore";
 
-import type { CreateGroup, Group } from "../types/group.types";
-import { mapGroup } from "./firestore-mappers";
+import { mapGroup } from "../_lib/firebase/firestore-mappers";
+import type { CreateGroup, Group } from "../_types/group";
 import {
   createDocument,
   deleteDocument,
   getDocument,
   listDocuments,
   updateDocument,
-} from "./utils";
+} from "../_lib/firebase/firestore-utils";
 
 const GROUPS_COLLECTION = "Groups";
 

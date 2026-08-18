@@ -1,14 +1,14 @@
 import { Timestamp } from "firebase/firestore";
 
-import type { CreateStudent, Student } from "../types/student.types";
-import { mapStudent } from "./firestore-mappers";
+import { mapStudent } from "../_lib/firebase/firestore-mappers";
+import type { CreateStudent, Student } from "../_types/student";
 import {
   createDocument,
   deleteDocument,
   getDocument,
   listDocuments,
   updateDocument,
-} from "./utils";
+} from "../_lib/firebase/firestore-utils";
 
 const STUDENTS_COLLECTION = "Students";
 

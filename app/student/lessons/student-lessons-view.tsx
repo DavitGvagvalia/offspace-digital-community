@@ -5,10 +5,10 @@ import Link from "next/link";
 
 import { AccessError, LoadingState } from "../../components/auth-states";
 import { useRequiredProfile } from "../../components/use-required-profile";
+import { getStudentLessonCourses } from "../_data/lessons";
+import type { StudentCourse } from "../_types/lessons";
 import { CourseTabs, LessonsPanel, StatePanel } from "./lesson-components";
 import { sortStudentLessons } from "./lesson-utils";
-import { getStudentLessonCourses } from "./student-lessons-data";
-import type { StudentCourse } from "./lesson-types";
 
 export function StudentLessonsView() {
   const { user, profile, isLoading: isAuthLoading, error: authError } =

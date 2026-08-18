@@ -1,14 +1,14 @@
 import { Timestamp } from "firebase/firestore";
 
-import type { CreateMentor, Mentor } from "../types/mentor.types";
-import { mapMentor } from "./firestore-mappers";
+import { mapMentor } from "../_lib/firebase/firestore-mappers";
+import type { CreateMentor, Mentor } from "../_types/mentor";
 import {
   createDocument,
   deleteDocument,
   getDocument,
   listDocuments,
   updateDocument,
-} from "./utils";
+} from "../_lib/firebase/firestore-utils";
 
 const MENTORS_COLLECTION = "Mentors";
 

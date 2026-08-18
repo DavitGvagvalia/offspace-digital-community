@@ -3,15 +3,15 @@ import { Timestamp } from "firebase/firestore";
 import type {
   CreateEnrollment,
   Enrollment,
-} from "../types/enrollment.types";
-import { mapEnrollment } from "./firestore-mappers";
+} from "../_types/enrollment";
+import { mapEnrollment } from "../_lib/firebase/firestore-mappers";
 import {
   createDocument,
   deleteDocument,
   getDocument,
   listDocuments,
   updateDocument,
-} from "./utils";
+} from "../_lib/firebase/firestore-utils";
 
 const ENROLLMENTS_COLLECTION = "Enrollments";
 

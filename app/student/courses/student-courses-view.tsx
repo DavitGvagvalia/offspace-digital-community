@@ -6,8 +6,8 @@ import { useEffect, useState } from "react";
 import { AccessError, LoadingState } from "../../components/auth-states";
 import { StatePanel } from "../../components/state-panel";
 import { useRequiredProfile } from "../../components/use-required-profile";
-import { getStudentCourseSummaries } from "../../services/student-courses.services";
-import type { StudentCourseSummary } from "../../types/student-course-summary.types";
+import { getStudentCourseSummaries } from "../_data/courses";
+import type { StudentCourseSummary } from "../_types/course-summary";
 import { CourseCard } from "./course-card";
 
 export function StudentCoursesView() {

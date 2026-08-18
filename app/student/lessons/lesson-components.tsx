@@ -1,4 +1,4 @@
-import type { StudentCourse, StudentLesson } from "./lesson-types";
+import type { StudentCourse, StudentLesson } from "../_types/lessons";
 import { formatLessonDate, getCourseTitle } from "./lesson-utils";
 
 export function CourseTabs({

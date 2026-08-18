@@ -1,7 +1,7 @@
 import type { User } from "firebase/auth";
 
-import type { Mentor } from "./mentor.types";
-import type { Student } from "./student.types";
+import type { Mentor } from "./mentor";
+import type { Student } from "./student";
 
 export type PortalRole = "student" | "mentor";
 

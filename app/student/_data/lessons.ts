@@ -3,11 +3,11 @@ import { Timestamp } from "firebase/firestore";
 import {
   getAttendancesByStudentGroup,
   getEnrollmentsByStudent,
-} from "../../services/queries.services";
-import { getCourse } from "../../services/courses.services";
-import { getLessons } from "../../services/lessons.services";
-import type { Course } from "../../types/course.types";
-import type { StudentCourse } from "./lesson-types";
+} from "../../_data/queries.repository";
+import { getCourse } from "../../_data/courses.repository";
+import { getLessons } from "../../_data/lessons.repository";
+import type { Course } from "../../_types/course";
+import type { StudentCourse } from "../_types/lessons";
 
 export async function getStudentLessonCourses(
   studentId: string,
