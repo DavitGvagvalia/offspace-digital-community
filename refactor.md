@@ -1,5 +1,6 @@
 # Service And Type Refactor Plan
 
+
 ## Goal
 
 Restructure the current `app/services` and `app/types` buckets so code is organized around the three product flows:
@@ -8,11 +9,11 @@ Restructure the current `app/services` and `app/types` buckets so code is organi
 - `mentor` - assigned groups, lessons, students, and attendance management.
 - `super-admin` - trusted database control UI for managing core records.
 
-The refactor should make flow-specific code easy to find while keeping shared Firestore primitives centralized and reusable.
+The refactor should make flow-specific code easy to find while keeping low-level Firestore access centralized and reusable.
 
 ## Current Problem
 
-The project currently has two broad shared folders:
+The project currently has two broad folders:
 
 ```txt
 app/services/
@@ -39,7 +40,9 @@ app/types/mentor.types.ts
 app/types/student.types.ts
 ```
 
-This is fine for low-level data access, but it makes feature work harder because the app is used through role flows, not isolated database entities. Flow-level files already exist in a few places, for example:
+This is fine for low-level data access, but it makes feature work harder because the app is used through role flows, not isolated database entities.
+
+Flow-level files already exist in a few places:
 
 ```txt
 app/services/student-courses.services.ts
@@ -53,33 +56,40 @@ Those files should move closer to the flow that owns them.
 
 ## Target Structure
 
-Keep low-level shared infrastructure under `app/shared`. Put role-facing services and view models inside each role route folder.
+Use private folders under `app/` for non-route code. The underscore matters: it signals that these folders are implementation details, not route segments.
 
 ```txt
 app/
-  shared/
+  _lib/
     firebase/
       client.ts                 # current app/lib/firebase.ts, if renamed later
-      firestore-mappers.ts       # shared Firestore document mappers
+      firestore-mappers.ts       # Firestore document mappers
       firestore-utils.ts         # generic create/update/delete/get helpers
-    data/
-      attendance.repository.ts
-      courses.repository.ts
-      enrollments.repository.ts
-      groups.repository.ts
-      lessons.repository.ts
-      mentors.repository.ts
-      students.repository.ts
-      queries.repository.ts
-    types/
-      attendance.ts
-      auth.ts
-      course.ts
-      enrollment.ts
-      group.ts
-      lesson.ts
-      mentor.ts
-      student.ts
+
+  _data/
+    attendance.repository.ts
+    courses.repository.ts
+    enrollments.repository.ts
+    groups.repository.ts
+    lessons.repository.ts
+    mentors.repository.ts
+    students.repository.ts
+    queries.repository.ts
+
+  _types/
+    attendance.ts
+    auth.ts
+    course.ts
+    enrollment.ts
+    group.ts
+    lesson.ts
+    mentor.ts
+    student.ts
+
+  _shared/
+    components/
+    utils/
+    constants/
 
   student/
     _data/
@@ -134,55 +144,63 @@ app/
     mentor-add.ts
 ```
 
-## Ownership Rules
+## Naming Rules
 
-Use these rules when moving files:
+Do not use `shared` as a catch-all for domain code.
 
-- `app/shared/data/*` owns raw Firestore collection access and entity CRUD.
-- `app/shared/types/*` owns canonical database document shapes.
-- `app/student/_data/*` owns composed queries for the student experience.
+Use these meanings:
+
+- `app/_data/*` owns raw database access and repository functions.
+- `app/_types/*` owns canonical database/domain document shapes.
+- `app/_lib/*` owns infrastructure clients and low-level helpers.
+- `app/_shared/*` owns generic reusable utilities or UI that are not specific to Offspace domain entities.
+- `app/student/_data/*` owns composed student use cases.
 - `app/student/_types/*` owns student-specific view models and UI data shapes.
-- `app/mentor/_data/*` owns composed queries and writes for the mentor experience.
+- `app/mentor/_data/*` owns composed mentor use cases and mentor-scoped writes.
 - `app/mentor/_types/*` owns mentor-specific view models and UI data shapes.
-- `app/super-admin/_data/*` owns super-admin database control actions.
+- `app/super-admin/_data/*` owns super-admin database control use cases.
 - `app/super-admin/_types/*` owns super-admin-only form and table models.
 
-Flow components should import from their own `_data` and `_types` folders first. They should only import directly from `app/shared/*` when they need canonical shared document types.
+Examples:
 
-## Shared Data Layer
+- `Student`, `Course`, `Enrollment`, `Lesson`, and `Attendance` belong in `app/_types`, not `app/_shared`.
+- Firestore repository functions belong in `app/_data`, not `app/_shared`.
+- Date formatting helpers, generic buttons, or reusable empty states may belong in `app/_shared`.
 
-The shared data layer should stay small and mechanical. It should not know about page workflows.
+## Root Data Layer
+
+The root data layer should stay small and mechanical. It should not know about page workflows.
 
 Move current entity services like this:
 
 ```txt
-app/services/courses.services.ts       -> app/shared/data/courses.repository.ts
-app/services/groups.services.ts        -> app/shared/data/groups.repository.ts
-app/services/lessons.services.ts       -> app/shared/data/lessons.repository.ts
-app/services/enrollments.services.ts   -> app/shared/data/enrollments.repository.ts
-app/services/attendance.services.ts    -> app/shared/data/attendance.repository.ts
-app/services/students.services.ts      -> app/shared/data/students.repository.ts
-app/services/mentors.services.ts       -> app/shared/data/mentors.repository.ts
-app/services/queries.services.ts       -> app/shared/data/queries.repository.ts
-app/services/firestore-mappers.ts      -> app/shared/firebase/firestore-mappers.ts
-app/services/utils.ts                  -> app/shared/firebase/firestore-utils.ts
-app/lib/firebase.ts                    -> app/shared/firebase/client.ts
+app/services/courses.services.ts       -> app/_data/courses.repository.ts
+app/services/groups.services.ts        -> app/_data/groups.repository.ts
+app/services/lessons.services.ts       -> app/_data/lessons.repository.ts
+app/services/enrollments.services.ts   -> app/_data/enrollments.repository.ts
+app/services/attendance.services.ts    -> app/_data/attendance.repository.ts
+app/services/students.services.ts      -> app/_data/students.repository.ts
+app/services/mentors.services.ts       -> app/_data/mentors.repository.ts
+app/services/queries.services.ts       -> app/_data/queries.repository.ts
+app/services/firestore-mappers.ts      -> app/_lib/firebase/firestore-mappers.ts
+app/services/utils.ts                  -> app/_lib/firebase/firestore-utils.ts
+app/lib/firebase.ts                    -> app/_lib/firebase/client.ts
 ```
 
 Move current canonical types like this:
 
 ```txt
-app/types/attendance.types.ts          -> app/shared/types/attendance.ts
-app/types/auth.types.ts                -> app/shared/types/auth.ts
-app/types/course.types.ts              -> app/shared/types/course.ts
-app/types/enrollment.types.ts          -> app/shared/types/enrollment.ts
-app/types/group.types.ts               -> app/shared/types/group.ts
-app/types/lesson.types.ts              -> app/shared/types/lesson.ts
-app/types/mentor.types.ts              -> app/shared/types/mentor.ts
-app/types/student.types.ts             -> app/shared/types/student.ts
+app/types/attendance.types.ts          -> app/_types/attendance.ts
+app/types/auth.types.ts                -> app/_types/auth.ts
+app/types/course.types.ts              -> app/_types/course.ts
+app/types/enrollment.types.ts          -> app/_types/enrollment.ts
+app/types/group.types.ts               -> app/_types/group.ts
+app/types/lesson.types.ts              -> app/_types/lesson.ts
+app/types/mentor.types.ts              -> app/_types/mentor.ts
+app/types/student.types.ts             -> app/_types/student.ts
 ```
 
-Keep collection names, Firestore paths, mappers, and generic document helpers in this shared layer so path strings are not duplicated across flows.
+Keep collection names, Firestore paths, mappers, and generic document helpers in this root layer so path strings are not duplicated across flows.
 
 ## Student Flow
 
@@ -211,7 +229,8 @@ Rules:
 
 - Student reads must derive `studentId` from the authenticated Firebase user.
 - Student pages should not import mentor or super-admin flow modules.
-- Student UI may import shared canonical types such as `Course`, `Lesson`, or `Attendance` when needed.
+- Student UI may import canonical types from `app/_types` when needed.
+- Student data modules may import repositories from `app/_data`.
 - Student attendance reads must remain scoped to the current student.
 
 ## Mentor Flow
@@ -234,12 +253,14 @@ app/services/mentor-workspace.services.ts         -> app/mentor/_data/workspace.
 app/types/mentor-workspace.types.ts               -> app/mentor/_types/workspace.ts
 ```
 
-Attendance write operations can be wrapped in `app/mentor/_data/attendance.ts` even if the low-level implementation remains in `app/shared/data/attendance.repository.ts`.
+Attendance write operations can be wrapped in `app/mentor/_data/attendance.ts` even if the low-level implementation remains in `app/_data/attendance.repository.ts`.
 
 Rules:
 
 - Mentor reads must derive `mentorId` from the authenticated Firebase user.
 - Mentor pages should not import student or super-admin flow modules.
+- Mentor UI may import canonical types from `app/_types` when needed.
+- Mentor data modules may import repositories from `app/_data`.
 - Mentor workspace data should expose the exact objects needed by the dashboard: group, course, lessons, enrolled students, and attendance records.
 - Mentor write access must stay limited to attendance for assigned groups unless a future product change explicitly expands the mentor role.
 
@@ -277,6 +298,8 @@ Rules:
 
 - Super-admin UI can manage all core database entities.
 - Super-admin code should not be used by student or mentor flows.
+- Super-admin UI may import canonical types from `app/_types`.
+- Super-admin data modules may import repositories from `app/_data`.
 - Super-admin writes must use a trusted authorization path before production.
 - Do not rely on client-side route checks for super-admin authorization.
 - Before production, add Firestore Security Rules and a reliable role source, such as Firebase custom claims or a locked-down admin profile collection.
@@ -290,9 +313,9 @@ Current `app/services/auth.services.ts` mixes shared auth helpers with role-spec
 Recommended split:
 
 ```txt
-app/shared/auth/firebase-auth.ts       # sign in, sign out, subscribeToAuthState, error mapping
-app/shared/auth/portal-access.ts       # getPortalProfile, hasPortalAccess
-app/shared/types/auth.ts               # PortalRole, PortalCopy, RequiredProfileState
+app/_lib/firebase/auth.ts              # sign in, sign out, subscribeToAuthState, error mapping
+app/_data/portal-access.repository.ts  # getPortalProfile, hasPortalAccess
+app/_types/auth.ts                     # PortalRole, PortalCopy, RequiredProfileState
 app/student/_data/auth.ts              # student-specific auth wrappers
 app/mentor/_data/auth.ts               # mentor-specific auth wrappers
 app/super-admin/_data/auth.ts          # super-admin-specific auth wrappers, when implemented
@@ -311,36 +334,46 @@ Only add that role when the UI and authorization model are implemented together.
 Allowed dependencies:
 
 ```txt
-student -> student/_data -> shared/data -> shared/firebase
-mentor -> mentor/_data -> shared/data -> shared/firebase
-super-admin -> super-admin/_data -> shared/data -> shared/firebase
-components -> shared/auth or flow-local data, depending on ownership
+app/student/*       -> app/student/_data -> app/_data -> app/_lib
+app/mentor/*        -> app/mentor/_data -> app/_data -> app/_lib
+app/super-admin/*   -> app/super-admin/_data -> app/_data -> app/_lib
+flow UI             -> app/_types for canonical document types
+flow UI             -> flow-local _types for view models
+generic UI/helpers  -> app/_shared
 ```
 
 Disallowed dependencies:
 
 ```txt
-student -> mentor
-student -> super-admin
-mentor -> student
-mentor -> super-admin
-shared -> student
-shared -> mentor
-shared -> super-admin
+app/student      -> app/mentor
+app/student      -> app/super-admin
+app/mentor       -> app/student
+app/mentor       -> app/super-admin
+app/super-admin  -> app/student
+app/super-admin  -> app/mentor
+app/_data        -> app/student
+app/_data        -> app/mentor
+app/_data        -> app/super-admin
+app/_types       -> app/student
+app/_types       -> app/mentor
+app/_types       -> app/super-admin
+app/_lib         -> app/student
+app/_lib         -> app/mentor
+app/_lib         -> app/super-admin
 ```
 
 This keeps role features independent and prevents accidental permission leaks.
 
 ## Migration Plan
 
-1. Create `app/shared/firebase`, `app/shared/data`, `app/shared/types`, and flow-local `_data` / `_types` folders.
-2. Move canonical entity types from `app/types` into `app/shared/types`.
-3. Move Firestore mappers and generic helpers into `app/shared/firebase`.
-4. Move entity CRUD services into `app/shared/data` and update imports.
+1. Create `app/_lib/firebase`, `app/_data`, `app/_types`, and flow-local `_data` / `_types` folders.
+2. Move canonical entity types from `app/types` into `app/_types`.
+3. Move Firestore mappers and generic helpers into `app/_lib/firebase`.
+4. Move entity CRUD services into `app/_data` and update imports.
 5. Move `student-courses.services.ts` and student lesson data/types into `app/student/_data` and `app/student/_types`.
 6. Move `mentor-workspace.services.ts` and mentor workspace types into `app/mentor/_data` and `app/mentor/_types`.
 7. Move or wrap super-admin database operations under `app/super-admin/_data`.
-8. Update route components to import from flow-local modules.
+8. Update route components to import from flow-local modules first, then from `app/_types` or `app/_shared` only when appropriate.
 9. Delete old `app/services` and `app/types` only after all imports are migrated.
 10. Run validation.
 
@@ -358,9 +391,11 @@ npm run build
 This refactor is complete when:
 
 - No route imports directly from old `app/services/*` or `app/types/*`.
-- Shared Firestore collection paths exist in one shared layer.
-- Student pages use only student-owned data modules plus shared canonical types.
-- Mentor pages use only mentor-owned data modules plus shared canonical types.
-- Super-admin pages use only super-admin-owned data modules plus shared canonical types.
+- Firestore collection paths exist in one root data/lib layer.
+- Canonical domain types live in `app/_types`.
+- Student pages use only student-owned data modules plus canonical types.
+- Mentor pages use only mentor-owned data modules plus canonical types.
+- Super-admin pages use only super-admin-owned data modules plus canonical types.
+- `app/_shared` does not contain domain repositories or domain document types.
 - Authorization still derives from authenticated Firebase users, not route params or hard-coded IDs.
 - Super-admin production access is protected by server-side authorization or Firestore rules.
