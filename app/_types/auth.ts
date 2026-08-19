@@ -2,8 +2,9 @@ import type { User } from "firebase/auth";
 
 import type { Mentor } from "./mentor";
 import type { Student } from "./student";
+import type { SuperAdmin } from "./super-admin";
 
-export type PortalRole = "student" | "mentor";
+export type PortalRole = "student" | "mentor" | "super-admin";
 
 export type PortalCopy = {
   label: string;
@@ -15,7 +16,9 @@ export type PortalCopy = {
 
 export type PortalProfileByRole<T extends PortalRole> = T extends "student"
   ? Student
-  : Mentor;
+  : T extends "mentor"
+    ? Mentor
+    : SuperAdmin;
 
 export type RequiredProfileState<T extends PortalRole> = {
   user: User | null;

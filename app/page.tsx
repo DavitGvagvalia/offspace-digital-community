@@ -45,6 +45,12 @@ export default function Home() {
           >
             Student registration
           </Link>
+          <Link
+            href="/super-admin/login"
+            className="rounded-sm border border-stone-200 bg-offwhite px-5 py-3 text-sm font-bold text-ink-soft transition hover:border-sage-300 hover:text-ink"
+          >
+            Super-admin login
+          </Link>
         </div>
       </section>
     </main>

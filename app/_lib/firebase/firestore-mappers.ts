@@ -7,6 +7,7 @@ import type { Group } from "../../_types/group";
 import type { Lesson } from "../../_types/lesson";
 import type { Mentor } from "../../_types/mentor";
 import type { Student } from "../../_types/student";
+import type { SuperAdmin } from "../../_types/super-admin";
 
 type Mapper<T> = (id: string, data: DocumentData) => T | null;
 
@@ -210,5 +211,15 @@ export const mapMentor: Mapper<Mentor> = (id, data) => {
     phone: optionalStringValue(data, "phone"),
     active,
     createdAt,
+  };
+};
+
+export const mapSuperAdmin: Mapper<SuperAdmin> = (id, data) => {
+  return {
+    id,
+    name: optionalStringValue(data, "name"),
+    lastName: optionalStringValue(data, "lastName"),
+    email: optionalStringValue(data, "email"),
+    createdAt: optionalTimestampValue(data, "createdAt"),
   };
 };

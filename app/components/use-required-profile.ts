@@ -17,6 +17,7 @@ import type {
 const loginPath: Record<PortalRole, string> = {
   student: "/student/login",
   mentor: "/mentor/login",
+  "super-admin": "/super-admin/login",
 };
 
 export function useRequiredProfile<T extends PortalRole>(

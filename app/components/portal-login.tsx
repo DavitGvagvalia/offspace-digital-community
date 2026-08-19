@@ -28,6 +28,13 @@ const portalCopy: Record<PortalRole, PortalCopy> = {
     emailLabel: "Mentor email",
     destination: "/mentor",
   },
+  "super-admin": {
+    label: "Super-admin portal",
+    title: "Super-admin login",
+    text: "Sign in to manage portal access for students and mentors.",
+    emailLabel: "Super-admin email",
+    destination: "/super-admin",
+  },
 };
 
 export function PortalLogin({ role }: { role: PortalRole }) {

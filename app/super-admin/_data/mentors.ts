@@ -15,6 +15,12 @@ import {
 import { Timestamp } from "firebase/firestore";
 
 import { createDocument } from "../../_lib/firebase/firestore-utils";
+import {
+  deleteMentor,
+  getMentor,
+  getMentors,
+  updateMentor,
+} from "../../_data/mentors.repository";
 import type { CreateMentor, Mentor } from "../../_types/mentor";
 
 const MENTORS_COLLECTION = "Mentors";
@@ -75,7 +81,6 @@ async function createMentorProfileWithAuthUid(
   uid: string,
   mentor: CreateMentor,
 ): Promise<Mentor> {
-  // This write requires a trusted super-admin path; current Firestore rules block public Mentors writes.
   return createDocument<Mentor, CreateMentor>(
     MENTORS_COLLECTION,
     mentor,
@@ -143,6 +148,10 @@ async function createMentorAuthAndProfile({
 export {
   createMentorAuthAndProfile,
   createMentorProfileWithAuthUid,
+  deleteMentor,
+  getMentor,
+  getMentors,
+  updateMentor,
   type MentorAuthCreationResult,
   type MentorAuthInput,
 };
