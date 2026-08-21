@@ -60,7 +60,7 @@ Required fields:
 Optional fields:
 
 - `description: string`
-- Target MVP mentor eligibility field pending implementation decision, likely `mentorIds: string[]`
+- `mentorIds: string[]`; defaults to an empty array in the mapper when absent
 - `updatedAt: Timestamp`
 
 Course availability for student enrollment should be derived from active courses. Super-admins and mentors decide outside the student flow whether a course is active based on whether mentors are ready to teach it.
@@ -100,27 +100,28 @@ Required fields:
 
 - `studentId: string`
 - `courseId: string`
-- `groupId: string`
-- `mentorId: string`
-- `price: number`
 - `status: "active" | "paused" | "completed" | "cancelled"`
 - `enrolledAt: Timestamp`
 
 Optional fields:
 
+- `groupId: string`
+- `mentorId: string`
+- `price: number`
 - `completedAt: Timestamp`
+- `updatedAt: Timestamp`
 
 Firestore rules include a helper that expects enrollment IDs in the format:
 
 ```text
-{studentId}_{groupId}
+{studentId}_{courseId}
 ```
 
-Keep this format if code or data writes enrollments used by Security Rules.
-
-Target MVP change: student course selection must be able to create an active enrollment before group assignment. That means `groupId` must become empty/null or otherwise optional for pending group assignment. The enrollment ID format also needs to change or be extended because `{studentId}_{groupId}` cannot represent a missing group safely.
-
-For the target MVP, enrollment status `active` means the student selected the course. It does not mean a group has already been assigned.
+This supports one enrollment per student per course before group assignment.
+Student-created enrollments include `studentId`, `courseId`, `status`, and
+`enrolledAt`. Assignment fields are added later by authorized support flows.
+Enrollment status `active` means the student selected the course. It does not
+mean a group has already been assigned.
 
 ### `Attendances/{attendanceId}`
 

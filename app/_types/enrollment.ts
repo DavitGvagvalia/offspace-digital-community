@@ -11,10 +11,10 @@ export interface Enrollment {
 
   studentId: string;
   courseId: string;
-  groupId: string;
-  mentorId: string;
+  groupId?: string;
+  mentorId?: string;
 
-  price: number;
+  price?: number;
 
   status: EnrollmentStatus;
 

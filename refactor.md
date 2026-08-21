@@ -89,19 +89,15 @@ Course documents currently contain course definition fields such as `name`, `des
 
 The target MVP needs course-level mentor eligibility metadata because mentors can be assigned to teach a course before groups are assigned.
 
-Candidate schema:
+Implemented schema:
 
 ```ts
 mentorIds: string[]
 ```
 
-Do not implement this blindly. Before coding, choose between:
-
-- `Courses/{courseId}.mentorIds`
-- `Courses/{courseId}/Mentors/{mentorId}`
-- a separate top-level course mentor assignment collection
-
-Choose based on Firestore rules, query needs, update frequency, and least-privilege access.
+This refactor uses `Courses/{courseId}.mentorIds` because course eligibility is
+course-scoped metadata, the current UI reads course documents directly, and the
+expected update frequency is low for the MVP.
 
 ### Enrollments
 
@@ -126,7 +122,9 @@ Refactor enrollment handling so:
 - `mentorId` can be empty/null until assignment unless a confirmed course-level mentor assignment is chosen at enrollment time.
 - Enrollment IDs no longer depend only on `{studentId}_{groupId}`, because `groupId` can be missing.
 
-Open implementation decision: choose a stable enrollment ID format, likely `{studentId}_{courseId}` for one enrollment per student per course unless future requirements allow repeated enrollment into the same course.
+Implemented enrollment ID format: `{studentId}_{courseId}` for one enrollment
+per student per course. Future repeated enrollment into the same course would
+require a new ID strategy.
 
 ### Attendance
 

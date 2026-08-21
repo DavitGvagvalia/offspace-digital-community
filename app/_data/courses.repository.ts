@@ -1,4 +1,12 @@
-import { collection, getDoc, getDocs, doc, Timestamp } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  Timestamp,
+  where,
+} from "firebase/firestore";
 
 import { db } from "../_lib/firebase/client";
 import { mapCourse } from "../_lib/firebase/firestore-mappers";
@@ -14,6 +22,18 @@ import {
 const COURSES_COLLECTION = "Courses";
 
 const getCourses = async () => listDocuments<Course>(COURSES_COLLECTION, mapCourse);
+
+const getActiveCourses = async () => {
+  const coursesQuery = query(
+    collection(db, COURSES_COLLECTION),
+    where("active", "==", true),
+  );
+  const coursesSnapshot = await getDocs(coursesQuery);
+
+  return coursesSnapshot.docs
+    .map((document) => mapCourse(document.id, document.data()))
+    .filter((course): course is Course => Boolean(course));
+};
 
 const getCourse = async (id: string) =>
   getDocument<Course>(COURSES_COLLECTION, id, mapCourse);
@@ -58,6 +78,7 @@ const getPrivateStudent = async (courseId: string, studentId: string) => {
 export {
   addCourse,
   deleteCourse,
+  getActiveCourses,
   getCourse,
   getCourses,
   getPrivateStudent,

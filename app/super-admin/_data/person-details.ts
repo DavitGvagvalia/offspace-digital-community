@@ -36,14 +36,20 @@ async function getStudentCourseDetails(
     enrollments.map(async (enrollment) => {
       const [course, lessons, attendances] = await Promise.all([
         getCourse(enrollment.courseId),
-        getLessons(enrollment.courseId, enrollment.groupId),
-        getAttendancesByStudentGroup(
-          studentId,
-          enrollment.courseId,
-          enrollment.groupId,
-        ),
+        enrollment.groupId
+          ? getLessons(enrollment.courseId, enrollment.groupId)
+          : Promise.resolve([]),
+        enrollment.groupId
+          ? getAttendancesByStudentGroup(
+              studentId,
+              enrollment.courseId,
+              enrollment.groupId,
+            )
+          : Promise.resolve([]),
       ]);
-      const group = await getGroup(enrollment.courseId, enrollment.groupId);
+      const group = enrollment.groupId
+        ? await getGroup(enrollment.courseId, enrollment.groupId)
+        : null;
       const lessonsById = new Map(
         lessons.map((lesson) => [lesson.id, lesson] as const),
       );

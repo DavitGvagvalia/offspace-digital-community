@@ -5,6 +5,7 @@ export interface Course {
 
   name: string;
   description?: string;
+  mentorIds: string[];
 
   active: boolean;
 
@@ -14,5 +15,7 @@ export interface Course {
 
 export type CreateCourse = Omit<
   Course,
-  "id" | "createdAt" | "updatedAt"
->;
+  "id" | "createdAt" | "updatedAt" | "mentorIds"
+> & {
+  mentorIds?: string[];
+};

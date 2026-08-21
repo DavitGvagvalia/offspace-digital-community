@@ -30,7 +30,9 @@ Target MVP behavior from the project owner:
 7. Enrollment can be created before group assignment; `groupId` should be empty/null until a mentor or super-admin assigns the student to a group.
 8. Courses without group assignment should show `Your mentor will assign group soon.` in student-facing course and lesson contexts.
 
-Implementation note: the current code and Firestore rules expect enrollment records to include `groupId` and `mentorId`, and current rules expect enrollment IDs in the format `{studentId}_{groupId}`. Implementing this target flow requires a data-model and rules update.
+Implementation note: enrollment records use the document ID format
+`{studentId}_{courseId}`. Student-created enrollments do not include `groupId`
+or `mentorId`; pending enrollments do not grant group or lesson access.
 
 ## Student Registration
 

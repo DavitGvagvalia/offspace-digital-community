@@ -698,9 +698,11 @@ function StudentDetails({
       </div>
 
       {details.map((detail) => {
-        const mentor = mentors.find(
-          (nextMentor) => nextMentor.id === detail.enrollment.mentorId,
-        );
+        const mentor = detail.enrollment.mentorId
+          ? mentors.find(
+              (nextMentor) => nextMentor.id === detail.enrollment.mentorId,
+            )
+          : null;
 
         return (
           <article
@@ -713,11 +715,14 @@ function StudentDetails({
                   {getCourseName(detail.course, detail.enrollment.courseId)}
                 </h3>
                 <p className="mt-1 text-sm text-ink-soft">
-                  Group: {getGroupName(detail.group, detail.enrollment.groupId)}
+                  Group:{" "}
+                  {detail.enrollment.groupId
+                    ? getGroupName(detail.group, detail.enrollment.groupId)
+                    : "Your mentor will assign group soon."}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-muted">
                   <span>Status: {detail.enrollment.status}</span>
-                  <span>Price: {detail.enrollment.price}</span>
+                  <span>Price: {detail.enrollment.price ?? "Not set"}</span>
                   <span>
                     Enrolled: {formatDateTime(detail.enrollment.enrolledAt)}
                   </span>
@@ -725,7 +730,7 @@ function StudentDetails({
                     Mentor:{" "}
                     {mentor
                       ? `${mentor.name} ${mentor.lastName}`
-                      : detail.enrollment.mentorId}
+                      : detail.enrollment.mentorId ?? "Not assigned"}
                   </span>
                 </div>
               </div>

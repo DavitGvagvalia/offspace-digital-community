@@ -28,14 +28,29 @@ function optionalStringValue(data: DocumentData, key: string) {
   return typeof value === "string" ? value : undefined;
 }
 
+function optionalNonEmptyStringValue(data: DocumentData, key: string) {
+  const value = optionalStringValue(data, key);
+  return value && value.trim() ? value : undefined;
+}
+
 function booleanValue(data: DocumentData, key: string) {
   const value = data[key];
   return typeof value === "boolean" ? value : null;
 }
 
-function numberValue(data: DocumentData, key: string) {
+function optionalNumberValue(data: DocumentData, key: string) {
   const value = data[key];
-  return typeof value === "number" ? value : null;
+  return typeof value === "number" ? value : undefined;
+}
+
+function optionalStringArrayValue(data: DocumentData, key: string) {
+  const value = data[key];
+
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.every((item) => typeof item === "string") ? value : [];
 }
 
 function timestampValue(data: DocumentData, key: string) {
@@ -69,6 +84,7 @@ export const mapCourse: Mapper<Course> = (id, data) => {
     id,
     name,
     description: optionalStringValue(data, "description"),
+    mentorIds: optionalStringArrayValue(data, "mentorIds"),
     active,
     createdAt,
     updatedAt: optionalTimestampValue(data, "updatedAt"),
@@ -121,18 +137,15 @@ export const mapLesson: Mapper<Lesson> = (id, data) => {
 export const mapEnrollment: Mapper<Enrollment> = (id, data) => {
   const studentId = stringValue(data, "studentId");
   const courseId = stringValue(data, "courseId");
-  const groupId = stringValue(data, "groupId");
-  const mentorId = stringValue(data, "mentorId");
-  const price = numberValue(data, "price");
+  const groupId = optionalNonEmptyStringValue(data, "groupId");
+  const mentorId = optionalNonEmptyStringValue(data, "mentorId");
+  const price = optionalNumberValue(data, "price");
   const status = enrollmentStatusValue(data, "status");
   const enrolledAt = timestampValue(data, "enrolledAt");
 
   if (
     !studentId ||
     !courseId ||
-    !groupId ||
-    !mentorId ||
-    price === null ||
     !status ||
     !enrolledAt
   ) {

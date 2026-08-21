@@ -18,12 +18,16 @@ export async function getStudentLessonCourses(
     enrollments.map(async (enrollment) => {
       const [course, scheduledLessons, attendanceRecords] = await Promise.all([
         getStudentCourse(enrollment.courseId),
-        getLessons(enrollment.courseId, enrollment.groupId),
-        getAttendancesByStudentGroup(
-          studentId,
-          enrollment.courseId,
-          enrollment.groupId,
-        ),
+        enrollment.groupId
+          ? getLessons(enrollment.courseId, enrollment.groupId)
+          : Promise.resolve([]),
+        enrollment.groupId
+          ? getAttendancesByStudentGroup(
+              studentId,
+              enrollment.courseId,
+              enrollment.groupId,
+            )
+          : Promise.resolve([]),
       ]);
       const attendanceByLessonId = new Map(
         attendanceRecords
@@ -36,10 +40,12 @@ export async function getStudentLessonCourses(
         course,
         enrollment,
         groupId: enrollment.groupId,
-        lessons: scheduledLessons.map((lesson) => ({
-          lesson,
-          attendance: attendanceByLessonId.get(lesson.id) ?? null,
-        })),
+        lessons: scheduledLessons
+          .filter((lesson) => lesson.date.toMillis() <= Date.now())
+          .map((lesson) => ({
+            lesson,
+            attendance: attendanceByLessonId.get(lesson.id) ?? null,
+          })),
       };
     }),
   );
@@ -55,6 +61,7 @@ async function getStudentCourse(courseId: string): Promise<Course> {
   return {
     id: courseId,
     name: courseId,
+    mentorIds: [],
     active: true,
     createdAt: Timestamp.fromMillis(0),
   };

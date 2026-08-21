@@ -4,6 +4,7 @@ import type { StudentCourseSummary } from "../_types/course-summary";
 
 export function CourseCard({ summary }: { summary: StudentCourseSummary }) {
   const { enrollment, course, group, mentor } = summary;
+  const isPendingGroupAssignment = !enrollment.groupId;
 
   return (
     <article className="rounded-md border border-stone-200 bg-offwhite p-5 shadow-sm">
@@ -15,12 +16,23 @@ export function CourseCard({ summary }: { summary: StudentCourseSummary }) {
           <h2 className="mt-2 text-2xl font-semibold text-ink">
             {course?.name ?? enrollment.courseId}
           </h2>
-          <p className="mt-2 text-sm text-ink-soft">
-            Group: {group?.name ?? enrollment.groupId}
-          </p>
-          <p className="mt-1 text-sm text-ink-soft">
-            Mentor: {mentor ? `${mentor.name} ${mentor.lastName}` : enrollment.mentorId}
-          </p>
+          {isPendingGroupAssignment ? (
+            <p className="mt-2 rounded-sm border border-warning/20 bg-warning/10 px-3 py-2 text-sm font-semibold text-warning">
+              Your mentor will assign group soon.
+            </p>
+          ) : (
+            <>
+              <p className="mt-2 text-sm text-ink-soft">
+                Group: {group?.name ?? enrollment.groupId}
+              </p>
+              <p className="mt-1 text-sm text-ink-soft">
+                Mentor:{" "}
+                {mentor
+                  ? `${mentor.name} ${mentor.lastName}`
+                  : enrollment.mentorId ?? "Not assigned"}
+              </p>
+            </>
+          )}
         </div>
         <Link
           href="/student/lessons"

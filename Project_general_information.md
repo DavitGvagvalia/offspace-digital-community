@@ -167,7 +167,7 @@ Important ID formats:
 - Student profile ID should match Firebase Auth UID.
 - Mentor profile ID should match Firebase Auth UID.
 - Super-admin profile ID should match Firebase Auth UID.
-- Firestore rules expect enrollment IDs in the format `{studentId}_{groupId}`.
+- Firestore rules expect enrollment IDs in the format `{studentId}_{courseId}`.
 - Attendance writes use IDs in the format `{studentId}_{lessonId}`.
 
 Important field summaries:
@@ -175,10 +175,10 @@ Important field summaries:
 - Students: `name`, `lastName`, optional `email`, optional `phone`, `createdAt`, optional `updatedAt`.
 - Mentors: `name`, `lastName`, optional `email`, optional `phone`, `active`, `createdAt`.
 - Super-admins: optional `name`, optional `lastName`, optional `email`, optional `createdAt`.
-- Courses: `name`, optional `description`, `active`, `createdAt`, optional `updatedAt`; target MVP also needs course-level mentor eligibility metadata, likely `mentorIds: string[]` unless a normalized assignment model is chosen before implementation.
+- Courses: `name`, optional `description`, `active`, `createdAt`, optional `mentorIds: string[]`, optional `updatedAt`.
 - Groups: `courseId`, optional `name`, `mentorId`, `active`, `createdAt`, optional `updatedAt`.
 - Lessons: `courseId`, `groupId`, optional `title`, optional `description`, `date`, `createdAt`, optional `updatedAt`.
-- Enrollments: `studentId`, `courseId`, `groupId`, `mentorId`, `price`, `status`, `enrolledAt`, optional `completedAt`; target MVP must allow `groupId` to be empty/null until group assignment.
+- Enrollments: `studentId`, `courseId`, `status`, `enrolledAt`, optional `groupId`, optional `mentorId`, optional `price`, optional `completedAt`, optional `updatedAt`.
 - Attendances: `studentId`, `courseId`, `groupId`, `lessonId`, `attendedAt`; MVP attendance is boolean attended/not attended.
 
 Enrollment statuses:
@@ -190,12 +190,12 @@ Enrollment statuses:
 
 Firestore mappers in `app/_lib/firebase/firestore-mappers.ts` return `null` when required fields are missing or invalid. Repository list calls filter those records out, so malformed Firestore documents can disappear from the UI without a visible error.
 
-Target MVP data-model changes required before implementation:
+Implemented target MVP data-model decisions:
 
-- Enrollments must support selected-course records before group assignment.
-- The current enrollment ID pattern `{studentId}_{groupId}` needs to change or be extended because group ID can be missing.
-- Course documents need a way to identify mentors eligible to teach that course. The current owner-proposed shape is a mentor ID array on the course document, but this should be planned against Firestore rule and query needs before code changes.
-- Student lesson queries must ignore future lessons and show only past lessons conducted in the student's assigned group.
+- Enrollments support selected-course records before group assignment.
+- Enrollment IDs use `{studentId}_{courseId}` for one enrollment per student per course.
+- Course documents represent mentor eligibility as `mentorIds: string[]`.
+- Student lesson queries ignore future lessons and show only past lessons conducted in the student's assigned group.
 
 ## Usage Summary
 
@@ -377,8 +377,8 @@ Known production limitations:
 29. Should mentors be able to view private students in this MVP?
 30. If private students are needed, what Firestore schema should represent them?
 31. How are courses and groups created today?
-32. What enrollment document ID format should replace or extend `{studentId}_{groupId}` when `groupId` is empty/null?
-33. Should course-to-mentor eligibility be stored as `Courses/{courseId}.mentorIds`, a subcollection, or a separate assignment collection?
+32. Should future repeated enrollment in the same course require changing the current `{studentId}_{courseId}` ID format?
+33. Should `Courses/{courseId}.mentorIds` stay sufficient if mentor eligibility updates become high-frequency or permission-sensitive?
 34. Should deleting a profile also disable or delete the Firebase Auth account?
 35. What data retention rules apply to attendance and enrollment records?
 36. Are there privacy or compliance requirements for student personal data?

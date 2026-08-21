@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 import type { StudentCourse, StudentLesson } from "../_types/lessons";
 import { formatLessonDate, getCourseTitle } from "./lesson-utils";
 
@@ -55,7 +59,9 @@ export function LessonsPanel({
             {getCourseTitle(selectedCourse.course)}
           </h2>
           <p className="mt-1 text-sm text-ink-soft">
-            Group {selectedCourse.groupId}
+            {selectedCourse.groupId
+              ? `Group ${selectedCourse.groupId}`
+              : "Pending group assignment"}
           </p>
         </div>
         <span className="rounded-xs bg-sage-50 px-3 py-2 text-xs font-bold text-ink-soft ring-1 ring-sage-200">
@@ -63,13 +69,18 @@ export function LessonsPanel({
         </span>
       </div>
 
-      {lessons.length === 0 ? (
+      {!selectedCourse.groupId ? (
         <StatePanel
-          title="No scheduled lessons"
-          text="This course is connected to the student, but no group lessons were found yet."
+          title="Group assignment pending"
+          text="Your mentor will assign group soon."
+        />
+      ) : lessons.length === 0 ? (
+        <StatePanel
+          title="No past lessons"
+          text="This course is connected to your group, but no past lessons were found yet."
         />
       ) : (
-        <div className="space-y-3">
+        <div className="relative space-y-4 before:absolute before:bottom-4 before:left-3 before:top-4 before:w-px before:bg-sage-200">
           {lessons.map((lesson) => (
             <LessonCard key={lesson.lesson.id} lesson={lesson} />
           ))}
@@ -81,17 +92,32 @@ export function LessonsPanel({
 
 export function LessonCard({ lesson }: { lesson: StudentLesson }) {
   const attended = Boolean(lesson.attendance);
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <article className="rounded-sm border border-stone-200 bg-ivory-light p-4">
+    <article className="group relative pl-10">
+      <span
+        className={`absolute left-0 top-4 z-10 h-6 w-6 rounded-full border-4 border-offwhite ${
+          attended ? "bg-success" : "bg-stone-300"
+        }`}
+        aria-hidden="true"
+      />
+      <button
+        type="button"
+        onClick={() => setIsOpen((currentValue) => !currentValue)}
+        className="w-full rounded-sm border border-stone-200 bg-ivory-light p-4 text-left transition hover:border-sage-300 focus:outline-none focus:ring-2 focus:ring-forest/20"
+        aria-expanded={isOpen}
+      >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-semibold text-ink">
-            {formatLessonDate(lesson.lesson.date)}
-          </p>
-          <p className="mt-1 text-sm text-ink-soft">
             {lesson.lesson.title ?? `Lesson ID: ${lesson.lesson.id}`}
           </p>
+          {lesson.lesson.description ? (
+            <p className="mt-1 text-sm text-ink-soft">
+              {lesson.lesson.description}
+            </p>
+          ) : null}
         </div>
         <span
           className={`inline-flex min-h-8 items-center rounded-xs px-3 py-1 text-xs font-bold ring-1 ${
@@ -100,9 +126,18 @@ export function LessonCard({ lesson }: { lesson: StudentLesson }) {
               : "bg-stone-100 text-stone-600 ring-stone-200"
           }`}
         >
-          {attended ? "Present" : "Not marked"}
+          {attended ? "Attended" : "Not attended"}
         </span>
       </div>
+      <div
+        className={`mt-3 rounded-xs border border-stone-200 bg-offwhite px-3 py-2 text-sm text-ink-soft ${
+          isOpen ? "block" : "hidden group-hover:block group-focus-within:block"
+        }`}
+      >
+        <p>Date: {formatLessonDate(lesson.lesson.date)}</p>
+        <p>Attendance: {attended ? "Attended" : "Not attended"}</p>
+      </div>
+      </button>
     </article>
   );
 }

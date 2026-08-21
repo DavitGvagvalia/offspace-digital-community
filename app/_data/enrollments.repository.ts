@@ -22,7 +22,7 @@ const getEnrollment = async (id: string) =>
   getDocument<Enrollment>(ENROLLMENTS_COLLECTION, id, mapEnrollment);
 
 const addEnrollment = async (enrollment: CreateEnrollment) => {
-  const enrollmentId = `${enrollment.studentId}_${enrollment.groupId}`;
+  const enrollmentId = `${enrollment.studentId}_${enrollment.courseId}`;
 
   return createDocument<Enrollment, CreateEnrollment>(
     ENROLLMENTS_COLLECTION,
@@ -37,7 +37,10 @@ const addEnrollment = async (enrollment: CreateEnrollment) => {
 const updateEnrollment = async (
   id: string,
   enrollment: Partial<CreateEnrollment>,
-) => updateDocument<Enrollment>(ENROLLMENTS_COLLECTION, id, enrollment);
+) =>
+  updateDocument<Enrollment>(ENROLLMENTS_COLLECTION, id, enrollment, {
+    updatedAt: Timestamp.now(),
+  });
 
 const deleteEnrollment = async (id: string) =>
   deleteDocument(ENROLLMENTS_COLLECTION, id);

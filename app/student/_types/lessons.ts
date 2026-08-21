@@ -12,6 +12,6 @@ export type StudentCourse = {
   id: string;
   course: Course;
   enrollment: Enrollment;
-  groupId: string;
+  groupId?: string;
   lessons: StudentLesson[];
 };

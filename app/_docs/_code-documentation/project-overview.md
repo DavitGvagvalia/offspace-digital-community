@@ -80,4 +80,6 @@ The project owner clarified the intended student MVP flow:
 - Attendance is boolean for the MVP: attended or not attended.
 - The courses page is the intended place for students to browse active available courses and enroll in additional courses after the initial no-enrollment flow.
 
-Implementation note: the current data model requires changes before this behavior can be implemented safely, because current enrollments require group and mentor IDs.
+Implementation note: enrollment records now support pending group assignment by
+using `{studentId}_{courseId}` document IDs and optional `groupId`/`mentorId`
+fields.

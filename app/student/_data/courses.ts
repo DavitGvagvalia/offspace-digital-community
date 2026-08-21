@@ -13,8 +13,10 @@ export async function getStudentCourseSummaries(
     enrollments.map(async (enrollment) => {
       const [course, group, mentor] = await Promise.all([
         getCourse(enrollment.courseId),
-        getGroup(enrollment.courseId, enrollment.groupId),
-        getMentor(enrollment.mentorId),
+        enrollment.groupId
+          ? getGroup(enrollment.courseId, enrollment.groupId)
+          : Promise.resolve(null),
+        enrollment.mentorId ? getMentor(enrollment.mentorId) : Promise.resolve(null),
       ]);
 
       return {
