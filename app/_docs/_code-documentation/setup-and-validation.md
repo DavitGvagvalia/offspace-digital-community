@@ -53,6 +53,23 @@ Current scripts:
 
 `npm test` is not a behavioral test suite yet. Add a real test runner before treating the project as behavior-tested.
 
+## UI Library Setup
+
+The project is configured for shadcn/ui-style components:
+
+- `components.json` stores shadcn/ui path and style configuration.
+- Add reusable generated components under `app/components/ui`.
+- Use `app/_lib/ui/utils.ts` for the shared `cn` helper.
+- Use Radix primitives directly when low-level accessible behavior is needed.
+- Use `lucide-react` for common UI icons.
+
+When adding shadcn/ui components, prefer targeted additions rather than a large
+bulk install. Example:
+
+```bash
+npx shadcn@latest add button dialog checkbox popover tooltip tabs
+```
+
 ## Firebase Rules
 
 Firestore rules live in `firestore.rules` and are referenced by `firebase.json`.
@@ -62,4 +79,3 @@ Before production use:
 - Run or add Firebase Emulator tests for the rules.
 - Confirm every query used by the client is allowed by rules and indexed where Firestore requires composite indexes.
 - Review the README note that the current client-read schema has least-privilege limitations for some profile and course lookups.
-

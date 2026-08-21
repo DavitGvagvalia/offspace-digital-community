@@ -60,7 +60,10 @@ Required fields:
 Optional fields:
 
 - `description: string`
+- Target MVP mentor eligibility field pending implementation decision, likely `mentorIds: string[]`
 - `updatedAt: Timestamp`
+
+Course availability for student enrollment should be derived from active courses. Super-admins and mentors decide outside the student flow whether a course is active based on whether mentors are ready to teach it.
 
 ### `Courses/{courseId}/Groups/{groupId}`
 
@@ -115,6 +118,10 @@ Firestore rules include a helper that expects enrollment IDs in the format:
 
 Keep this format if code or data writes enrollments used by Security Rules.
 
+Target MVP change: student course selection must be able to create an active enrollment before group assignment. That means `groupId` must become empty/null or otherwise optional for pending group assignment. The enrollment ID format also needs to change or be extended because `{studentId}_{groupId}` cannot represent a missing group safely.
+
+For the target MVP, enrollment status `active` means the student selected the course. It does not mean a group has already been assigned.
+
 ### `Attendances/{attendanceId}`
 
 Required fields:
@@ -124,6 +131,8 @@ Required fields:
 - `groupId: string`
 - `lessonId: string`
 - `attendedAt: Timestamp`
+
+Attendance is boolean in the MVP domain: attended or not attended. The current implementation represents attendance as the presence or absence of an attendance record for a student and lesson. If an explicit boolean field is added later, update types, mappers, write paths, rules, and UI states together.
 
 `app/_data/attendance.repository.ts` creates attendance IDs in the format:
 
@@ -146,4 +155,3 @@ When changing schema fields, update all of these together:
 - Repository write shape.
 - Firestore rules in `firestore.rules`.
 - Relevant UI display and empty/error states.
-

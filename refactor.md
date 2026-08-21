@@ -1,401 +1,201 @@
-# Service And Type Refactor Plan
+# MVP Refactor Goal
 
+Refactor the current codebase from the existing schedule/attendance implementation into the newly defined Offspace Digital Community MVP.
 
-## Goal
+The refactor must align runtime behavior, types, Firestore data access, Firestore rules, and documentation with the updated student MVP flow in `README.md`, `AGENTS.md`, `app/_docs`, and `Project_general_information.md`.
 
-Restructure the current `app/services` and `app/types` buckets so code is organized around the three product flows:
+## Product Target
 
-- `student` - student schedule, courses, profile, and personal attendance.
-- `mentor` - assigned groups, lessons, students, and attendance management.
-- `super-admin` - trusted database control UI for managing core records.
+The MVP remains a role-based schedule and attendance app with these core flows:
 
-The refactor should make flow-specific code easy to find while keeping low-level Firestore access centralized and reusable.
+- Student: account access, course selection/enrollment, enrolled course overview, past lesson timeline, and personal attendance.
+- Mentor: assigned teaching workspace, group assignment where applicable, lesson/attendance management for assigned students.
+- Super-admin: existing support flow for account access, course availability, mentor course assignment, and student group assignment where explicitly needed for the MVP.
 
-## Current Problem
+Do not expand into a general LMS, payments, messaging, homework, files, certificates, parent accounts, notifications, video lessons, analytics, marketplace, or other broader platform features.
 
-The project currently has two broad folders:
+## UI Refactor Priority
 
-```txt
-app/services/
-app/types/
+Use the configured shadcn/ui pattern as the primary way to build reusable UI for
+the MVP refactor.
+
+- Put shared generated/adapted components under `app/components/ui`.
+- Use `cn` from `app/_lib/ui/utils.ts`.
+- Use Radix primitives directly when shadcn components are too high-level or do not fit the workflow.
+- Use `lucide-react` icons for controls and actions.
+- Keep visual styling aligned with Offspace Tailwind tokens in `app/globals.css`.
+- Avoid adding another broad UI suite unless the workflow need is explicit.
+
+## Student MVP Refactor Requirements
+
+### First Student Portal Visit Without Enrollments
+
+When an authenticated student opens `/student`, the app must check for existing enrollments using the authenticated Firebase UID.
+
+If no enrollments exist:
+
+- Show an available-course selection block on the main student page.
+- List active courses from Firestore.
+- Allow selecting multiple courses.
+- Create one active enrollment per selected course.
+- Allow enrollment before group assignment.
+
+Enrollment status `active` means the student selected the course. It does not mean a mentor or group has already been assigned.
+
+### Pending Group Assignment
+
+The target MVP must support enrolled courses without a group assignment.
+
+For those courses:
+
+- `groupId` should be empty/null or otherwise explicitly optional in the enrollment model.
+- Student-facing pages must show:
+
+```text
+Your mentor will assign group soon.
 ```
 
-Most files inside those folders are entity-based:
+Current implementation constraint: existing types, mappers, Firestore rules, and queries require `groupId` and `mentorId` on enrollment records. Refactor these together before enabling pending group assignment.
 
-```txt
-app/services/attendance.services.ts
-app/services/auth.services.ts
-app/services/courses.services.ts
-app/services/enrollments.services.ts
-app/services/groups.services.ts
-app/services/lessons.services.ts
-app/services/mentors.services.ts
-app/services/students.services.ts
-app/types/attendance.types.ts
-app/types/course.types.ts
-app/types/enrollment.types.ts
-app/types/group.types.ts
-app/types/lesson.types.ts
-app/types/mentor.types.ts
-app/types/student.types.ts
-```
+### Student Lessons
 
-This is fine for low-level data access, but it makes feature work harder because the app is used through role flows, not isolated database entities.
+The student lessons page must:
 
-Flow-level files already exist in a few places:
+- Show all courses enrolled by the authenticated student.
+- For courses with an assigned group, show a vertical timeline of past lessons conducted in that group.
+- Exclude future lessons for this MVP.
+- Show lesson details on hover and tap/click.
+- Show lesson date and the student's attendance status.
+- Use boolean attendance semantics: attended or not attended.
+- For courses without an assigned group, show the pending group assignment message.
 
-```txt
-app/services/student-courses.services.ts
-app/services/mentor-workspace.services.ts
-app/types/student-course-summary.types.ts
-app/types/mentor-workspace.types.ts
-app/super-admin/mentor-add.ts
-```
+The student must never see another student's attendance.
 
-Those files should move closer to the flow that owns them.
+### Student Courses
 
-## Target Structure
+The student courses page must:
 
-Use private folders under `app/` for non-route code. The underscore matters: it signals that these folders are implementation details, not route segments.
+- Show the student's enrolled courses.
+- Show group assignment status.
+- Later support browsing active available courses and enrolling in additional courses.
 
-```txt
-app/
-  _lib/
-    firebase/
-      client.ts                 # current app/lib/firebase.ts, if renamed later
-      firestore-mappers.ts       # Firestore document mappers
-      firestore-utils.ts         # generic create/update/delete/get helpers
+Changing or removing already selected courses is intentionally deferred until after the first MVP behavior is implemented.
 
-  _data/
-    attendance.repository.ts
-    courses.repository.ts
-    enrollments.repository.ts
-    groups.repository.ts
-    lessons.repository.ts
-    mentors.repository.ts
-    students.repository.ts
-    queries.repository.ts
+## Data Model Refactor Requirements
 
-  _types/
-    attendance.ts
-    auth.ts
-    course.ts
-    enrollment.ts
-    group.ts
-    lesson.ts
-    mentor.ts
-    student.ts
+### Courses
 
-  _shared/
-    components/
-    utils/
-    constants/
+Course documents currently contain course definition fields such as `name`, `description`, `active`, and timestamps.
 
-  student/
-    _data/
-      auth.ts                    # student login/register/profile access
-      courses.ts                 # getStudentCourseSummaries
-      lessons.ts                 # student lessons + personal attendance loader
-    _types/
-      course-summary.ts          # StudentCourseSummary
-      lessons.ts                 # StudentLessonsData, selected-course UI state
-    courses/
-      page.tsx
-      course-card.tsx
-      student-courses-view.tsx
-    lessons/
-      page.tsx
-      lesson-components.tsx
-      lesson-utils.ts
-      student-lessons-view.tsx
-    login/
-      page.tsx
-    profile/
-      page.tsx
-    register/
-      page.tsx
-      student-registration.tsx
+The target MVP needs course-level mentor eligibility metadata because mentors can be assigned to teach a course before groups are assigned.
 
-  mentor/
-    _data/
-      auth.ts                    # mentor login/profile access
-      workspace.ts               # getMentorGroupWorkspaces
-      attendance.ts              # mentor attendance write operations
-    _types/
-      workspace.ts               # MentorGroupWorkspace
-    login/
-      page.tsx
-    page.tsx
-    mentor-dashboard.tsx
-    mentor-workspace-components.tsx
-
-  super-admin/
-    _data/
-      courses.ts
-      groups.ts
-      lessons.ts
-      mentors.ts
-      students.ts
-      enrollments.ts
-      attendance.ts
-    _types/
-      database-control.ts
-    page.tsx
-    mentor-add.ts
-```
-
-## Naming Rules
-
-Do not use `shared` as a catch-all for domain code.
-
-Use these meanings:
-
-- `app/_data/*` owns raw database access and repository functions.
-- `app/_types/*` owns canonical database/domain document shapes.
-- `app/_lib/*` owns infrastructure clients and low-level helpers.
-- `app/_shared/*` owns generic reusable utilities or UI that are not specific to Offspace domain entities.
-- `app/student/_data/*` owns composed student use cases.
-- `app/student/_types/*` owns student-specific view models and UI data shapes.
-- `app/mentor/_data/*` owns composed mentor use cases and mentor-scoped writes.
-- `app/mentor/_types/*` owns mentor-specific view models and UI data shapes.
-- `app/super-admin/_data/*` owns super-admin database control use cases.
-- `app/super-admin/_types/*` owns super-admin-only form and table models.
-
-Examples:
-
-- `Student`, `Course`, `Enrollment`, `Lesson`, and `Attendance` belong in `app/_types`, not `app/_shared`.
-- Firestore repository functions belong in `app/_data`, not `app/_shared`.
-- Date formatting helpers, generic buttons, or reusable empty states may belong in `app/_shared`.
-
-## Root Data Layer
-
-The root data layer should stay small and mechanical. It should not know about page workflows.
-
-Move current entity services like this:
-
-```txt
-app/services/courses.services.ts       -> app/_data/courses.repository.ts
-app/services/groups.services.ts        -> app/_data/groups.repository.ts
-app/services/lessons.services.ts       -> app/_data/lessons.repository.ts
-app/services/enrollments.services.ts   -> app/_data/enrollments.repository.ts
-app/services/attendance.services.ts    -> app/_data/attendance.repository.ts
-app/services/students.services.ts      -> app/_data/students.repository.ts
-app/services/mentors.services.ts       -> app/_data/mentors.repository.ts
-app/services/queries.services.ts       -> app/_data/queries.repository.ts
-app/services/firestore-mappers.ts      -> app/_lib/firebase/firestore-mappers.ts
-app/services/utils.ts                  -> app/_lib/firebase/firestore-utils.ts
-app/lib/firebase.ts                    -> app/_lib/firebase/client.ts
-```
-
-Move current canonical types like this:
-
-```txt
-app/types/attendance.types.ts          -> app/_types/attendance.ts
-app/types/auth.types.ts                -> app/_types/auth.ts
-app/types/course.types.ts              -> app/_types/course.ts
-app/types/enrollment.types.ts          -> app/_types/enrollment.ts
-app/types/group.types.ts               -> app/_types/group.ts
-app/types/lesson.types.ts              -> app/_types/lesson.ts
-app/types/mentor.types.ts              -> app/_types/mentor.ts
-app/types/student.types.ts             -> app/_types/student.ts
-```
-
-Keep collection names, Firestore paths, mappers, and generic document helpers in this root layer so path strings are not duplicated across flows.
-
-## Student Flow
-
-Student code should be centered on the authenticated student UID.
-
-Target student data modules:
-
-```txt
-app/student/_data/auth.ts
-app/student/_data/courses.ts
-app/student/_data/lessons.ts
-app/student/_types/course-summary.ts
-app/student/_types/lessons.ts
-```
-
-Move current student-specific code:
-
-```txt
-app/services/student-courses.services.ts          -> app/student/_data/courses.ts
-app/types/student-course-summary.types.ts         -> app/student/_types/course-summary.ts
-app/student/lessons/student-lessons-data.ts       -> app/student/_data/lessons.ts
-app/student/lessons/lesson-types.ts               -> app/student/_types/lessons.ts
-```
-
-Rules:
-
-- Student reads must derive `studentId` from the authenticated Firebase user.
-- Student pages should not import mentor or super-admin flow modules.
-- Student UI may import canonical types from `app/_types` when needed.
-- Student data modules may import repositories from `app/_data`.
-- Student attendance reads must remain scoped to the current student.
-
-## Mentor Flow
-
-Mentor code should be centered on the authenticated mentor UID.
-
-Target mentor data modules:
-
-```txt
-app/mentor/_data/auth.ts
-app/mentor/_data/workspace.ts
-app/mentor/_data/attendance.ts
-app/mentor/_types/workspace.ts
-```
-
-Move current mentor-specific code:
-
-```txt
-app/services/mentor-workspace.services.ts         -> app/mentor/_data/workspace.ts
-app/types/mentor-workspace.types.ts               -> app/mentor/_types/workspace.ts
-```
-
-Attendance write operations can be wrapped in `app/mentor/_data/attendance.ts` even if the low-level implementation remains in `app/_data/attendance.repository.ts`.
-
-Rules:
-
-- Mentor reads must derive `mentorId` from the authenticated Firebase user.
-- Mentor pages should not import student or super-admin flow modules.
-- Mentor UI may import canonical types from `app/_types` when needed.
-- Mentor data modules may import repositories from `app/_data`.
-- Mentor workspace data should expose the exact objects needed by the dashboard: group, course, lessons, enrolled students, and attendance records.
-- Mentor write access must stay limited to attendance for assigned groups unless a future product change explicitly expands the mentor role.
-
-## Super-Admin Flow
-
-Super-admin is a third flow with a different purpose: direct database control through UI.
-
-Target super-admin modules:
-
-```txt
-app/super-admin/
-  _data/
-    courses.ts
-    groups.ts
-    lessons.ts
-    mentors.ts
-    students.ts
-    enrollments.ts
-    attendance.ts
-  _types/
-    database-control.ts
-  page.tsx
-  mentor-add.ts
-```
-
-The existing file:
-
-```txt
-app/super-admin/mentor-add.ts
-```
-
-should eventually import mentor creation helpers from `app/super-admin/_data/mentors.ts` or move its helper functions there.
-
-Rules:
-
-- Super-admin UI can manage all core database entities.
-- Super-admin code should not be used by student or mentor flows.
-- Super-admin UI may import canonical types from `app/_types`.
-- Super-admin data modules may import repositories from `app/_data`.
-- Super-admin writes must use a trusted authorization path before production.
-- Do not rely on client-side route checks for super-admin authorization.
-- Before production, add Firestore Security Rules and a reliable role source, such as Firebase custom claims or a locked-down admin profile collection.
-
-Important current constraint: the app uses the Firebase Web SDK from client-facing code. Full database control from a browser UI is not production-safe unless Firestore rules enforce the super-admin role. If privileged operations need to bypass normal client permissions, implement them through a trusted server/API/admin SDK path instead of exposing broad client writes.
-
-## Auth Placement
-
-Current `app/services/auth.services.ts` mixes shared auth helpers with role-specific portal behavior.
-
-Recommended split:
-
-```txt
-app/_lib/firebase/auth.ts              # sign in, sign out, subscribeToAuthState, error mapping
-app/_data/portal-access.repository.ts  # getPortalProfile, hasPortalAccess
-app/_types/auth.ts                     # PortalRole, PortalCopy, RequiredProfileState
-app/student/_data/auth.ts              # student-specific auth wrappers
-app/mentor/_data/auth.ts               # mentor-specific auth wrappers
-app/super-admin/_data/auth.ts          # super-admin-specific auth wrappers, when implemented
-```
-
-Update `PortalRole` when super-admin login is introduced:
+Candidate schema:
 
 ```ts
-export type PortalRole = "student" | "mentor" | "super-admin";
+mentorIds: string[]
 ```
 
-Only add that role when the UI and authorization model are implemented together.
+Do not implement this blindly. Before coding, choose between:
 
-## Import Direction
+- `Courses/{courseId}.mentorIds`
+- `Courses/{courseId}/Mentors/{mentorId}`
+- a separate top-level course mentor assignment collection
 
-Allowed dependencies:
+Choose based on Firestore rules, query needs, update frequency, and least-privilege access.
 
-```txt
-app/student/*       -> app/student/_data -> app/_data -> app/_lib
-app/mentor/*        -> app/mentor/_data -> app/_data -> app/_lib
-app/super-admin/*   -> app/super-admin/_data -> app/_data -> app/_lib
-flow UI             -> app/_types for canonical document types
-flow UI             -> flow-local _types for view models
-generic UI/helpers  -> app/_shared
-```
+### Enrollments
 
-Disallowed dependencies:
+Current enrollment records require:
 
-```txt
-app/student      -> app/mentor
-app/student      -> app/super-admin
-app/mentor       -> app/student
-app/mentor       -> app/super-admin
-app/super-admin  -> app/student
-app/super-admin  -> app/mentor
-app/_data        -> app/student
-app/_data        -> app/mentor
-app/_data        -> app/super-admin
-app/_types       -> app/student
-app/_types       -> app/mentor
-app/_types       -> app/super-admin
-app/_lib         -> app/student
-app/_lib         -> app/mentor
-app/_lib         -> app/super-admin
-```
+- `studentId`
+- `courseId`
+- `groupId`
+- `mentorId`
+- `price`
+- `status`
+- `enrolledAt`
 
-This keeps role features independent and prevents accidental permission leaks.
+The target MVP must support a student-selected course before group assignment.
 
-## Migration Plan
+Refactor enrollment handling so:
 
-1. Create `app/_lib/firebase`, `app/_data`, `app/_types`, and flow-local `_data` / `_types` folders.
-2. Move canonical entity types from `app/types` into `app/_types`.
-3. Move Firestore mappers and generic helpers into `app/_lib/firebase`.
-4. Move entity CRUD services into `app/_data` and update imports.
-5. Move `student-courses.services.ts` and student lesson data/types into `app/student/_data` and `app/student/_types`.
-6. Move `mentor-workspace.services.ts` and mentor workspace types into `app/mentor/_data` and `app/mentor/_types`.
-7. Move or wrap super-admin database operations under `app/super-admin/_data`.
-8. Update route components to import from flow-local modules first, then from `app/_types` or `app/_shared` only when appropriate.
-9. Delete old `app/services` and `app/types` only after all imports are migrated.
-10. Run validation.
+- `studentId` is always the authenticated student UID for student-created enrollments.
+- `courseId` is required.
+- `status` starts as `active`.
+- `groupId` can be empty/null until assignment.
+- `mentorId` can be empty/null until assignment unless a confirmed course-level mentor assignment is chosen at enrollment time.
+- Enrollment IDs no longer depend only on `{studentId}_{groupId}`, because `groupId` can be missing.
 
-Recommended validation:
+Open implementation decision: choose a stable enrollment ID format, likely `{studentId}_{courseId}` for one enrollment per student per course unless future requirements allow repeated enrollment into the same course.
+
+### Attendance
+
+Attendance remains linked to assigned group lessons.
+
+For the MVP, attendance is boolean:
+
+- attended
+- not attended
+
+The current implementation represents this as presence or absence of an attendance document. Keep that model unless an explicit boolean field is required for clearer rules or UI.
+
+## Firestore Rules Refactor Requirements
+
+Update `firestore.rules` with the data model changes.
+
+Rules must enforce:
+
+- Students can create enrollments only for themselves.
+- Students can only read their own enrollments and attendance.
+- Students can read active available courses needed for course selection.
+- Pending enrollments without a group do not grant access to group lessons.
+- Group lesson reads are allowed only after the student is assigned to that group.
+- Mentors and super-admins can only perform assignment writes that the MVP explicitly requires.
+- Client-side checks are not treated as sufficient authorization.
+
+Add Firebase Emulator rules tests before treating the rules as production-ready.
+
+## Refactor Work Plan
+
+1. Confirm the enrollment ID strategy.
+2. Confirm the course-to-mentor assignment schema.
+3. Update canonical types in `app/_types`.
+4. Update Firestore mappers in `app/_lib/firebase/firestore-mappers.ts`.
+5. Update shared repositories in `app/_data`.
+6. Add student enrollment creation and active-course query functions.
+7. Refactor `/student` to show the course-selection block when the student has no enrollments.
+8. Refactor `/student/lessons` for pending group assignment and past-lesson timeline behavior.
+9. Refactor `/student/courses` for enrolled course status and future additional enrollment support.
+10. Update mentor/super-admin assignment data paths only as needed for the MVP.
+11. Update `firestore.rules` for pending enrollments and assignment permissions.
+12. Update docs when implementation details are confirmed.
+13. Run validation.
+
+## Validation
+
+Use the narrowest useful validation while working. Before considering the refactor complete, run:
 
 ```bash
 npm run lint
-npx tsc --noEmit
+npm run typecheck
 npm test
 npm run build
 ```
 
+Add Firebase Emulator tests for Firestore rules before production use.
+
 ## Done State
 
-This refactor is complete when:
+The MVP refactor is complete when:
 
-- No route imports directly from old `app/services/*` or `app/types/*`.
-- Firestore collection paths exist in one root data/lib layer.
-- Canonical domain types live in `app/_types`.
-- Student pages use only student-owned data modules plus canonical types.
-- Mentor pages use only mentor-owned data modules plus canonical types.
-- Super-admin pages use only super-admin-owned data modules plus canonical types.
-- `app/_shared` does not contain domain repositories or domain document types.
-- Authorization still derives from authenticated Firebase users, not route params or hard-coded IDs.
-- Super-admin production access is protected by server-side authorization or Firestore rules.
+- Student course selection appears on `/student` only when the authenticated student has no enrollments.
+- Multiple selected active courses create active enrollments.
+- Enrollments can exist before group assignment.
+- Student pages clearly show `Your mentor will assign group soon.` for unassigned enrollments.
+- Student lessons show only past lessons from assigned groups in a vertical timeline.
+- Hover and tap/click reveal lesson date and boolean attendance status.
+- Students cannot read other students' attendance.
+- Types, mappers, repositories, rules, and UI agree on optional group assignment.
+- Course-to-mentor assignment is represented consistently.
+- Firestore rules match the new MVP access model.
+- Documentation matches implemented behavior and known limitations.

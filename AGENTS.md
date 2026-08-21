@@ -4,6 +4,12 @@
 
 This file is the source of truth for AI agents working in this repository. Follow it before making code changes.
 
+For a repository-derived summary of the project's current purpose, usage,
+routes, data model, validation commands, security notes, and owner questions,
+see `Project_general_information.md`. If that summary conflicts with this
+file, treat this file as the agent instruction source of truth and update the
+summary only after confirming the repository evidence.
+
 ## Product Scope
 
 The current product is not the full Offspace platform. The only product functionality in scope is a role-based schedule and attendance web application for Offspace Digital Community.
@@ -14,6 +20,12 @@ The MVP supports two authenticated roles:
 - Mentor
 
 Do not add admin dashboards, payments, messaging, homework, file uploads, certificates, payroll, parent accounts, notifications, video lessons, complex analytics, a public course marketplace, or broader LMS functionality unless explicitly requested.
+
+The current codebase includes a super-admin portal. Treat super-admin features
+as existing repository behavior and as required for account/course assignment
+workflow only where the project owner has explicitly described them. Do not
+expand super-admin scope beyond profile access, course availability, mentor
+course assignment, and student group assignment without a new request.
 
 ## Current Routes
 
@@ -48,24 +60,31 @@ The current Firestore model is client-read through the Firebase Web SDK.
 
 - `Students` - student profiles keyed by Firebase Auth UID
 - `Mentors` - mentor profiles keyed by Firebase Auth UID
-- `Courses` - course definitions
+- `Courses` - course definitions; target MVP requires course-level mentor eligibility metadata, likely `mentorIds: string[]` unless a normalized assignment model is chosen before implementation
 - `Courses/{courseId}/Groups` - groups for a course
 - `Courses/{courseId}/Groups/{groupId}/Lessons` - lessons for a group
-- `Enrollments` - top-level student-course-group-mentor links
-- `Attendances` - top-level attendance records linked to student, course, group, and lesson
+- `Enrollments` - top-level student-course links; target MVP must allow an active enrollment before group assignment, with `groupId` empty/null until a mentor or super-admin assigns a group
+- `Attendances` - top-level attendance records linked to student, course, group, and lesson; MVP attendance is boolean attended/not attended
 
 
 ## Student Experience
 
-The student interface is centered on the courses assigned to the current student.
+The student interface is centered on the courses selected by or assigned to the current student.
 
-- `/student` should remain a simple hub for student pages.
-- `/student/lessons` should let the student choose among their courses and view schedule plus personal attendance.
-- `/student/courses` should show active course enrollment details.
+- `/student` should show the normal student hub plus a course-selection block when the authenticated student has no existing enrollments.
+- The no-enrollment course-selection block should list active available courses, support selecting multiple courses, and create one active enrollment per selected course.
+- Enrollment status `active` means the student selected the course. It does not guarantee group assignment.
+- Enrollments may exist with no group assigned yet. Student-facing pages must show `Your mentor will assign group soon.` for those courses.
+- `/student/lessons` should show enrolled courses and a vertical timeline of past lessons conducted in the student's assigned group.
+- Lesson timeline items should expose lesson date and the student's attendance status on hover and on tap/click for touch devices.
+- Attendance status is boolean for the MVP: attended or not attended.
+- `/student/courses` should show active course enrollment details and later support enrolling in additional available courses.
 - `/student/profile` should show read-only student profile basics.
 - Students must not see other students' attendance.
 
-The student course selector should remain horizontal where practical. On small screens it may scroll horizontally or use compact tabs, but avoid confusing multi-row course navigation.
+Editing selected courses after enrollment is intentionally deferred until after the first MVP behavior is implemented.
+
+The student course selector should remain clear on small screens. Prefer a compact, scrollable, or vertical timeline-compatible UI over confusing multi-row course navigation.
 
 ## Mentor Experience
 
@@ -83,10 +102,16 @@ Use the existing Offspace visual system.
 
 - Primary brand color: `#123524`
 - Use existing Tailwind theme tokens in `app/globals.css`.
+- Prefer `shadcn/ui` patterns for new reusable UI components.
+- Use Radix primitives directly when a component needs accessible behavior that is lower-level than a shadcn component.
+- Use `lucide-react` icons for interface actions when an icon exists.
+- Shared shadcn-style UI components should live in `app/components/ui`.
+- Use `cn` from `app/_lib/ui/utils.ts` for conditional class merging.
 - Prefer Tailwind utilities over large custom CSS component classes.
 - Keep the UI calm, practical, modern, friendly, and responsive.
 - Avoid generic enterprise school-dashboard aesthetics, dense unnecessary tables, childish education visuals, and one-off colors.
 - Prioritize data clarity and permissions over decorative polish.
+- Do not add another broad UI suite such as Mantine or MUI unless a specific workflow justifies the dependency, styling, and design-system tradeoff.
 
 ## Code Structure Rules
 

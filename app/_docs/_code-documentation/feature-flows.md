@@ -17,6 +17,21 @@
 4. On success, the user is routed to `/student`.
 5. On role mismatch, the user is signed out and shown an access error.
 
+## Student First Portal Course Selection
+
+Target MVP behavior from the project owner:
+
+1. Student signs in and opens `/student`.
+2. The page checks enrollments for the authenticated student.
+3. If no enrollments exist, the page shows an available-course selection block.
+4. The block lists active courses.
+5. The student can select multiple courses.
+6. Submitting creates one active enrollment per selected course.
+7. Enrollment can be created before group assignment; `groupId` should be empty/null until a mentor or super-admin assigns the student to a group.
+8. Courses without group assignment should show `Your mentor will assign group soon.` in student-facing course and lesson contexts.
+
+Implementation note: the current code and Firestore rules expect enrollment records to include `groupId` and `mentorId`, and current rules expect enrollment IDs in the format `{studentId}_{groupId}`. Implementing this target flow requires a data-model and rules update.
+
 ## Student Registration
 
 1. Student opens `/student/register`.
@@ -38,9 +53,10 @@ Flow:
 
 1. `useRequiredProfile("student")` verifies the current user and student profile.
 2. `getStudentLessonCourses(user.uid)` loads enrollments for the student.
-3. For each enrollment, the app loads the course, group lessons, and that student's attendance records for the group.
-4. Lessons are sorted by date.
-5. The UI shows course tabs, lesson schedule, and whether each lesson has a matching attendance record.
+3. For each enrollment with an assigned group, the app loads the course, group lessons, and that student's attendance records for the group.
+4. For each enrollment without an assigned group, the app shows `Your mentor will assign group soon.`
+5. The target MVP UI shows enrolled courses and a vertical timeline of past lessons conducted in the student's assigned group.
+6. Lesson details are available on hover and on tap/click, and include lesson date plus boolean attendance status.
 
 ## Student Courses
 
@@ -113,4 +129,3 @@ Flow:
 4. Super-admin can remove profile documents from portal access.
 
 Current delete behavior removes the Firestore profile document. The confirmation copy states that the Firebase Auth account remains until deleted from a trusted admin backend.
-

@@ -2,6 +2,10 @@
 
 This directory contains documentation for the current Offspace Digital Community schedule and attendance app.
 
+The root [Project_general_information.md](../../Project_general_information.md)
+collects repository-wide project purpose, usage, data model, validation,
+security notes, and owner questions in one place.
+
 The documentation is split by audience:
 
 - [_code-documentation](./_code-documentation/README.md): engineering documentation for setup, architecture, data access, auth, and validation.
@@ -32,7 +36,8 @@ Use these files as the primary sources when updating documentation:
 - `app/components/portal-login.tsx`
 - `app/_data/*`
 - `app/_lib/firebase/*`
+- `app/_lib/ui/utils.ts`
+- `components.json`
 - `app/student/*`
 - `app/mentor/*`
 - `app/super-admin/*`
-

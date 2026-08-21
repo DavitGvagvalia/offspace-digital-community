@@ -69,3 +69,19 @@ Global design tokens and Tailwind theme values live in `app/globals.css`.
 
 The primary brand color is `#123524`. Prefer Tailwind utilities and the existing color tokens over adding one-off CSS.
 
+## UI Components
+
+The preferred reusable UI approach is shadcn/ui-style components backed by
+Tailwind utilities and Offspace theme tokens.
+
+Confirmed setup:
+
+- `components.json` configures shadcn/ui paths for this repository.
+- Shared UI components should be added under `app/components/ui`.
+- `app/_lib/ui/utils.ts` exports `cn` for conditional class merging.
+- `radix-ui` is available for direct primitive usage.
+- `lucide-react` is available for interface icons.
+- `tw-animate-css` is imported in `app/globals.css` for Tailwind v4 animation utilities used by shadcn-style components.
+
+Do not introduce another broad component system unless a specific workflow
+requires it and the design-system tradeoff is documented.
