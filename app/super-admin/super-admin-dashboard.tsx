@@ -1,5 +1,6 @@
 "use client";
 
+import type { Timestamp } from "firebase/firestore";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import { AccessError, LoadingState } from "../components/auth-states";
@@ -8,6 +9,12 @@ import { useRequiredProfile } from "../components/use-required-profile";
 import { formatFirebaseDate } from "../_lib/firebase/firestore-utils";
 import type { Mentor } from "../_types/mentor";
 import type { Student } from "../_types/student";
+import {
+  getMentorGroupDetails,
+  getStudentCourseDetails,
+  type MentorGroupDetail,
+  type StudentCourseDetail,
+} from "./_data/person-details";
 import {
   createMentorAuthAndProfile,
   deleteMentor,
@@ -26,6 +33,32 @@ type ActionState = {
   message: string;
 } | null;
 
+type SelectedPerson =
+  | {
+      role: "student";
+      person: Student;
+    }
+  | {
+      role: "mentor";
+      person: Mentor;
+    };
+
+type DetailState = {
+  key: string | null;
+  isLoading: boolean;
+  error: string | null;
+  studentCourses: StudentCourseDetail[];
+  mentorGroups: MentorGroupDetail[];
+};
+
+const emptyDetailState: DetailState = {
+  key: null,
+  isLoading: false,
+  error: null,
+  studentCourses: [],
+  mentorGroups: [],
+};
+
 export function SuperAdminDashboard() {
   const { profile, isLoading: isAuthLoading, error: authError } =
     useRequiredProfile("super-admin");
@@ -36,6 +69,11 @@ export function SuperAdminDashboard() {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionState, setActionState] = useState<ActionState>(null);
+  const [selectedPerson, setSelectedPerson] = useState<SelectedPerson | null>(
+    null,
+  );
+  const [detailState, setDetailState] =
+    useState<DetailState>(emptyDetailState);
 
   useEffect(() => {
     let isMounted = true;
@@ -77,6 +115,24 @@ export function SuperAdminDashboard() {
       isMounted = false;
     };
   }, [profile]);
+
+  useEffect(() => {
+    if (!selectedPerson) {
+      return;
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        handleCloseDetails();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedPerson]);
 
   const adminName = useMemo(() => {
     if (!profile?.name && !profile?.lastName) {
@@ -191,6 +247,63 @@ export function SuperAdminDashboard() {
     }
   }
 
+  async function handleOpenDetails(selection: SelectedPerson) {
+    const detailKey = `${selection.role}:${selection.person.id}`;
+
+    setSelectedPerson(selection);
+    setDetailState({
+      ...emptyDetailState,
+      key: detailKey,
+      isLoading: true,
+    });
+
+    try {
+      if (selection.role === "student") {
+        const studentCourses = await getStudentCourseDetails(
+          selection.person.id,
+        );
+
+        setDetailState((currentDetailState) =>
+          currentDetailState.key === detailKey
+            ? {
+                ...emptyDetailState,
+                key: detailKey,
+                studentCourses,
+              }
+            : currentDetailState,
+        );
+      } else {
+        const mentorGroups = await getMentorGroupDetails(selection.person.id);
+
+        setDetailState((currentDetailState) =>
+          currentDetailState.key === detailKey
+            ? {
+                ...emptyDetailState,
+                key: detailKey,
+                mentorGroups,
+              }
+            : currentDetailState,
+        );
+      }
+    } catch (detailsError) {
+      console.error(detailsError);
+      setDetailState((currentDetailState) =>
+        currentDetailState.key === detailKey
+          ? {
+              ...emptyDetailState,
+              key: detailKey,
+              error: "We could not load profile details right now.",
+            }
+          : currentDetailState,
+      );
+    }
+  }
+
+  function handleCloseDetails() {
+    setSelectedPerson(null);
+    setDetailState(emptyDetailState);
+  }
+
   if (isAuthLoading) {
     return <LoadingState title="Loading super-admin portal" />;
   }
@@ -252,22 +365,38 @@ export function SuperAdminDashboard() {
         ) : (
           <section className="grid gap-5 lg:grid-cols-2">
             <PeopleList
+              role="student"
               title="Students"
               people={students}
               emptyText="No students found."
               pendingDeleteId={pendingDeleteId}
+              onOpenDetails={(person) =>
+                handleOpenDetails({ role: "student", person })
+              }
               onDelete={(personId) => handleDeletePerson("student", personId)}
             />
             <PeopleList
+              role="mentor"
               title="Mentors"
               people={mentors}
               emptyText="No mentors found."
               pendingDeleteId={pendingDeleteId}
+              onOpenDetails={(person) =>
+                handleOpenDetails({ role: "mentor", person })
+              }
               onDelete={(personId) => handleDeletePerson("mentor", personId)}
             />
           </section>
         )}
       </section>
+      {selectedPerson ? (
+        <PersonDetailsModal
+          selectedPerson={selectedPerson}
+          detailState={detailState}
+          mentors={mentors}
+          onClose={handleCloseDetails}
+        />
+      ) : null}
     </main>
   );
 }
@@ -377,17 +506,21 @@ function PersonForm({
   );
 }
 
-function PeopleList({
+function PeopleList<Person extends Student | Mentor>({
+  role,
   title,
   people,
   emptyText,
   pendingDeleteId,
+  onOpenDetails,
   onDelete,
 }: {
+  role: ManagedRole;
   title: string;
-  people: Array<Student | Mentor>;
+  people: Person[];
   emptyText: string;
   pendingDeleteId: string | null;
+  onOpenDetails: (person: Person) => void;
   onDelete: (personId: string) => void;
 }) {
   return (
@@ -415,7 +548,12 @@ function PeopleList({
               key={person.id}
               className="flex flex-col gap-4 py-4 sm:flex-row sm:items-center sm:justify-between"
             >
-              <div className="min-w-0">
+              <button
+                type="button"
+                onClick={() => onOpenDetails(person)}
+                className="-m-2 min-w-0 flex-1 rounded-sm p-2 text-left transition hover:bg-sage-50 focus:outline-none focus:ring-2 focus:ring-forest/20"
+                aria-label={`Open ${role} details for ${person.name} ${person.lastName}`}
+              >
                 <p className="font-semibold text-ink">
                   {person.name} {person.lastName}
                 </p>
@@ -430,7 +568,7 @@ function PeopleList({
                     <span>{person.active ? "Active" : "Inactive"}</span>
                   ) : null}
                 </div>
-              </div>
+              </button>
               <button
                 type="button"
                 disabled={pendingDeleteId === person.id}
@@ -445,6 +583,289 @@ function PeopleList({
       )}
     </section>
   );
+}
+
+function PersonDetailsModal({
+  selectedPerson,
+  detailState,
+  mentors,
+  onClose,
+}: {
+  selectedPerson: SelectedPerson;
+  detailState: DetailState;
+  mentors: Mentor[];
+  onClose: () => void;
+}) {
+  const person = selectedPerson.person;
+  const expectedDetailKey = `${selectedPerson.role}:${person.id}`;
+  const isLoading =
+    detailState.isLoading || detailState.key !== expectedDetailKey;
+  const fullName = `${person.name} ${person.lastName}`;
+  const roleLabel = selectedPerson.role === "student" ? "Student" : "Mentor";
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/45 px-4 py-6"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="person-details-title"
+        className="flex max-h-[90vh] w-full max-w-3xl flex-col rounded-md border border-stone-200 bg-offwhite shadow-xl"
+      >
+        <header className="flex flex-col gap-4 border-b border-stone-200 p-5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-forest">
+              {roleLabel} details
+            </p>
+            <h2
+              id="person-details-title"
+              className="mt-2 break-words text-2xl font-semibold text-ink"
+            >
+              {fullName}
+            </h2>
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-muted">
+              <span className="break-all">ID: {person.id}</span>
+              {person.email ? <span>{person.email}</span> : null}
+              {person.phone ? <span>Phone: {person.phone}</span> : null}
+              {"active" in person ? (
+                <span>{person.active ? "Active" : "Inactive"}</span>
+              ) : null}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-sm border border-stone-200 px-4 py-2 text-sm font-bold text-ink-soft transition hover:border-sage-300 hover:text-ink"
+          >
+            Close
+          </button>
+        </header>
+
+        <div className="overflow-y-auto p-5">
+          {isLoading ? (
+            <DetailStatePanel
+              title="Loading details"
+              text="Checking courses, groups, and attendance records."
+            />
+          ) : detailState.error ? (
+            <DetailStatePanel title="Details unavailable" text={detailState.error} />
+          ) : selectedPerson.role === "student" ? (
+            <StudentDetails
+              details={detailState.studentCourses}
+              mentors={mentors}
+            />
+          ) : (
+            <MentorDetails details={detailState.mentorGroups} />
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function StudentDetails({
+  details,
+  mentors,
+}: {
+  details: StudentCourseDetail[];
+  mentors: Mentor[];
+}) {
+  if (details.length === 0) {
+    return (
+      <DetailStatePanel
+        title="No enrollments found"
+        text="This student does not have connected course enrollments yet."
+      />
+    );
+  }
+
+  const attendedLessonCount = details.reduce(
+    (total, detail) => total + detail.attendedLessons.length,
+    0,
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Metric label="Courses" value={details.length} />
+        <Metric label="Attended lessons" value={attendedLessonCount} />
+      </div>
+
+      {details.map((detail) => {
+        const mentor = mentors.find(
+          (nextMentor) => nextMentor.id === detail.enrollment.mentorId,
+        );
+
+        return (
+          <article
+            key={detail.enrollment.id}
+            className="rounded-sm border border-stone-200 bg-ivory-light p-4"
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <h3 className="break-words text-lg font-semibold text-ink">
+                  {getCourseName(detail.course, detail.enrollment.courseId)}
+                </h3>
+                <p className="mt-1 text-sm text-ink-soft">
+                  Group: {getGroupName(detail.group, detail.enrollment.groupId)}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-muted">
+                  <span>Status: {detail.enrollment.status}</span>
+                  <span>Price: {detail.enrollment.price}</span>
+                  <span>
+                    Enrolled: {formatDateTime(detail.enrollment.enrolledAt)}
+                  </span>
+                  <span>
+                    Mentor:{" "}
+                    {mentor
+                      ? `${mentor.name} ${mentor.lastName}`
+                      : detail.enrollment.mentorId}
+                  </span>
+                </div>
+              </div>
+              <span className="rounded-sm bg-sage-100 px-3 py-1 text-sm font-bold text-forest">
+                {detail.attendedLessons.length} attended
+              </span>
+            </div>
+
+            {detail.attendedLessons.length === 0 ? (
+              <p className="mt-4 rounded-sm border border-stone-200 bg-offwhite px-3 py-3 text-sm text-ink-soft">
+                No attended lessons recorded for this course group.
+              </p>
+            ) : (
+              <div className="mt-4 space-y-2">
+                {detail.attendedLessons.map(({ attendance, lesson }) => (
+                  <div
+                    key={attendance.id}
+                    className="rounded-sm border border-stone-200 bg-offwhite px-3 py-3"
+                  >
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="break-words text-sm font-semibold text-ink">
+                          {lesson?.title ?? `Lesson ID: ${attendance.lessonId}`}
+                        </p>
+                        <p className="mt-1 text-xs text-ink-muted">
+                          Lesson date:{" "}
+                          {lesson
+                            ? formatDateTime(lesson.date)
+                            : "Lesson document not found"}
+                        </p>
+                      </div>
+                      <span className="text-xs font-semibold text-success">
+                        Attended {formatDateTime(attendance.attendedAt)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
+function MentorDetails({ details }: { details: MentorGroupDetail[] }) {
+  if (details.length === 0) {
+    return (
+      <DetailStatePanel
+        title="No mentored groups found"
+        text="This mentor does not have assigned course groups yet."
+      />
+    );
+  }
+
+  const courseCount = new Set(
+    details.map((detail) => detail.course?.id ?? detail.group.courseId),
+  ).size;
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Metric label="Courses" value={courseCount} />
+        <Metric label="Groups" value={details.length} />
+      </div>
+
+      <div className="space-y-3">
+        {details.map((detail) => (
+          <article
+            key={`${detail.group.courseId}:${detail.group.id}`}
+            className="rounded-sm border border-stone-200 bg-ivory-light p-4"
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <h3 className="break-words text-lg font-semibold text-ink">
+                  {getCourseName(detail.course, detail.group.courseId)}
+                </h3>
+                <p className="mt-1 text-sm text-ink-soft">
+                  Group: {getGroupName(detail.group, detail.group.id)}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-muted">
+                  <span className="break-all">Course ID: {detail.group.courseId}</span>
+                  <span className="break-all">Group ID: {detail.group.id}</span>
+                  <span>Created: {formatFirebaseDate(detail.group.createdAt)}</span>
+                </div>
+              </div>
+              <span
+                className={`rounded-sm px-3 py-1 text-sm font-bold ${
+                  detail.group.active
+                    ? "bg-success/10 text-success"
+                    : "bg-stone-100 text-stone-600"
+                }`}
+              >
+                {detail.group.active ? "Active group" : "Inactive group"}
+              </span>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-sm border border-stone-200 bg-ivory-light px-4 py-3">
+      <p className="text-xs font-bold uppercase tracking-[0.18em] text-ink-muted">
+        {label}
+      </p>
+      <p className="mt-1 text-2xl font-semibold text-ink">{value}</p>
+    </div>
+  );
+}
+
+function DetailStatePanel({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="rounded-sm border border-stone-200 bg-ivory-light p-4">
+      <h3 className="text-lg font-semibold text-ink">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-ink-soft">{text}</p>
+    </div>
+  );
+}
+
+function getCourseName(course: StudentCourseDetail["course"], courseId: string) {
+  return course?.name ?? `Course ID: ${courseId}`;
+}
+
+function getGroupName(group: StudentCourseDetail["group"], groupId: string) {
+  return group?.name ?? groupId;
+}
+
+function formatDateTime(timestamp: Timestamp) {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(timestamp.toDate());
 }
 
 function readPersonForm(formData: FormData) {
