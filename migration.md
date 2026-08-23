@@ -38,7 +38,7 @@ Create `.env.local` from `.env.example`:
 ```text
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_SECRET_KEY=
 ```
 
 Rules:
@@ -46,7 +46,7 @@ Rules:
 - `NEXT_PUBLIC_SUPABASE_URL` is safe for browser use.
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` is safe for browser use when Row Level
   Security is correct.
-- `SUPABASE_SERVICE_ROLE_KEY` is server-only. Never expose it in client
+- `SUPABASE_SECRET_KEY` is server-only. Never expose it in client
   components, browser logs, screenshots, or `NEXT_PUBLIC_*` variables.
 
 ## Hosted Project Migration
@@ -58,6 +58,12 @@ npx supabase login
 npx supabase link --project-ref <project-ref>
 npx supabase db push
 ```
+
+Seed base course data by opening Supabase Dashboard -> SQL Editor and running
+`supabase/seed.sql`.
+
+If you prefer terminal execution, use `psql` with the hosted database connection
+string from Supabase Dashboard. Do not commit that connection string.
 
 After any schema change, regenerate committed database types:
 
@@ -91,6 +97,24 @@ values ('<auth-user-id>');
 The application expects role authorization from `profiles.role` plus the
 matching role table row. Super-admin-created student and mentor accounts also
 mirror the role into Supabase Auth `app_metadata`.
+
+## Sample Data After Auth Users Exist
+
+Real student and mentor rows require real Supabase Auth user ids. Create those
+accounts through the super-admin portal first.
+
+Then copy `supabase/seed_after_auth_template.sql`, replace:
+
+- `<mentor-auth-user-id>`
+- `<student-auth-user-id>`
+
+and execute the edited SQL in Supabase SQL Editor. This creates:
+
+- mentor course eligibility
+- one group
+- one active enrollment
+- three lessons
+- attendance rows for those lessons
 
 ## Manual Parity Checks
 

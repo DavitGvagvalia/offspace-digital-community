@@ -11,6 +11,6 @@ Postgres:
 
 Normal browser reads and writes are constrained by Row Level Security.
 Super-admin student/mentor account creation runs through server actions using
-`SUPABASE_SERVICE_ROLE_KEY`.
+`SUPABASE_SECRET_KEY`.
 
 The first super-admin is bootstrapped manually in Supabase Dashboard and SQL.

@@ -48,7 +48,7 @@ not from route params, search params, local state, or hard-coded IDs.
   `super_admins` row.
 - Students must only see their own enrollments, lessons, and attendance.
 - Mentors must only see assigned groups, students, lessons, and attendance.
-- Super-admin user creation uses server-only Supabase service-role access.
+- Super-admin user creation uses server-only Supabase secret-key access.
 - Browser reads and writes must be protected by Supabase Row Level Security.
 
 ## Core Data Model

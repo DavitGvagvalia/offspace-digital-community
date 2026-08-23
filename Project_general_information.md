@@ -19,10 +19,10 @@ Firebase has been removed from active runtime and deployment configuration.
 ```text
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_SECRET_KEY=
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY` is server-only and is used for super-admin account
+`SUPABASE_SECRET_KEY` is server-only and is used for super-admin account
 creation.
 
 ## Data Model

@@ -25,14 +25,14 @@ function getSupabasePublicConfig() {
   };
 }
 
-function getSupabaseServiceRoleKey() {
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+function getSupabaseSecretKey() {
+  const secretKey = process.env.SUPABASE_SECRET_KEY;
 
-  if (!serviceRoleKey) {
-    throw new Error("Missing Supabase service role key.");
+  if (!secretKey) {
+    throw new Error("Missing Supabase secret key.");
   }
 
-  return serviceRoleKey;
+  return secretKey;
 }
 
-export { getSupabasePublicConfig, getSupabaseServiceRoleKey };
+export { getSupabasePublicConfig, getSupabaseSecretKey };

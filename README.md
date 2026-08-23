@@ -36,11 +36,11 @@ Create `.env.local` from `.env.example`:
 ```text
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_SECRET_KEY=
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY` is server-only. Never expose it through a
-`NEXT_PUBLIC_*` variable.
+`SUPABASE_SECRET_KEY` is server-only. Never expose it through a `NEXT_PUBLIC_*`
+variable.
 
 Run the app:
 
