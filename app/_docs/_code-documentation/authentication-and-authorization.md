@@ -15,10 +15,15 @@ through server actions using `SUPABASE_SECRET_KEY`.
 
 Students may insert only their own active, unassigned enrollments for active
 <<<<<<< HEAD
+<<<<<<< HEAD
 courses. The app uses a student-authenticated server action for student course
 selection, and super-admins retain full enrollment management access.
 =======
 courses. Super-admins retain full enrollment management access.
 >>>>>>> 1f8509b (feat: implement student self-registration and update related documentation)
+=======
+courses. The app uses a student-authenticated server action for student course
+selection, and super-admins retain full enrollment management access.
+>>>>>>> d4a4744 (feat: enhance student enrollment process with server actions and improve documentation)
 
 The first super-admin is bootstrapped manually in Supabase Dashboard and SQL.

@@ -1,8 +1,12 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> d4a4744 (feat: enhance student enrollment process with server actions and improve documentation)
 "use server";
 
 import { createAdminSupabaseClient } from "../../_lib/supabase/admin";
 import { createServerSupabaseClient } from "../../_lib/supabase/server";
+<<<<<<< HEAD
 import {
   mapAttendance,
   mapCourse,
@@ -17,16 +21,23 @@ import type { Enrollment } from "../../_types/enrollment";
 =======
 import { getCourse, getCourses } from "../../_data/courses.repository";
 import { getLessons } from "../../_data/lessons.repository";
+=======
+>>>>>>> d4a4744 (feat: enhance student enrollment process with server actions and improve documentation)
 import {
-  getAttendancesByGroup,
-  getEnrollmentsByAssignedGroup,
-  getGroupsByMentor,
-  getUnassignedActiveEnrollmentsByCourses,
-} from "../../_data/queries.repository";
-import { getStudent } from "../../_data/students.repository";
+  mapAttendance,
+  mapCourse,
+  mapEnrollment,
+  mapGroup,
+  mapLesson,
+  mapStudent,
+} from "../../_lib/supabase/mappers";
 import { toMillis } from "../../_lib/dates";
 import type { Course } from "../../_types/course";
+<<<<<<< HEAD
 >>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
+=======
+import type { Enrollment } from "../../_types/enrollment";
+>>>>>>> d4a4744 (feat: enhance student enrollment process with server actions and improve documentation)
 import type { Lesson } from "../../_types/lesson";
 import type { Student } from "../../_types/student";
 import type {
@@ -36,28 +47,6 @@ import type {
 } from "../_types/workspace";
 <<<<<<< HEAD
 =======
-
-export async function getMentorDashboardWorkspace(
-  mentorId: string,
-): Promise<MentorDashboardWorkspace> {
-  const [workspaces, allCourses] = await Promise.all([
-    getMentorGroupWorkspaces(mentorId),
-    getCourses(),
-  ]);
-  const eligibleCourses = sortCourses(
-    allCourses.filter((course) => course.active && course.mentorIds.includes(mentorId)),
-  );
-  const pendingEnrollments = await getMentorPendingEnrollments(
-    eligibleCourses,
-  );
-
-  return {
-    workspaces,
-    eligibleCourses,
-    pendingEnrollments,
-  };
-}
->>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
 
 async function getMentorDashboardWorkspace(
   mentorId: string,
@@ -80,7 +69,33 @@ async function getMentorDashboardWorkspace(
     pendingEnrollments,
   };
 }
+>>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
 
+<<<<<<< HEAD
+async function getMentorDashboardWorkspace(
+  mentorId: string,
+): Promise<MentorDashboardWorkspace> {
+  const currentMentorId = await assertCurrentUserIsActiveMentor();
+
+  if (mentorId !== currentMentorId) {
+    throw new Error("This mentor workspace is not available for your account.");
+  }
+
+  const eligibleCourses = await getEligibleCourses(currentMentorId);
+  const [workspaces, pendingEnrollments] = await Promise.all([
+    getMentorGroupWorkspaces(currentMentorId),
+    getMentorPendingEnrollments(eligibleCourses),
+  ]);
+
+  return {
+    workspaces,
+    eligibleCourses,
+    pendingEnrollments,
+  };
+}
+
+=======
+>>>>>>> d4a4744 (feat: enhance student enrollment process with server actions and improve documentation)
 async function getMentorGroupWorkspaces(
   mentorId: string,
 ): Promise<MentorGroupWorkspace[]> {
@@ -120,6 +135,9 @@ async function getMentorGroupWorkspaces(
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> d4a4744 (feat: enhance student enrollment process with server actions and improve documentation)
 async function assertCurrentUserIsActiveMentor() {
   const supabase = await createServerSupabaseClient();
   const {
@@ -191,6 +209,7 @@ async function getEligibleCourses(mentorId: string): Promise<Course[]> {
   return (courses ?? []).map((course) => mapCourse(course, [mentorId]));
 }
 
+<<<<<<< HEAD
 async function getMentorPendingEnrollments(
   eligibleCourses: Course[],
 ): Promise<MentorPendingEnrollment[]> {
@@ -228,21 +247,49 @@ async function getMentorPendingEnrollments(
       const course = coursesById.get(enrollment.courseId);
       const student = studentsById.get(enrollment.studentId);
 =======
+=======
+>>>>>>> d4a4744 (feat: enhance student enrollment process with server actions and improve documentation)
 async function getMentorPendingEnrollments(
   eligibleCourses: Course[],
 ): Promise<MentorPendingEnrollment[]> {
+  if (eligibleCourses.length === 0) {
+    return [];
+  }
+
+  const admin = createAdminSupabaseClient();
   const coursesById = new Map(
     eligibleCourses.map((course) => [course.id, course] as const),
   );
-  const enrollments = await getUnassignedActiveEnrollmentsByCourses(
-    eligibleCourses.map((course) => course.id),
+  const { data: enrollments, error: enrollmentsError } = await admin
+    .from("enrollments")
+    .select("*")
+    .in("course_id", eligibleCourses.map((course) => course.id))
+    .eq("status", "active")
+    .is("group_id", null)
+    .is("mentor_id", null)
+    .is("deleted_at", null)
+    .order("enrolled_at");
+
+  if (enrollmentsError) {
+    throw enrollmentsError;
+  }
+
+  const mappedEnrollments = (enrollments ?? []).map(mapEnrollment);
+  const studentsById = new Map(
+    (await getStudentsByIds(
+      mappedEnrollments.map((enrollment) => enrollment.studentId),
+    )).map((student) => [student.id, student] as const),
   );
 
-  const pendingEnrollments = await Promise.all(
-    enrollments.map(async (enrollment) => {
+  return mappedEnrollments
+    .map((enrollment) => {
       const course = coursesById.get(enrollment.courseId);
+<<<<<<< HEAD
       const student = await getStudent(enrollment.studentId);
 >>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
+=======
+      const student = studentsById.get(enrollment.studentId);
+>>>>>>> d4a4744 (feat: enhance student enrollment process with server actions and improve documentation)
 
       if (!course || !student) {
         return null;
@@ -254,6 +301,7 @@ async function getMentorPendingEnrollments(
         student,
       };
 <<<<<<< HEAD
+<<<<<<< HEAD
     })
 =======
     }),
@@ -261,6 +309,9 @@ async function getMentorPendingEnrollments(
 
   return pendingEnrollments
 >>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
+=======
+    })
+>>>>>>> d4a4744 (feat: enhance student enrollment process with server actions and improve documentation)
     .filter(
       (pendingEnrollment): pendingEnrollment is MentorPendingEnrollment =>
         Boolean(pendingEnrollment),
@@ -269,6 +320,9 @@ async function getMentorPendingEnrollments(
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> d4a4744 (feat: enhance student enrollment process with server actions and improve documentation)
 async function getCourse(courseId: string): Promise<Course | null> {
   const admin = createAdminSupabaseClient();
   const { data: course, error: courseError } = await admin
@@ -363,14 +417,18 @@ async function getStudentsByIds(studentIds: string[]): Promise<Student[]> {
   return (students ?? []).map(mapStudent).sort(compareStudents);
 }
 
+<<<<<<< HEAD
 =======
 >>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
+=======
+>>>>>>> d4a4744 (feat: enhance student enrollment process with server actions and improve documentation)
 function sortLessons(lessons: Lesson[]) {
   return [...lessons].sort((firstLesson, secondLesson) => {
     return toMillis(firstLesson.date) - toMillis(secondLesson.date);
   });
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 function compareStudents(firstStudent: Student, secondStudent: Student) {
   return `${firstStudent.lastName} ${firstStudent.name}`.localeCompare(
@@ -380,6 +438,11 @@ function sortCourses(courses: Course[]) {
   return [...courses].sort((firstCourse, secondCourse) =>
     firstCourse.name.localeCompare(secondCourse.name),
 >>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
+=======
+function compareStudents(firstStudent: Student, secondStudent: Student) {
+  return `${firstStudent.lastName} ${firstStudent.name}`.localeCompare(
+    `${secondStudent.lastName} ${secondStudent.name}`,
+>>>>>>> d4a4744 (feat: enhance student enrollment process with server actions and improve documentation)
   );
 }
 
@@ -396,6 +459,7 @@ function comparePendingEnrollments(
   }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   return compareStudents(
     firstPendingEnrollment.student,
     secondPendingEnrollment.student,
@@ -409,3 +473,12 @@ export { getMentorDashboardWorkspace, getMentorGroupWorkspaces };
   );
 }
 >>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
+=======
+  return compareStudents(
+    firstPendingEnrollment.student,
+    secondPendingEnrollment.student,
+  );
+}
+
+export { getMentorDashboardWorkspace, getMentorGroupWorkspaces };
+>>>>>>> d4a4744 (feat: enhance student enrollment process with server actions and improve documentation)

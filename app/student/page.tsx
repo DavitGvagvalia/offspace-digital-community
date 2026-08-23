@@ -8,10 +8,13 @@ import { useRequiredProfile } from "../components/use-required-profile";
 import { useSessionCachedQuery } from "../_lib/session-cache";
 import type { Course } from "../_types/course";
 <<<<<<< HEAD
+<<<<<<< HEAD
 import type { Enrollment } from "../_types/enrollment";
 import { enrollCurrentStudentInCourses } from "./_data/enrollment-actions";
 import { getStudentEnrollmentState } from "./_data/enrollments";
 =======
+=======
+>>>>>>> d4a4744 (feat: enhance student enrollment process with server actions and improve documentation)
 import {
   enrollStudentInCourses,
   getStudentEnrollmentState,
@@ -39,7 +42,33 @@ const navItems = [
 ];
 =======
 import { StudentNavigation } from "./student-navigation";
+<<<<<<< HEAD
 >>>>>>> 350f812 (feat: enhance student registration and navigation experience)
+=======
+=======
+import type { Enrollment } from "../_types/enrollment";
+import { enrollCurrentStudentInCourses } from "./_data/enrollment-actions";
+import { getStudentEnrollmentState } from "./_data/enrollments";
+
+const navItems = [
+  {
+    href: "/student/lessons",
+    title: "Lessons",
+    text: "Review scheduled lessons and your attendance status.",
+  },
+  {
+    href: "/student/courses",
+    title: "Courses",
+    text: "See your active course enrollments and group details.",
+  },
+  {
+    href: "/student/profile",
+    title: "Profile",
+    text: "View the basic student information connected to your account.",
+  },
+];
+>>>>>>> 8b40a4a (feat: enhance student enrollment process with server actions and improve documentation)
+>>>>>>> d4a4744 (feat: enhance student enrollment process with server actions and improve documentation)
 
 export default function StudentPage() {
   const { user, profile, isLoading, error } = useRequiredProfile("student");

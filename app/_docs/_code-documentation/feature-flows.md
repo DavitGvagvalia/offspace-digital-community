@@ -9,6 +9,7 @@ row before routing into the portal.
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 Students can self-register, view profile data, enrollments, courses, assigned
 lessons, and personal attendance. If they have no enrollments, they can select
 active courses from the student hub through a student-authenticated server
@@ -20,12 +21,23 @@ lessons, and personal attendance. Pending group assignment displays
 `Your mentor will assign group soon.`
 >>>>>>> 4e832f9 (feat: implement public student registration functionality and update related documentation)
 =======
+=======
+>>>>>>> d4a4744 (feat: enhance student enrollment process with server actions and improve documentation)
 Visitors can browse active courses at `/courses` before logging in. Students
 can register at `/student/register`, then sign in at `/student/login`. They can
 view profile data, enrollments, courses, assigned lessons, and personal
 attendance. Pending group assignment displays `Your mentor will assign group
 soon.`
+<<<<<<< HEAD
 >>>>>>> b4c7db1 (feat: add price field to courses and update related documentation and UI)
+=======
+=======
+Students can self-register, view profile data, enrollments, courses, assigned
+lessons, and personal attendance. If they have no enrollments, they can select
+active courses from the student hub through a student-authenticated server
+action. Pending group assignment displays `Your mentor will assign group soon.`
+>>>>>>> 8b40a4a (feat: enhance student enrollment process with server actions and improve documentation)
+>>>>>>> d4a4744 (feat: enhance student enrollment process with server actions and improve documentation)
 
 ## Mentor
 
