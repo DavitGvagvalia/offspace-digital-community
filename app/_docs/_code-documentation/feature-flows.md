@@ -20,4 +20,5 @@ mark attendance only for students and lessons in assigned groups.
 ## Super-Admin
 
 Super-admins create mentor Supabase Auth users and can create managed student
-users through server actions. They also manage MVP setup data.
+users through server actions. They manage MVP setup data and can open a mentor
+details modal to select the courses that mentor can teach.

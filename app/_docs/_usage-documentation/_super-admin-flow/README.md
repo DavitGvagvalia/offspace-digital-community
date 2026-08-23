@@ -6,6 +6,7 @@ Super-admins can:
 
 - Create student accounts.
 - Create mentor accounts.
+- Open mentor details and select courses that mentor can teach.
 - View student and mentor profile details.
 - Soft-delete portal access.
 - Manage the setup data needed by the MVP.

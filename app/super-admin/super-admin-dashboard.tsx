@@ -6,6 +6,7 @@ import { AccessError, LoadingState } from "../components/auth-states";
 import { StatePanel } from "../components/state-panel";
 import { useRequiredProfile } from "../components/use-required-profile";
 import { formatDate, formatDateTime as formatTimestampDateTime } from "../_lib/dates";
+import type { Course } from "../_types/course";
 import type { TimestampString } from "../_types/date";
 import type { Mentor } from "../_types/mentor";
 import type { Student } from "../_types/student";
@@ -21,6 +22,7 @@ import {
 } from "./_data/person-details";
 import { deleteMentor, getMentors } from "./_data/mentors";
 import { deleteStudent, getStudents } from "./_data/students";
+import { getCourses, updateCourse } from "./_data/courses";
 
 type ManagedRole = "student" | "mentor";
 
@@ -60,9 +62,16 @@ export function SuperAdminDashboard() {
     useRequiredProfile("super-admin");
   const [students, setStudents] = useState<Student[]>([]);
   const [mentors, setMentors] = useState<Mentor[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [isLoadingPeople, setIsLoadingPeople] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState<ManagedRole | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [pendingMentorCourseId, setPendingMentorCourseId] = useState<
+    string | null
+  >(null);
+  const [mentorCourseError, setMentorCourseError] = useState<string | null>(
+    null,
+  );
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionState, setActionState] = useState<ActionState>(null);
   const [selectedPerson, setSelectedPerson] = useState<SelectedPerson | null>(
@@ -74,7 +83,7 @@ export function SuperAdminDashboard() {
   useEffect(() => {
     let isMounted = true;
 
-    async function loadPeople() {
+    async function loadDashboardData() {
       if (!profile) {
         return;
       }
@@ -83,20 +92,22 @@ export function SuperAdminDashboard() {
         setIsLoadingPeople(true);
         setLoadError(null);
 
-        const [nextStudents, nextMentors] = await Promise.all([
+        const [nextStudents, nextMentors, nextCourses] = await Promise.all([
           getStudents(),
           getMentors(),
+          getCourses(),
         ]);
 
         if (isMounted) {
           setStudents(sortStudents(nextStudents));
           setMentors(sortMentors(nextMentors));
+          setCourses(sortCourses(nextCourses));
         }
       } catch (peopleError) {
         console.error(peopleError);
 
         if (isMounted) {
-          setLoadError("We could not load students and mentors right now.");
+          setLoadError("We could not load portal setup data right now.");
         }
       } finally {
         if (isMounted) {
@@ -105,7 +116,7 @@ export function SuperAdminDashboard() {
       }
     }
 
-    loadPeople();
+    loadDashboardData();
 
     return () => {
       isMounted = false;
@@ -295,9 +306,44 @@ export function SuperAdminDashboard() {
     }
   }
 
+  async function handleToggleMentorCourse(
+    mentorId: string,
+    course: Course,
+    shouldTeach: boolean,
+  ) {
+    const nextMentorIds = shouldTeach
+      ? [...new Set([...course.mentorIds, mentorId])]
+      : course.mentorIds.filter((courseMentorId) => courseMentorId !== mentorId);
+
+    try {
+      setPendingMentorCourseId(course.id);
+      setMentorCourseError(null);
+
+      const updatedCourse = await updateCourse(course.id, {
+        mentorIds: nextMentorIds,
+      });
+
+      setCourses((currentCourses) =>
+        sortCourses(
+          currentCourses.map((currentCourse) =>
+            currentCourse.id === updatedCourse.id ? updatedCourse : currentCourse,
+          ),
+        ),
+      );
+    } catch (courseError) {
+      console.error(courseError);
+      setMentorCourseError(
+        "We could not update this mentor's course access right now.",
+      );
+    } finally {
+      setPendingMentorCourseId(null);
+    }
+  }
+
   function handleCloseDetails() {
     setSelectedPerson(null);
     setDetailState(emptyDetailState);
+    setMentorCourseError(null);
   }
 
   if (isAuthLoading) {
@@ -390,6 +436,10 @@ export function SuperAdminDashboard() {
           selectedPerson={selectedPerson}
           detailState={detailState}
           mentors={mentors}
+          courses={courses}
+          pendingMentorCourseId={pendingMentorCourseId}
+          mentorCourseError={mentorCourseError}
+          onToggleMentorCourse={handleToggleMentorCourse}
           onClose={handleCloseDetails}
         />
       ) : null}
@@ -585,11 +635,23 @@ function PersonDetailsModal({
   selectedPerson,
   detailState,
   mentors,
+  courses,
+  pendingMentorCourseId,
+  mentorCourseError,
+  onToggleMentorCourse,
   onClose,
 }: {
   selectedPerson: SelectedPerson;
   detailState: DetailState;
   mentors: Mentor[];
+  courses: Course[];
+  pendingMentorCourseId: string | null;
+  mentorCourseError: string | null;
+  onToggleMentorCourse: (
+    mentorId: string,
+    course: Course,
+    shouldTeach: boolean,
+  ) => void;
   onClose: () => void;
 }) {
   const person = selectedPerson.person;
@@ -657,7 +719,14 @@ function PersonDetailsModal({
               mentors={mentors}
             />
           ) : (
-            <MentorDetails details={detailState.mentorGroups} />
+            <MentorDetails
+              mentor={selectedPerson.person}
+              details={detailState.mentorGroups}
+              courses={courses}
+              pendingMentorCourseId={pendingMentorCourseId}
+              mentorCourseError={mentorCourseError}
+              onToggleCourse={onToggleMentorCourse}
+            />
           )}
         </div>
       </section>
@@ -773,62 +842,149 @@ function StudentDetails({
   );
 }
 
-function MentorDetails({ details }: { details: MentorGroupDetail[] }) {
-  if (details.length === 0) {
-    return (
-      <DetailStatePanel
-        title="No mentored groups found"
-        text="This mentor does not have assigned course groups yet."
-      />
-    );
-  }
-
+function MentorDetails({
+  mentor,
+  details,
+  courses,
+  pendingMentorCourseId,
+  mentorCourseError,
+  onToggleCourse,
+}: {
+  mentor: Mentor;
+  details: MentorGroupDetail[];
+  courses: Course[];
+  pendingMentorCourseId: string | null;
+  mentorCourseError: string | null;
+  onToggleCourse: (mentorId: string, course: Course, shouldTeach: boolean) => void;
+}) {
   const courseCount = new Set(
     details.map((detail) => detail.course?.id ?? detail.group.courseId),
   ).size;
+  const eligibleCourseCount = courses.filter((course) =>
+    course.mentorIds.includes(mentor.id),
+  ).length;
 
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2">
-        <Metric label="Courses" value={courseCount} />
+        <Metric label="Assigned courses" value={courseCount} />
         <Metric label="Groups" value={details.length} />
       </div>
 
-      <div className="space-y-3">
-        {details.map((detail) => (
-          <article
-            key={`${detail.group.courseId}:${detail.group.id}`}
-            className="rounded-sm border border-stone-200 bg-ivory-light p-4"
-          >
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0">
-                <h3 className="break-words text-lg font-semibold text-ink">
-                  {getCourseName(detail.course, detail.group.courseId)}
-                </h3>
-                <p className="mt-1 text-sm text-ink-soft">
-                  Group: {getGroupName(detail.group, detail.group.id)}
-                </p>
-                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-muted">
-                  <span className="break-all">Course ID: {detail.group.courseId}</span>
-                  <span className="break-all">Group ID: {detail.group.id}</span>
-                  <span>Created: {formatDate(detail.group.createdAt)}</span>
+      <section className="rounded-sm border border-stone-200 bg-ivory-light p-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-ink">Teaching courses</h3>
+            <p className="mt-1 text-sm leading-6 text-ink-soft">
+              Courses this mentor can teach.
+            </p>
+          </div>
+          <span className="rounded-sm bg-sage-100 px-3 py-1 text-sm font-bold text-forest">
+            {eligibleCourseCount}
+          </span>
+        </div>
+
+        {mentorCourseError ? (
+          <p className="mt-3 rounded-sm border border-danger/20 bg-danger/10 px-3 py-2 text-sm text-danger">
+            {mentorCourseError}
+          </p>
+        ) : null}
+
+        {courses.length === 0 ? (
+          <p className="mt-4 rounded-sm border border-stone-200 bg-offwhite px-3 py-3 text-sm text-ink-soft">
+            No courses found.
+          </p>
+        ) : (
+          <div className="mt-4 space-y-2">
+            {courses.map((course) => {
+              const isChecked = course.mentorIds.includes(mentor.id);
+              const isPending = pendingMentorCourseId === course.id;
+
+              return (
+                <label
+                  key={course.id}
+                  className="flex items-start gap-3 rounded-sm border border-stone-200 bg-offwhite px-3 py-3"
+                >
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    disabled={isPending}
+                    onChange={(event) =>
+                      onToggleCourse(mentor.id, course, event.target.checked)
+                    }
+                    className="mt-1 h-4 w-4 rounded border-stone-300 text-forest focus:ring-forest disabled:cursor-not-allowed disabled:opacity-60"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block break-words text-sm font-semibold text-ink">
+                      {course.name}
+                    </span>
+                    <span className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-ink-muted">
+                      <span className="break-all">ID: {course.id}</span>
+                      <span>{course.active ? "Active" : "Inactive"}</span>
+                      {isPending ? <span>Saving...</span> : null}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {details.length === 0 ? (
+        <DetailStatePanel
+          title="No assigned groups found"
+          text="This mentor does not have assigned course groups yet."
+        />
+      ) : (
+        <div className="space-y-3">
+          {details.map((detail) => (
+            <article
+              key={`${detail.group.courseId}:${detail.group.id}`}
+              className="rounded-sm border border-stone-200 bg-ivory-light p-4"
+            >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <h3 className="break-words text-lg font-semibold text-ink">
+                    {getCourseName(detail.course, detail.group.courseId)}
+                  </h3>
+                  <p className="mt-1 text-sm text-ink-soft">
+                    Group: {getGroupName(detail.group, detail.group.id)}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-muted">
+                    <span className="break-all">
+                      Course ID: {detail.group.courseId}
+                    </span>
+                    <span className="break-all">Group ID: {detail.group.id}</span>
+                    <span>Created: {formatDate(detail.group.createdAt)}</span>
+                  </div>
                 </div>
+                <span
+                  className={`rounded-sm px-3 py-1 text-sm font-bold ${
+                    detail.group.active
+                      ? "bg-success/10 text-success"
+                      : "bg-stone-100 text-stone-600"
+                  }`}
+                >
+                  {detail.group.active ? "Active group" : "Inactive group"}
+                </span>
               </div>
-              <span
-                className={`rounded-sm px-3 py-1 text-sm font-bold ${
-                  detail.group.active
-                    ? "bg-success/10 text-success"
-                    : "bg-stone-100 text-stone-600"
-                }`}
-              >
-                {detail.group.active ? "Active group" : "Inactive group"}
-              </span>
-            </div>
-          </article>
-        ))}
-      </div>
+            </article>
+          ))}
+        </div>
+      )}
     </div>
   );
+}
+
+function sortCourses(courses: Course[]) {
+  return [...courses].sort((firstCourse, secondCourse) => {
+    if (firstCourse.active !== secondCourse.active) {
+      return firstCourse.active ? -1 : 1;
+    }
+
+    return firstCourse.name.localeCompare(secondCourse.name);
+  });
 }
 
 function Metric({ label, value }: { label: string; value: number }) {

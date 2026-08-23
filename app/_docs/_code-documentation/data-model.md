@@ -17,6 +17,7 @@ Important rules:
 
 - `profiles.id` references `auth.users.id`.
 - Course mentor eligibility is a join table.
+- Super-admin mentor course toggles write `course_mentor_eligibility` rows.
 - Enrollments allow pending group assignment with null `group_id` and
   `mentor_id`.
 - Students can create only their own active pending enrollments for active

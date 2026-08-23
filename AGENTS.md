@@ -92,7 +92,8 @@ lessons.
 
 Super-admins can create student and mentor Supabase Auth accounts and manage
 the MVP setup data needed for courses, groups, lessons, enrollments, and
-attendance. The first super-admin is bootstrapped manually in Supabase.
+attendance. Super-admins assign the courses a mentor can teach from the mentor
+details modal. The first super-admin is bootstrapped manually in Supabase.
 
 ## UI Direction
 
