@@ -10,5 +10,6 @@ Super-admins can:
 - Soft-delete portal access.
 - Manage the setup data needed by the MVP.
 
-The first super-admin must be created manually in Supabase before the portal can
-manage other accounts.
+Student self-registration is also available from `/student/register`. The first
+super-admin must be created manually in Supabase before the portal can manage
+other accounts.

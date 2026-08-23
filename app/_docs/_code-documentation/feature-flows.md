@@ -7,8 +7,9 @@ row before routing into the portal.
 
 ## Student
 
-Students can view profile data, enrollments, courses, assigned lessons, and
-personal attendance. Pending group assignment displays
+Students can self-register, view profile data, enrollments, courses, assigned
+lessons, and personal attendance. If they have no enrollments, they can select
+active courses from the student hub. Pending group assignment displays
 `Your mentor will assign group soon.`
 
 ## Mentor
@@ -18,5 +19,5 @@ mark attendance only for students and lessons in assigned groups.
 
 ## Super-Admin
 
-Super-admins create student and mentor Supabase Auth users through server
-actions and manage MVP setup data.
+Super-admins create mentor Supabase Auth users and can create managed student
+users through server actions. They also manage MVP setup data.

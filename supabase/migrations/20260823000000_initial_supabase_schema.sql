@@ -21,7 +21,6 @@ end $$;
 
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
-  legacy_firebase_uid text unique,
   role public.portal_role not null,
   name text not null,
   last_name text not null,
@@ -53,7 +52,6 @@ create table if not exists public.super_admins (
 
 create table if not exists public.courses (
   id uuid primary key default gen_random_uuid(),
-  legacy_firebase_id text unique,
   name text not null,
   description text,
   active boolean not null default true,
@@ -72,20 +70,17 @@ create table if not exists public.course_mentor_eligibility (
 
 create table if not exists public.groups (
   id uuid primary key default gen_random_uuid(),
-  legacy_firebase_id text,
   course_id uuid not null references public.courses(id) on delete cascade,
   mentor_id uuid not null references public.mentors(user_id),
   name text,
   active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz,
-  deleted_at timestamptz,
-  unique (course_id, legacy_firebase_id)
+  deleted_at timestamptz
 );
 
 create table if not exists public.lessons (
   id uuid primary key default gen_random_uuid(),
-  legacy_firebase_id text,
   course_id uuid not null references public.courses(id) on delete cascade,
   group_id uuid not null references public.groups(id) on delete cascade,
   title text,
@@ -93,13 +88,11 @@ create table if not exists public.lessons (
   lesson_at timestamptz not null,
   created_at timestamptz not null default now(),
   updated_at timestamptz,
-  deleted_at timestamptz,
-  unique (group_id, legacy_firebase_id)
+  deleted_at timestamptz
 );
 
 create table if not exists public.enrollments (
   id uuid primary key default gen_random_uuid(),
-  legacy_firebase_id text unique,
   student_id uuid not null references public.students(user_id) on delete cascade,
   course_id uuid not null references public.courses(id) on delete cascade,
   group_id uuid references public.groups(id),
@@ -120,7 +113,6 @@ create table if not exists public.enrollments (
 
 create table if not exists public.attendances (
   id uuid primary key default gen_random_uuid(),
-  legacy_firebase_id text unique,
   student_id uuid not null references public.students(user_id) on delete cascade,
   course_id uuid not null references public.courses(id) on delete cascade,
   group_id uuid not null references public.groups(id) on delete cascade,
@@ -381,6 +373,34 @@ using (
     student_id = auth.uid()
     or mentor_id = auth.uid()
     or public.is_super_admin()
+  )
+);
+
+create policy "enrollments_insert_student_self"
+on public.enrollments for insert
+with check (
+  student_id = auth.uid()
+  and group_id is null
+  and mentor_id is null
+  and price is null
+  and completed_at is null
+  and status = 'active'
+  and deleted_at is null
+  and exists (
+    select 1
+    from public.profiles p
+    join public.students s on s.user_id = p.id
+    where p.id = auth.uid()
+      and p.role = 'student'
+      and p.deleted_at is null
+      and s.deleted_at is null
+  )
+  and exists (
+    select 1
+    from public.courses c
+    where c.id = enrollments.course_id
+      and c.active = true
+      and c.deleted_at is null
   )
 );
 

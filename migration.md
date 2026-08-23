@@ -10,8 +10,9 @@ Auth + Supabase Postgres.
 - Supabase Free is acceptable for MVP launch by user decision.
 - No Firebase rollback path is required because existing Firebase data was test
   data only.
-- Public student self-registration is disabled.
-- Super-admins create student and mentor accounts.
+- Public student self-registration is enabled through `/student/register`.
+- Super-admins create mentor accounts and can also create managed student
+  accounts.
 - Payments, invoices, and private-student mentor workspaces are deferred.
 - Hosted Supabase project only; no local Docker Supabase stack is required for
   MVP setup.
@@ -30,6 +31,8 @@ Auth + Supabase Postgres.
 - Database types live in `app/_types/supabase.ts`.
 - Initial SQL migration lives at
   `supabase/migrations/20260823000000_initial_supabase_schema.sql`.
+- Firebase legacy columns have been removed from the canonical schema because
+  Firebase data was test-only and no rollback path is required.
 
 ## Environment Setup
 
@@ -100,8 +103,9 @@ mirror the role into Supabase Auth `app_metadata`.
 
 ## Sample Data After Auth Users Exist
 
-Real student and mentor rows require real Supabase Auth user ids. Create those
-accounts through the super-admin portal first.
+Real student and mentor rows require real Supabase Auth user ids. Create the
+mentor account through the super-admin portal and create the student account
+through `/student/register` or the super-admin portal first.
 
 Then copy `supabase/seed_after_auth_template.sql`, replace:
 
@@ -121,7 +125,10 @@ and execute the edited SQL in Supabase SQL Editor. This creates:
 After the hosted database is migrated and the first super-admin exists, verify:
 
 - Student login redirects to `/student`.
+- Student registration creates a student account and profile rows.
 - Student profile loads only the signed-in student's profile.
+- Student course selection creates only the signed-in student's active,
+  unassigned enrollments.
 - Student courses load active enrollments.
 - Student lessons show assigned group lessons and personal attendance.
 - Mentor login redirects to `/mentor`.

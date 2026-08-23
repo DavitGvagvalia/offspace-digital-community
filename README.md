@@ -20,10 +20,9 @@ required.
 The active MVP supports student, mentor, and super-admin portals for courses,
 groups, lessons, enrollments, and boolean attendance.
 
-Deferred: public student self-registration, payments, invoices, private-student
-mentor workspaces, messaging, homework, file uploads, certificates, payroll,
-parent accounts, notifications, video lessons, analytics, and broad LMS
-features.
+Deferred: payments, invoices, private-student mentor workspaces, messaging,
+homework, file uploads, certificates, payroll, parent accounts, notifications,
+video lessons, analytics, and broad LMS features.
 
 ## Setup
 
@@ -39,8 +38,9 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SECRET_KEY=
 ```
 
-`SUPABASE_SECRET_KEY` is server-only. Never expose it through a `NEXT_PUBLIC_*`
-variable.
+`SUPABASE_SECRET_KEY` is server-only. It is used by server actions for
+student self-registration and super-admin account creation. Never expose it
+through a `NEXT_PUBLIC_*` variable.
 
 Run the app:
 
@@ -79,7 +79,8 @@ insert into public.super_admins (user_id)
 values ('<auth-user-id>');
 ```
 
-The super-admin portal can then create student and mentor accounts.
+The super-admin portal can then create mentor accounts and managed student
+accounts. Students can also create their own accounts at `/student/register`.
 
 ## Validation
 

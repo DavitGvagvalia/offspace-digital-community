@@ -10,7 +10,10 @@ Postgres:
 - Super-admin: `profiles.role = 'super_admin'` plus `super_admins.user_id`.
 
 Normal browser reads and writes are constrained by Row Level Security.
-Super-admin student/mentor account creation runs through server actions using
-`SUPABASE_SECRET_KEY`.
+Student self-registration and super-admin student/mentor account creation run
+through server actions using `SUPABASE_SECRET_KEY`.
+
+Students may insert only their own active, unassigned enrollments for active
+courses. Super-admins retain full enrollment management access.
 
 The first super-admin is bootstrapped manually in Supabase Dashboard and SQL.

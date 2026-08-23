@@ -36,7 +36,7 @@ const getStudent = async (id: string) => {
 const addStudent = async (student: CreateStudent) => {
   void student;
   throw new Error(
-    "Students must be created through Supabase Auth by a super-admin.",
+    "Students must be created through Supabase Auth registration or a super-admin action.",
   );
 };
 

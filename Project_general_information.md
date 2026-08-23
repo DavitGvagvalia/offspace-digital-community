@@ -22,8 +22,8 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SECRET_KEY=
 ```
 
-`SUPABASE_SECRET_KEY` is server-only and is used for super-admin account
-creation.
+`SUPABASE_SECRET_KEY` is server-only and is used by server actions for student
+self-registration and super-admin account creation.
 
 ## Data Model
 
@@ -48,11 +48,12 @@ attended the lesson.
 
 ## Access Model
 
-- Students read only their own profile, enrollments, lessons, and attendance.
+- Students can self-register, choose active courses, and read only their own
+  profile, enrollments, lessons, and attendance.
 - Mentors read assigned groups and related students, lessons, and attendance.
 - Super-admins manage profiles, courses, groups, lessons, enrollments, and
   account creation.
-- Public student self-registration is disabled.
+- Student self-registration is enabled through `/student/register`.
 
 ## Validation
 
