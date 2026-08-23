@@ -1,7 +1,11 @@
 import type { Attendance } from "../_types/attendance";
 import { formatDateTime, formatShortDate } from "../_lib/dates";
+import type { Course } from "../_types/course";
 import type { Lesson } from "../_types/lesson";
-import type { MentorGroupWorkspace } from "./_types/workspace";
+import type {
+  MentorGroupWorkspace,
+  MentorPendingEnrollment,
+} from "./_types/workspace";
 import type { Student } from "../_types/student";
 
 export type AttendanceToggleRequest = {
@@ -9,6 +13,223 @@ export type AttendanceToggleRequest = {
   studentId: string;
   lessonId: string;
 };
+
+export type GroupCreationRequest = {
+  courseId: string;
+  name: string;
+  enrollmentIds: string[];
+};
+
+export function GroupCreationPanel({
+  eligibleCourses,
+  pendingEnrollments,
+  selectedCourseId,
+  groupName,
+  selectedEnrollmentIds,
+  isSubmitting,
+  error,
+  onCourseChange,
+  onNameChange,
+  onToggleEnrollment,
+  onSubmit,
+}: {
+  eligibleCourses: Course[];
+  pendingEnrollments: MentorPendingEnrollment[];
+  selectedCourseId: string;
+  groupName: string;
+  selectedEnrollmentIds: string[];
+  isSubmitting: boolean;
+  error: string | null;
+  onCourseChange: (courseId: string) => void;
+  onNameChange: (name: string) => void;
+  onToggleEnrollment: (enrollmentId: string) => void;
+  onSubmit: (request: GroupCreationRequest) => void;
+}) {
+  const pendingForCourse = pendingEnrollments.filter(
+    (pendingEnrollment) => pendingEnrollment.course.id === selectedCourseId,
+  );
+
+  return (
+    <section className="rounded-md border border-stone-200 bg-offwhite p-5 shadow-sm">
+      <div className="mb-5">
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-forest">
+          Groups
+        </p>
+        <h2 className="mt-2 text-2xl font-semibold text-ink">Create group</h2>
+      </div>
+
+      {eligibleCourses.length === 0 ? (
+        <EmptyBox text="No teaching courses assigned." />
+      ) : (
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            onSubmit({
+              courseId: selectedCourseId,
+              name: groupName,
+              enrollmentIds: selectedEnrollmentIds,
+            });
+          }}
+        >
+          <label className="block">
+            <span className="text-sm font-semibold text-ink">Course</span>
+            <select
+              name="courseId"
+              required
+              value={selectedCourseId}
+              onChange={(event) => onCourseChange(event.target.value)}
+              className="mt-2 w-full rounded-sm border border-stone-200 bg-ivory-light px-4 py-3 text-sm text-ink outline-none transition focus:border-forest focus:ring-2 focus:ring-forest/15"
+            >
+              {eligibleCourses.map((course) => (
+                <option key={course.id} value={course.id}>
+                  {course.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="mt-4 block">
+            <span className="text-sm font-semibold text-ink">Group name</span>
+            <input
+              type="text"
+              name="name"
+              value={groupName}
+              onChange={(event) => onNameChange(event.target.value)}
+              className="mt-2 w-full rounded-sm border border-stone-200 bg-ivory-light px-4 py-3 text-sm text-ink outline-none transition focus:border-forest focus:ring-2 focus:ring-forest/15"
+            />
+          </label>
+
+          {pendingForCourse.length > 0 ? (
+            <div className="mt-4">
+              <p className="text-sm font-semibold text-ink">Students</p>
+              <div className="mt-2 max-h-56 space-y-2 overflow-y-auto rounded-sm border border-stone-200 bg-ivory-light p-2">
+                {pendingForCourse.map(({ enrollment, student }) => (
+                  <label
+                    key={enrollment.id}
+                    className="flex items-start gap-3 rounded-sm bg-offwhite px-3 py-2"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedEnrollmentIds.includes(enrollment.id)}
+                      onChange={() => onToggleEnrollment(enrollment.id)}
+                      className="mt-1 h-4 w-4 rounded border-stone-300 text-forest focus:ring-forest"
+                    />
+                    <span className="min-w-0">
+                      <span className="block break-words text-sm font-semibold text-ink">
+                        {student.name} {student.lastName}
+                      </span>
+                      <span className="mt-1 block break-all text-xs text-ink-muted">
+                        {student.email ?? student.id}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {error ? (
+            <p className="mt-4 rounded-sm border border-danger/20 bg-danger/10 px-3 py-2 text-sm text-danger">
+              {error}
+            </p>
+          ) : null}
+
+          <button
+            type="submit"
+            disabled={isSubmitting || !selectedCourseId}
+            className="mt-6 w-full rounded-sm bg-forest px-4 py-3 text-sm font-bold text-ivory transition hover:bg-forest-light disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSubmitting ? "Creating group..." : "Create group"}
+          </button>
+        </form>
+      )}
+    </section>
+  );
+}
+
+export function UnassignedStudentsPanel({
+  pendingEnrollments,
+}: {
+  pendingEnrollments: MentorPendingEnrollment[];
+}) {
+  const courseGroups = pendingEnrollments.reduce<
+    Array<{ course: Course; pendingEnrollments: MentorPendingEnrollment[] }>
+  >((groups, pendingEnrollment) => {
+    const existingGroup = groups.find(
+      (group) => group.course.id === pendingEnrollment.course.id,
+    );
+
+    if (existingGroup) {
+      existingGroup.pendingEnrollments.push(pendingEnrollment);
+      return groups;
+    }
+
+    return [
+      ...groups,
+      {
+        course: pendingEnrollment.course,
+        pendingEnrollments: [pendingEnrollment],
+      },
+    ];
+  }, []);
+
+  return (
+    <section className="rounded-md border border-stone-200 bg-offwhite p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-forest">
+            Students
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold text-ink">
+            Unassigned enrollments
+          </h2>
+        </div>
+        <span className="rounded-sm bg-sage-100 px-3 py-1 text-sm font-bold text-forest">
+          {pendingEnrollments.length}
+        </span>
+      </div>
+
+      {courseGroups.length === 0 ? (
+        <p className="mt-5 rounded-sm border border-stone-200 bg-ivory-light px-3 py-3 text-sm text-ink-soft">
+          No unassigned enrolled students found.
+        </p>
+      ) : (
+        <div className="mt-5 space-y-4">
+          {courseGroups.map((courseGroup) => (
+            <article
+              key={courseGroup.course.id}
+              className="rounded-sm border border-stone-200 bg-ivory-light p-4"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="break-words text-lg font-semibold text-ink">
+                  {courseGroup.course.name}
+                </h3>
+                <span className="rounded-sm bg-offwhite px-3 py-1 text-sm font-bold text-forest">
+                  {courseGroup.pendingEnrollments.length}
+                </span>
+              </div>
+              <ul className="mt-3 space-y-2">
+                {courseGroup.pendingEnrollments.map(({ enrollment, student }) => (
+                  <li
+                    key={enrollment.id}
+                    className="rounded-sm border border-stone-200 bg-offwhite px-3 py-2"
+                  >
+                    <p className="break-words text-sm font-semibold text-ink">
+                      {student.name} {student.lastName}
+                    </p>
+                    <p className="mt-1 break-all text-xs text-ink-muted">
+                      {student.email ?? student.id}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
 
 export function MentorGroupList({
   workspaces,
@@ -23,7 +244,7 @@ export function MentorGroupList({
     <aside className="rounded-md border border-stone-200 bg-offwhite p-4 shadow-sm">
       <h2 className="text-2xl font-semibold text-ink">My groups</h2>
       <p className="mt-1 text-sm text-ink-soft">
-        Private student assignments are not modeled yet.
+        Assigned course groups.
       </p>
       <div className="mt-5 space-y-2">
         {workspaces.map((workspace) => {

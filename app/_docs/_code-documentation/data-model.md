@@ -18,6 +18,8 @@ Important rules:
 - `profiles.id` references `auth.users.id`.
 - Course mentor eligibility is a join table.
 - Super-admin mentor course toggles write `course_mentor_eligibility` rows.
+- Mentors can see active unassigned enrollments for eligible courses and create
+  groups through a mentor-authenticated server action.
 - Enrollments allow pending group assignment with null `group_id` and
   `mentor_id`.
 - Students can create only their own active pending enrollments for active

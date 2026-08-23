@@ -75,6 +75,31 @@ async function getEnrollmentsByAssignedGroup(
   return (data ?? []).map(mapEnrollment);
 }
 
+async function getUnassignedActiveEnrollmentsByCourses(
+  courseIds: string[],
+): Promise<Enrollment[]> {
+  const uniqueCourseIds = [...new Set(courseIds)].filter(Boolean);
+
+  if (uniqueCourseIds.length === 0) {
+    return [];
+  }
+
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("enrollments")
+    .select("*")
+    .in("course_id", uniqueCourseIds)
+    .eq("status", "active")
+    .is("group_id", null)
+    .is("mentor_id", null)
+    .is("deleted_at", null)
+    .order("enrolled_at");
+
+  throwIfSupabaseError(error);
+
+  return (data ?? []).map(mapEnrollment);
+}
+
 async function getAttendancesByGroup(
   courseId: string,
   groupId: string,
@@ -135,5 +160,6 @@ export {
   getAttendancesByStudentGroup,
   getEnrollmentsByStudent,
   getEnrollmentsByAssignedGroup,
+  getUnassignedActiveEnrollmentsByCourses,
   getGroupsByMentor,
 };

@@ -15,7 +15,9 @@ active courses from the student hub. Pending group assignment displays
 ## Mentor
 
 Mentors load groups where `groups.mentor_id` is the authenticated user. They can
-mark attendance only for students and lessons in assigned groups.
+create groups for courses they are eligible to teach, see active unassigned
+enrollments for those courses, assign selected pending students while creating a
+group, and mark attendance only for students and lessons in assigned groups.
 
 ## Super-Admin
 

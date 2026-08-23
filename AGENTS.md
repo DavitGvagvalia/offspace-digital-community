@@ -87,8 +87,9 @@ and personal attendance. Students can select active courses when they have no
 enrollments. Enrollments can exist before group assignment and must show
 `Your mentor will assign group soon.`
 
-Mentors can view assigned groups and mark attendance only for assigned group
-lessons.
+Mentors can create groups for courses they are eligible to teach, view active
+unassigned enrollments for those courses, assign selected pending students while
+creating a group, and mark attendance only for assigned group lessons.
 
 Super-admins can create student and mentor Supabase Auth accounts and manage
 the MVP setup data needed for courses, groups, lessons, enrollments, and

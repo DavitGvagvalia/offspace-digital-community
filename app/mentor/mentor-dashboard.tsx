@@ -1,16 +1,25 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { AccessError, LoadingState } from "../components/auth-states";
 import { StatePanel } from "../components/state-panel";
 import { useRequiredProfile } from "../components/use-required-profile";
+import type { Course } from "../_types/course";
+import { createMentorGroup } from "./_data/group-actions";
 import { addAttendance, deleteAttendance } from "./_data/attendance";
-import { getMentorGroupWorkspaces } from "./_data/workspace";
-import type { MentorGroupWorkspace } from "./_types/workspace";
+import { getMentorDashboardWorkspace } from "./_data/workspace";
+import type {
+  MentorDashboardWorkspace,
+  MentorGroupWorkspace,
+  MentorPendingEnrollment,
+} from "./_types/workspace";
 import {
+  GroupCreationPanel,
   GroupWorkspace,
+  type GroupCreationRequest,
   MentorGroupList,
+  UnassignedStudentsPanel,
   type AttendanceToggleRequest,
 } from "./mentor-workspace-components";
 
@@ -18,11 +27,65 @@ export function MentorDashboard() {
   const { user, profile, isLoading: isAuthLoading, error: authError } =
     useRequiredProfile("mentor");
   const [workspaces, setWorkspaces] = useState<MentorGroupWorkspace[]>([]);
+  const [eligibleCourses, setEligibleCourses] = useState<Course[]>([]);
+  const [pendingEnrollments, setPendingEnrollments] = useState<
+    MentorPendingEnrollment[]
+  >([]);
   const [selectedGroupId, setSelectedGroupId] = useState("");
+  const [newGroupCourseId, setNewGroupCourseId] = useState("");
+  const newGroupCourseIdRef = useRef("");
+  const [newGroupName, setNewGroupName] = useState("");
+  const [selectedEnrollmentIds, setSelectedEnrollmentIds] = useState<string[]>(
+    [],
+  );
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [groupCreationError, setGroupCreationError] = useState<string | null>(
+    null,
+  );
   const [pendingAttendanceIds, setPendingAttendanceIds] = useState<string[]>([]);
+
+  const applyMentorDashboardWorkspace = useCallback(
+    (nextWorkspace: MentorDashboardWorkspace, preferredGroupId?: string) => {
+      const nextSelectedGroupId =
+        preferredGroupId &&
+        nextWorkspace.workspaces.some(
+          (workspace) => workspace.group.id === preferredGroupId,
+        )
+          ? preferredGroupId
+          : nextWorkspace.workspaces[0]?.group.id ?? "";
+      const currentCourseId = newGroupCourseIdRef.current;
+      const nextCourseId = nextWorkspace.eligibleCourses.some(
+        (course) => course.id === currentCourseId,
+      )
+        ? currentCourseId
+        : nextWorkspace.eligibleCourses[0]?.id ?? "";
+
+      newGroupCourseIdRef.current = nextCourseId;
+      setWorkspaces(nextWorkspace.workspaces);
+      setEligibleCourses(nextWorkspace.eligibleCourses);
+      setPendingEnrollments(nextWorkspace.pendingEnrollments);
+      setSelectedGroupId(nextSelectedGroupId);
+      setNewGroupCourseId(nextCourseId);
+      setSelectedEnrollmentIds((currentEnrollmentIds) => {
+        const pendingEnrollmentIds = new Set(
+          nextWorkspace.pendingEnrollments
+            .filter(
+              (pendingEnrollment) =>
+                pendingEnrollment.course.id === nextCourseId,
+            )
+            .map((pendingEnrollment) => pendingEnrollment.enrollment.id),
+        );
+
+        return currentEnrollmentIds.filter((enrollmentId) =>
+          pendingEnrollmentIds.has(enrollmentId),
+        );
+      });
+    },
+    [],
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -36,11 +99,10 @@ export function MentorDashboard() {
         setIsLoading(true);
         setError(null);
 
-        const nextWorkspaces = await getMentorGroupWorkspaces(user.id);
+        const nextWorkspace = await getMentorDashboardWorkspace(user.id);
 
         if (isMounted) {
-          setWorkspaces(nextWorkspaces);
-          setSelectedGroupId(nextWorkspaces[0]?.group.id ?? "");
+          applyMentorDashboardWorkspace(nextWorkspace);
         }
       } catch (loadError) {
         console.error(loadError);
@@ -60,11 +122,74 @@ export function MentorDashboard() {
     return () => {
       isMounted = false;
     };
-  }, [user]);
+  }, [applyMentorDashboardWorkspace, user]);
 
   const selectedWorkspace = useMemo(() => {
     return workspaces.find((workspace) => workspace.group.id === selectedGroupId);
   }, [selectedGroupId, workspaces]);
+
+  const pendingEnrollmentsForSelectedCourse = useMemo(() => {
+    return pendingEnrollments.filter(
+      (pendingEnrollment) =>
+        pendingEnrollment.course.id === newGroupCourseId,
+    );
+  }, [newGroupCourseId, pendingEnrollments]);
+
+  function handleNewGroupCourseChange(courseId: string) {
+    newGroupCourseIdRef.current = courseId;
+    setNewGroupCourseId(courseId);
+    setSelectedEnrollmentIds([]);
+    setGroupCreationError(null);
+  }
+
+  function handleToggleSelectedEnrollment(enrollmentId: string) {
+    setSelectedEnrollmentIds((currentEnrollmentIds) =>
+      currentEnrollmentIds.includes(enrollmentId)
+        ? currentEnrollmentIds.filter((currentEnrollmentId) => currentEnrollmentId !== enrollmentId)
+        : [...currentEnrollmentIds, enrollmentId],
+    );
+  }
+
+  async function handleCreateGroup(request: GroupCreationRequest) {
+    if (!user) {
+      return;
+    }
+
+    const validEnrollmentIds = new Set(
+      pendingEnrollmentsForSelectedCourse.map(
+        (pendingEnrollment) => pendingEnrollment.enrollment.id,
+      ),
+    );
+    const enrollmentIds = request.enrollmentIds.filter((enrollmentId) =>
+      validEnrollmentIds.has(enrollmentId),
+    );
+
+    try {
+      setIsCreatingGroup(true);
+      setGroupCreationError(null);
+      setActionError(null);
+
+      const createdGroup = await createMentorGroup({
+        courseId: request.courseId,
+        name: request.name,
+        enrollmentIds,
+      });
+      const nextWorkspace = await getMentorDashboardWorkspace(user.id);
+
+      applyMentorDashboardWorkspace(nextWorkspace, createdGroup.id);
+      setNewGroupName("");
+      setSelectedEnrollmentIds([]);
+    } catch (createError) {
+      console.error(createError);
+      setGroupCreationError(
+        createError instanceof Error
+          ? createError.message
+          : "We could not create that group right now.",
+      );
+    } finally {
+      setIsCreatingGroup(false);
+    }
+  }
 
   async function handleToggleAttendance(request: AttendanceToggleRequest) {
     if (!user) {
@@ -194,27 +319,48 @@ export function MentorDashboard() {
           <StatePanel title="Loading groups" text="Checking your assigned groups." />
         ) : error ? (
           <StatePanel title="Workspace unavailable" text={error} />
-        ) : workspaces.length === 0 ? (
-          <StatePanel title="No assigned groups" text="No groups were found for this mentor account yet." />
         ) : (
-          <section className="grid gap-5 lg:grid-cols-[18rem_minmax(0,1fr)]">
-            <MentorGroupList
-              workspaces={workspaces}
-              selectedGroupId={selectedGroupId}
-              onSelectGroup={setSelectedGroupId}
-            />
-
-            {selectedWorkspace ? (
-              <GroupWorkspace
-                workspace={selectedWorkspace}
-                actionError={actionError}
-                pendingAttendanceIds={pendingAttendanceIds}
-                onToggleAttendance={handleToggleAttendance}
+          <>
+            <section className="grid gap-5 lg:grid-cols-2">
+              <GroupCreationPanel
+                eligibleCourses={eligibleCourses}
+                pendingEnrollments={pendingEnrollments}
+                selectedCourseId={newGroupCourseId}
+                groupName={newGroupName}
+                selectedEnrollmentIds={selectedEnrollmentIds}
+                isSubmitting={isCreatingGroup}
+                error={groupCreationError}
+                onCourseChange={handleNewGroupCourseChange}
+                onNameChange={setNewGroupName}
+                onToggleEnrollment={handleToggleSelectedEnrollment}
+                onSubmit={handleCreateGroup}
               />
+              <UnassignedStudentsPanel pendingEnrollments={pendingEnrollments} />
+            </section>
+
+            {workspaces.length === 0 ? (
+              <StatePanel title="No assigned groups" text="No groups were found for this mentor account yet." />
             ) : (
-              <StatePanel title="No group selected" text="Choose a group to see schedule and attendance." />
+              <section className="grid gap-5 lg:grid-cols-[18rem_minmax(0,1fr)]">
+                <MentorGroupList
+                  workspaces={workspaces}
+                  selectedGroupId={selectedGroupId}
+                  onSelectGroup={setSelectedGroupId}
+                />
+
+                {selectedWorkspace ? (
+                  <GroupWorkspace
+                    workspace={selectedWorkspace}
+                    actionError={actionError}
+                    pendingAttendanceIds={pendingAttendanceIds}
+                    onToggleAttendance={handleToggleAttendance}
+                  />
+                ) : (
+                  <StatePanel title="No group selected" text="Choose a group to see schedule and attendance." />
+                )}
+              </section>
             )}
-          </section>
+          </>
         )}
       </section>
     </main>
