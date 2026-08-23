@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 "use server";
 
 import { createAdminSupabaseClient } from "../../_lib/supabase/admin";
@@ -13,6 +14,19 @@ import {
 import { toMillis } from "../../_lib/dates";
 import type { Course } from "../../_types/course";
 import type { Enrollment } from "../../_types/enrollment";
+=======
+import { getCourse, getCourses } from "../../_data/courses.repository";
+import { getLessons } from "../../_data/lessons.repository";
+import {
+  getAttendancesByGroup,
+  getEnrollmentsByAssignedGroup,
+  getGroupsByMentor,
+  getUnassignedActiveEnrollmentsByCourses,
+} from "../../_data/queries.repository";
+import { getStudent } from "../../_data/students.repository";
+import { toMillis } from "../../_lib/dates";
+import type { Course } from "../../_types/course";
+>>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
 import type { Lesson } from "../../_types/lesson";
 import type { Student } from "../../_types/student";
 import type {
@@ -20,6 +34,30 @@ import type {
   MentorGroupWorkspace,
   MentorPendingEnrollment,
 } from "../_types/workspace";
+<<<<<<< HEAD
+=======
+
+export async function getMentorDashboardWorkspace(
+  mentorId: string,
+): Promise<MentorDashboardWorkspace> {
+  const [workspaces, allCourses] = await Promise.all([
+    getMentorGroupWorkspaces(mentorId),
+    getCourses(),
+  ]);
+  const eligibleCourses = sortCourses(
+    allCourses.filter((course) => course.active && course.mentorIds.includes(mentorId)),
+  );
+  const pendingEnrollments = await getMentorPendingEnrollments(
+    eligibleCourses,
+  );
+
+  return {
+    workspaces,
+    eligibleCourses,
+    pendingEnrollments,
+  };
+}
+>>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
 
 async function getMentorDashboardWorkspace(
   mentorId: string,
@@ -81,6 +119,7 @@ async function getMentorGroupWorkspaces(
   );
 }
 
+<<<<<<< HEAD
 async function assertCurrentUserIsActiveMentor() {
   const supabase = await createServerSupabaseClient();
   const {
@@ -188,6 +227,22 @@ async function getMentorPendingEnrollments(
     .map((enrollment) => {
       const course = coursesById.get(enrollment.courseId);
       const student = studentsById.get(enrollment.studentId);
+=======
+async function getMentorPendingEnrollments(
+  eligibleCourses: Course[],
+): Promise<MentorPendingEnrollment[]> {
+  const coursesById = new Map(
+    eligibleCourses.map((course) => [course.id, course] as const),
+  );
+  const enrollments = await getUnassignedActiveEnrollmentsByCourses(
+    eligibleCourses.map((course) => course.id),
+  );
+
+  const pendingEnrollments = await Promise.all(
+    enrollments.map(async (enrollment) => {
+      const course = coursesById.get(enrollment.courseId);
+      const student = await getStudent(enrollment.studentId);
+>>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
 
       if (!course || !student) {
         return null;
@@ -198,7 +253,14 @@ async function getMentorPendingEnrollments(
         course,
         student,
       };
+<<<<<<< HEAD
     })
+=======
+    }),
+  );
+
+  return pendingEnrollments
+>>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
     .filter(
       (pendingEnrollment): pendingEnrollment is MentorPendingEnrollment =>
         Boolean(pendingEnrollment),
@@ -206,6 +268,7 @@ async function getMentorPendingEnrollments(
     .sort(comparePendingEnrollments);
 }
 
+<<<<<<< HEAD
 async function getCourse(courseId: string): Promise<Course | null> {
   const admin = createAdminSupabaseClient();
   const { data: course, error: courseError } = await admin
@@ -300,15 +363,23 @@ async function getStudentsByIds(studentIds: string[]): Promise<Student[]> {
   return (students ?? []).map(mapStudent).sort(compareStudents);
 }
 
+=======
+>>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
 function sortLessons(lessons: Lesson[]) {
   return [...lessons].sort((firstLesson, secondLesson) => {
     return toMillis(firstLesson.date) - toMillis(secondLesson.date);
   });
 }
 
+<<<<<<< HEAD
 function compareStudents(firstStudent: Student, secondStudent: Student) {
   return `${firstStudent.lastName} ${firstStudent.name}`.localeCompare(
     `${secondStudent.lastName} ${secondStudent.name}`,
+=======
+function sortCourses(courses: Course[]) {
+  return [...courses].sort((firstCourse, secondCourse) =>
+    firstCourse.name.localeCompare(secondCourse.name),
+>>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
   );
 }
 
@@ -324,6 +395,7 @@ function comparePendingEnrollments(
     return courseComparison;
   }
 
+<<<<<<< HEAD
   return compareStudents(
     firstPendingEnrollment.student,
     secondPendingEnrollment.student,
@@ -331,3 +403,9 @@ function comparePendingEnrollments(
 }
 
 export { getMentorDashboardWorkspace, getMentorGroupWorkspaces };
+=======
+  return `${firstPendingEnrollment.student.lastName} ${firstPendingEnrollment.student.name}`.localeCompare(
+    `${secondPendingEnrollment.student.lastName} ${secondPendingEnrollment.student.name}`,
+  );
+}
+>>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)

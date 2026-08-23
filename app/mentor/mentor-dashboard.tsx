@@ -1,18 +1,28 @@
 "use client";
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 =======
 import { useMemo, useState } from "react";
 >>>>>>> 33d4dbc (Refactor student and super-admin portals to use session caching for data fetching)
+=======
+import { useMemo, useState } from "react";
+=======
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+>>>>>>> 3a9c5df (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
+>>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
 
 import { AccessError, LoadingState } from "../components/auth-states";
 import { StatePanel } from "../components/state-panel";
 import { useRequiredProfile } from "../components/use-required-profile";
 <<<<<<< HEAD
+<<<<<<< HEAD
 import type { Course } from "../_types/course";
 import { createMentorGroup } from "./_data/group-actions";
 =======
+=======
+>>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
 import { useSessionCachedQuery } from "../_lib/session-cache";
 >>>>>>> 33d4dbc (Refactor student and super-admin portals to use session caching for data fetching)
 import { addAttendance, deleteAttendance } from "./_data/attendance";
@@ -27,7 +37,21 @@ import type {
 import { createLessonWithDetails, updateLessonDetails } from "./_data/lessons";
 import { getMentorGroupWorkspaces } from "./_data/workspace";
 import type { MentorGroupWorkspace } from "./_types/workspace";
+<<<<<<< HEAD
 >>>>>>> 922a061 (feat: add lesson creation and update functionality, enhance date formatting in components)
+=======
+=======
+import type { Course } from "../_types/course";
+import { createMentorGroup } from "./_data/group-actions";
+import { addAttendance, deleteAttendance } from "./_data/attendance";
+import { getMentorDashboardWorkspace } from "./_data/workspace";
+import type {
+  MentorDashboardWorkspace,
+  MentorGroupWorkspace,
+  MentorPendingEnrollment,
+} from "./_types/workspace";
+>>>>>>> 3a9c5df (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
+>>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
 import {
   GroupCreationPanel,
   GroupWorkspace,
@@ -45,12 +69,23 @@ export function MentorDashboard() {
   const { user, profile, isLoading: isAuthLoading, error: authError } =
     useRequiredProfile("mentor");
 <<<<<<< HEAD
+<<<<<<< HEAD
   const [workspaces, setWorkspaces] = useState<MentorGroupWorkspace[]>([]);
   const [eligibleCourses, setEligibleCourses] = useState<Course[]>([]);
   const [pendingEnrollments, setPendingEnrollments] = useState<
     MentorPendingEnrollment[]
   >([]);
   const [selectedGroupId, setSelectedGroupId] = useState("");
+=======
+  const [selectedGroupId, setSelectedGroupId] = useState("");
+=======
+  const [workspaces, setWorkspaces] = useState<MentorGroupWorkspace[]>([]);
+  const [eligibleCourses, setEligibleCourses] = useState<Course[]>([]);
+  const [pendingEnrollments, setPendingEnrollments] = useState<
+    MentorPendingEnrollment[]
+  >([]);
+  const [selectedGroupId, setSelectedGroupId] = useState("");
+>>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
   const [newGroupCourseId, setNewGroupCourseId] = useState("");
   const newGroupCourseIdRef = useRef("");
   const [newGroupName, setNewGroupName] = useState("");
@@ -60,14 +95,19 @@ export function MentorDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [error, setError] = useState<string | null>(null);
+<<<<<<< HEAD
 =======
   const [selectedGroupId, setSelectedGroupId] = useState("");
 >>>>>>> 33d4dbc (Refactor student and super-admin portals to use session caching for data fetching)
+=======
+>>>>>>> 3a9c5df (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
+>>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
   const [actionError, setActionError] = useState<string | null>(null);
   const [groupCreationError, setGroupCreationError] = useState<string | null>(
     null,
   );
   const [pendingAttendanceIds, setPendingAttendanceIds] = useState<string[]>([]);
+<<<<<<< HEAD
   const [pendingLessonIds, setPendingLessonIds] = useState<string[]>([]);
   const [pendingLessonCreateGroupIds, setPendingLessonCreateGroupIds] = useState<
     string[]
@@ -123,11 +163,62 @@ export function MentorDashboard() {
     key: user ? `mentor:${user.id}:group-workspaces` : null,
     enabled: Boolean(user),
     fetcher: () => {
+<<<<<<< HEAD
 >>>>>>> 33d4dbc (Refactor student and super-admin portals to use session caching for data fetching)
+=======
+=======
+
+  const applyMentorDashboardWorkspace = useCallback(
+    (nextWorkspace: MentorDashboardWorkspace, preferredGroupId?: string) => {
+      const nextSelectedGroupId =
+        preferredGroupId &&
+        nextWorkspace.workspaces.some(
+          (workspace) => workspace.group.id === preferredGroupId,
+        )
+          ? preferredGroupId
+          : nextWorkspace.workspaces[0]?.group.id ?? "";
+      const currentCourseId = newGroupCourseIdRef.current;
+      const nextCourseId = nextWorkspace.eligibleCourses.some(
+        (course) => course.id === currentCourseId,
+      )
+        ? currentCourseId
+        : nextWorkspace.eligibleCourses[0]?.id ?? "";
+
+      newGroupCourseIdRef.current = nextCourseId;
+      setWorkspaces(nextWorkspace.workspaces);
+      setEligibleCourses(nextWorkspace.eligibleCourses);
+      setPendingEnrollments(nextWorkspace.pendingEnrollments);
+      setSelectedGroupId(nextSelectedGroupId);
+      setNewGroupCourseId(nextCourseId);
+      setSelectedEnrollmentIds((currentEnrollmentIds) => {
+        const pendingEnrollmentIds = new Set(
+          nextWorkspace.pendingEnrollments
+            .filter(
+              (pendingEnrollment) =>
+                pendingEnrollment.course.id === nextCourseId,
+            )
+            .map((pendingEnrollment) => pendingEnrollment.enrollment.id),
+        );
+
+        return currentEnrollmentIds.filter((enrollmentId) =>
+          pendingEnrollmentIds.has(enrollmentId),
+        );
+      });
+    },
+    [],
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadMentorGroups() {
+>>>>>>> 3a9c5df (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
+>>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
       if (!user) {
         return Promise.resolve([]);
       }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
       try {
         setIsLoading(true);
@@ -158,6 +249,8 @@ export function MentorDashboard() {
     };
   }, [applyMentorDashboardWorkspace, user]);
 =======
+=======
+>>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
       return getMentorGroupWorkspaces(user.id);
     },
   });
@@ -167,7 +260,40 @@ export function MentorDashboard() {
   )
     ? selectedGroupId
     : workspaces[0]?.group.id ?? "";
+<<<<<<< HEAD
 >>>>>>> 33d4dbc (Refactor student and super-admin portals to use session caching for data fetching)
+=======
+=======
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const nextWorkspace = await getMentorDashboardWorkspace(user.id);
+
+        if (isMounted) {
+          applyMentorDashboardWorkspace(nextWorkspace);
+        }
+      } catch (loadError) {
+        console.error(loadError);
+
+        if (isMounted) {
+          setError("We could not load your mentor workspace right now.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadMentorGroups();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [applyMentorDashboardWorkspace, user]);
+>>>>>>> 3a9c5df (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
+>>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
 
   const selectedWorkspace = useMemo(() => {
     return workspaces.find(
@@ -534,9 +660,12 @@ export function MentorDashboard() {
         {workspacesQuery.isLoading ? (
           <StatePanel title="Loading groups" text="Checking your assigned groups." />
 <<<<<<< HEAD
+<<<<<<< HEAD
         ) : error ? (
           <StatePanel title="Workspace unavailable" text={error} />
 =======
+=======
+>>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
         ) : workspacesQuery.error ? (
           <StatePanel title="Workspace unavailable" text="We could not load your mentor workspace right now." />
         ) : workspaces.length === 0 ? (
@@ -576,7 +705,29 @@ export function MentorDashboard() {
                 onCreateLesson={handleCreateLesson}
                 onToggleAttendance={handleToggleAttendance}
                 onUpdateLesson={handleUpdateLesson}
+<<<<<<< HEAD
 >>>>>>> 922a061 (feat: add lesson creation and update functionality, enhance date formatting in components)
+=======
+=======
+        ) : error ? (
+          <StatePanel title="Workspace unavailable" text={error} />
+        ) : (
+          <>
+            <section className="grid gap-5 lg:grid-cols-2">
+              <GroupCreationPanel
+                eligibleCourses={eligibleCourses}
+                pendingEnrollments={pendingEnrollments}
+                selectedCourseId={newGroupCourseId}
+                groupName={newGroupName}
+                selectedEnrollmentIds={selectedEnrollmentIds}
+                isSubmitting={isCreatingGroup}
+                error={groupCreationError}
+                onCourseChange={handleNewGroupCourseChange}
+                onNameChange={setNewGroupName}
+                onToggleEnrollment={handleToggleSelectedEnrollment}
+                onSubmit={handleCreateGroup}
+>>>>>>> 3a9c5df (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
+>>>>>>> 4c9f986 (feat: implement mentor group creation and enrollment management, add policies for unassigned active enrollments)
               />
               <UnassignedStudentsPanel pendingEnrollments={pendingEnrollments} />
             </section>
