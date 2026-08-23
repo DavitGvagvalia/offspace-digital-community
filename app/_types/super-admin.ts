@@ -1,4 +1,4 @@
-import { Timestamp } from "firebase/firestore";
+import type { TimestampString } from "./date";
 
 export interface SuperAdmin {
   id: string;
@@ -7,5 +7,5 @@ export interface SuperAdmin {
   lastName?: string;
   email?: string;
 
-  createdAt?: Timestamp;
+  createdAt?: TimestampString;
 }

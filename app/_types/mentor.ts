@@ -1,4 +1,4 @@
-import { Timestamp } from "firebase/firestore";
+import type { TimestampString } from "./date";
 
 export interface Mentor {
   id: string;
@@ -11,7 +11,8 @@ export interface Mentor {
 
   active: boolean;
 
-  createdAt: Timestamp;
+  createdAt: TimestampString;
+  updatedAt?: TimestampString;
 }
 
 export type CreateMentor = Omit<

@@ -29,7 +29,7 @@ export function StudentCoursesView() {
         setIsLoading(true);
         setError(null);
 
-        const summaries = await getStudentCourseSummaries(user.uid);
+        const summaries = await getStudentCourseSummaries(user.id);
 
         if (isMounted) {
           setCourses(summaries);

@@ -36,7 +36,7 @@ export function MentorDashboard() {
         setIsLoading(true);
         setError(null);
 
-        const nextWorkspaces = await getMentorGroupWorkspaces(user.uid);
+        const nextWorkspaces = await getMentorGroupWorkspaces(user.id);
 
         if (isMounted) {
           setWorkspaces(nextWorkspaces);
@@ -75,7 +75,7 @@ export function MentorDashboard() {
       (currentWorkspace) => currentWorkspace.group.id === request.groupId,
     );
 
-    if (!workspace || workspace.group.mentorId !== user.uid) {
+    if (!workspace || workspace.group.mentorId !== user.id) {
       setActionError("This group is not available for your mentor account.");
       return;
     }

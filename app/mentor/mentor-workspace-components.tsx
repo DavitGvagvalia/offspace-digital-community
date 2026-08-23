@@ -1,4 +1,5 @@
 import type { Attendance } from "../_types/attendance";
+import { formatDateTime, formatShortDate } from "../_lib/dates";
 import type { Lesson } from "../_types/lesson";
 import type { MentorGroupWorkspace } from "./_types/workspace";
 import type { Student } from "../_types/student";
@@ -283,18 +284,9 @@ function EmptyBox({ text }: { text: string }) {
 }
 
 function formatLessonDate(date: Lesson["date"]) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(date.toDate());
+  return formatDateTime(date);
 }
 
 function formatShortLessonDate(date: Lesson["date"]) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-  }).format(date.toDate());
+  return formatShortDate(date);
 }

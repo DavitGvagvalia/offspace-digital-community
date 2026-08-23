@@ -53,7 +53,7 @@ export default function StudentPage() {
         setIsLoadingEnrollmentState(true);
         setEnrollmentError(null);
 
-        const nextState = await getStudentEnrollmentState(user.uid);
+        const nextState = await getStudentEnrollmentState(user.id);
 
         if (isMounted) {
           setEnrollments(nextState.enrollments);
@@ -90,7 +90,7 @@ export default function StudentPage() {
       setEnrollmentError(null);
 
       const createdEnrollments = await enrollStudentInCourses(
-        user.uid,
+        user.id,
         selectedCourseIds,
       );
 

@@ -1,4 +1,4 @@
-import { Timestamp } from "firebase/firestore";
+import type { TimestampString } from "./date";
 
 export interface Course {
   id: string;
@@ -9,8 +9,8 @@ export interface Course {
 
   active: boolean;
 
-  createdAt: Timestamp;
-  updatedAt?: Timestamp;
+  createdAt: TimestampString;
+  updatedAt?: TimestampString;
 }
 
 export type CreateCourse = Omit<

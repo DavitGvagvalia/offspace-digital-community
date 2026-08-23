@@ -6,6 +6,7 @@ import {
   getGroupsByMentor,
 } from "../../_data/queries.repository";
 import { getStudent } from "../../_data/students.repository";
+import { toMillis } from "../../_lib/dates";
 import type { Lesson } from "../../_types/lesson";
 import type { Student } from "../../_types/student";
 import type { MentorGroupWorkspace } from "../_types/workspace";
@@ -42,6 +43,6 @@ export async function getMentorGroupWorkspaces(
 
 function sortLessons(lessons: Lesson[]) {
   return [...lessons].sort((firstLesson, secondLesson) => {
-    return firstLesson.date.toMillis() - secondLesson.date.toMillis();
+    return toMillis(firstLesson.date) - toMillis(secondLesson.date);
   });
 }

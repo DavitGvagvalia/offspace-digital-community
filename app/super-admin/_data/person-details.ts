@@ -1,6 +1,7 @@
 import { getCourse } from "../../_data/courses.repository";
 import { getGroup } from "../../_data/groups.repository";
 import { getLessons } from "../../_data/lessons.repository";
+import { toMillis } from "../../_lib/dates";
 import {
   getAttendancesByStudentGroup,
   getEnrollmentsByStudent,
@@ -115,9 +116,9 @@ function compareAttendedLessons(
   second: StudentCourseDetail["attendedLessons"][number],
 ) {
   const firstTime =
-    first.lesson?.date.toMillis() ?? first.attendance.attendedAt.toMillis();
+    first.lesson ? toMillis(first.lesson.date) : toMillis(first.attendance.attendedAt);
   const secondTime =
-    second.lesson?.date.toMillis() ?? second.attendance.attendedAt.toMillis();
+    second.lesson ? toMillis(second.lesson.date) : toMillis(second.attendance.attendedAt);
 
   return firstTime - secondTime;
 }

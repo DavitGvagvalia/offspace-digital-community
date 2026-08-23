@@ -30,7 +30,7 @@ export function StudentLessonsView() {
         setIsLoading(true);
         setError(null);
 
-        const nextStudentCourses = await getStudentLessonCourses(user.uid);
+        const nextStudentCourses = await getStudentLessonCourses(user.id);
 
         if (!isMounted) {
           return;

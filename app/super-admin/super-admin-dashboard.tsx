@@ -1,30 +1,26 @@
 "use client";
 
-import type { Timestamp } from "firebase/firestore";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import { AccessError, LoadingState } from "../components/auth-states";
 import { StatePanel } from "../components/state-panel";
 import { useRequiredProfile } from "../components/use-required-profile";
-import { formatFirebaseDate } from "../_lib/firebase/firestore-utils";
+import { formatDate, formatDateTime as formatTimestampDateTime } from "../_lib/dates";
+import type { TimestampString } from "../_types/date";
 import type { Mentor } from "../_types/mentor";
 import type { Student } from "../_types/student";
+import {
+  createMentorAuthAndProfile,
+  createStudentAuthAndProfile,
+} from "./_data/account-actions";
 import {
   getMentorGroupDetails,
   getStudentCourseDetails,
   type MentorGroupDetail,
   type StudentCourseDetail,
 } from "./_data/person-details";
-import {
-  createMentorAuthAndProfile,
-  deleteMentor,
-  getMentors,
-} from "./_data/mentors";
-import {
-  createStudentAuthAndProfile,
-  deleteStudent,
-  getStudents,
-} from "./_data/students";
+import { deleteMentor, getMentors } from "./_data/mentors";
+import { deleteStudent, getStudents } from "./_data/students";
 
 type ManagedRole = "student" | "mentor";
 
@@ -166,7 +162,7 @@ export function SuperAdminDashboard() {
       console.error(createError);
       setActionState({
         type: "error",
-        message: getFirebaseAccountMessage(createError, "student"),
+        message: getSupabaseAccountMessage(createError, "student"),
       });
     } finally {
       setIsSubmitting(null);
@@ -200,7 +196,7 @@ export function SuperAdminDashboard() {
       console.error(createError);
       setActionState({
         type: "error",
-        message: getFirebaseAccountMessage(createError, "mentor"),
+        message: getSupabaseAccountMessage(createError, "mentor"),
       });
     } finally {
       setIsSubmitting(null);
@@ -209,7 +205,7 @@ export function SuperAdminDashboard() {
 
   async function handleDeletePerson(role: ManagedRole, personId: string) {
     const confirmed = window.confirm(
-      "Remove this profile from the portal? The Firebase Auth account will remain until it is deleted from a trusted admin backend.",
+      "Remove this profile from the portal? Access is soft-deleted in Supabase.",
     );
 
     if (!confirmed) {
@@ -563,7 +559,7 @@ function PeopleList<Person extends Student | Mentor>({
                 <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-muted">
                   <span className="break-all">ID: {person.id}</span>
                   {person.phone ? <span>Phone: {person.phone}</span> : null}
-                  <span>Created: {formatFirebaseDate(person.createdAt)}</span>
+                  <span>Created: {formatDate(person.createdAt)}</span>
                   {"active" in person ? (
                     <span>{person.active ? "Active" : "Inactive"}</span>
                   ) : null}
@@ -815,7 +811,7 @@ function MentorDetails({ details }: { details: MentorGroupDetail[] }) {
                 <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-muted">
                   <span className="break-all">Course ID: {detail.group.courseId}</span>
                   <span className="break-all">Group ID: {detail.group.id}</span>
-                  <span>Created: {formatFirebaseDate(detail.group.createdAt)}</span>
+                  <span>Created: {formatDate(detail.group.createdAt)}</span>
                 </div>
               </div>
               <span
@@ -863,14 +859,8 @@ function getGroupName(group: StudentCourseDetail["group"], groupId: string) {
   return group?.name ?? groupId;
 }
 
-function formatDateTime(timestamp: Timestamp) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(timestamp.toDate());
+function formatDateTime(timestamp: TimestampString) {
+  return formatTimestampDateTime(timestamp);
 }
 
 function readPersonForm(formData: FormData) {
@@ -906,14 +896,18 @@ function comparePeople(
   );
 }
 
-function getFirebaseAccountMessage(error: unknown, role: ManagedRole) {
+function getSupabaseAccountMessage(error: unknown, role: ManagedRole) {
   if (
     typeof error === "object" &&
     error !== null &&
     "code" in error &&
     typeof error.code === "string"
   ) {
-    if (error.code === "auth/email-already-in-use") {
+    if (
+      error.code === "email_exists" ||
+      error.code === "user_already_exists" ||
+      error.code === "auth/email-already-in-use"
+    ) {
       return "An account with this email already exists.";
     }
 
@@ -926,7 +920,7 @@ function getFirebaseAccountMessage(error: unknown, role: ManagedRole) {
     }
 
     if (error.code === "auth/operation-not-allowed") {
-      return "Email and password registration is not enabled for this Firebase project.";
+      return "Email and password registration is not enabled for this Supabase project.";
     }
 
     if (error.code === "permission-denied") {

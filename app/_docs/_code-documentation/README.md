@@ -1,22 +1,10 @@
 # Code Documentation
 
-Engineering documentation for the Offspace Digital Community schedule and attendance app.
+Use these rules when changing code:
 
-## Contents
-
-- [Project Overview](./project-overview.md)
-- [Setup And Validation](./setup-and-validation.md)
-- [Application Architecture](./application-architecture.md)
-- [Data Model](./data-model.md)
-- [Authentication And Authorization](./authentication-and-authorization.md)
-- [Feature Flows](./feature-flows.md)
-
-## Engineering Principles For This Repository
-
-- Treat Firebase Auth UID as the source of identity.
-- Derive student, mentor, and super-admin authorization from profile documents, not from route params or user-entered IDs.
-- Keep Firestore access behind repository/data modules.
-- Use explicit Firestore mappers for user-facing data.
-- Keep scope focused on schedule, attendance, role login, and role dashboards unless the project owner explicitly expands it.
-- Validate changes with the narrowest useful command, and use broader validation for shared or structural changes.
-
+- Supabase access is centralized under `app/_lib/supabase`.
+- UI code calls repository/data modules rather than raw table queries.
+- SQL uses snake_case; app types use camelCase.
+- Timestamps are ISO strings in app code.
+- Public student self-registration is disabled.
+- Super-admin account creation uses server actions and the service-role key.

@@ -1,5 +1,4 @@
-import { Timestamp } from "firebase/firestore";
-
+import { toMillis } from "../../_lib/dates";
 import {
   getAttendancesByStudentGroup,
   getEnrollmentsByStudent,
@@ -41,7 +40,7 @@ export async function getStudentLessonCourses(
         enrollment,
         groupId: enrollment.groupId,
         lessons: scheduledLessons
-          .filter((lesson) => lesson.date.toMillis() <= Date.now())
+          .filter((lesson) => toMillis(lesson.date) <= Date.now())
           .map((lesson) => ({
             lesson,
             attendance: attendanceByLessonId.get(lesson.id) ?? null,
@@ -63,6 +62,6 @@ async function getStudentCourse(courseId: string): Promise<Course> {
     name: courseId,
     mentorIds: [],
     active: true,
-    createdAt: Timestamp.fromMillis(0),
+    createdAt: new Date(0).toISOString(),
   };
 }

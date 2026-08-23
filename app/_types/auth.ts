@@ -1,4 +1,4 @@
-import type { User } from "firebase/auth";
+import type { User } from "@supabase/supabase-js";
 
 import type { Mentor } from "./mentor";
 import type { Student } from "./student";

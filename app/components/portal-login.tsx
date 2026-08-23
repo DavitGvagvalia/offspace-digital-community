@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 import {
-  getFirebaseLoginMessage,
+  getSupabaseAuthMessage,
   loginWithEmailAndPassword,
   signOutCurrentUser,
-} from "../_lib/firebase/auth";
+} from "../_lib/supabase/auth";
 import { hasPortalAccess } from "../_data/portal-access.repository";
 import type { PortalCopy, PortalRole } from "../_types/auth";
 import { MascotBackground } from "./mascot-background";
@@ -55,7 +55,7 @@ export function PortalLogin({ role }: { role: PortalRole }) {
       setError(null);
 
       const user = await loginWithEmailAndPassword(email, password);
-      const roleExists = await hasPortalAccess(role, user.uid);
+      const roleExists = await hasPortalAccess(role, user.id);
 
       if (!roleExists) {
         await signOutCurrentUser();
@@ -65,7 +65,7 @@ export function PortalLogin({ role }: { role: PortalRole }) {
 
       router.push(copy.destination);
     } catch (loginError) {
-      setError(getFirebaseLoginMessage(loginError));
+      setError(getSupabaseAuthMessage(loginError));
     } finally {
       setIsSubmitting(false);
     }
@@ -153,13 +153,7 @@ export function PortalLogin({ role }: { role: PortalRole }) {
 
             {role === "student" ? (
               <p className="mt-4 text-center text-sm text-ink-soft">
-                New student?{" "}
-                <Link
-                  href="/student/register"
-                  className="font-semibold text-forest hover:text-forest-light"
-                >
-                  Create an account
-                </Link>
+                New student accounts are created by a super-admin.
               </p>
             ) : null}
           </form>

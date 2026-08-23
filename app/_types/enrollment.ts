@@ -1,4 +1,4 @@
-import { Timestamp } from "firebase/firestore";
+import type { TimestampString } from "./date";
 
 export type EnrollmentStatus =
   | "active"
@@ -18,9 +18,10 @@ export interface Enrollment {
 
   status: EnrollmentStatus;
 
-  enrolledAt: Timestamp;
+  enrolledAt: TimestampString;
 
-  completedAt?: Timestamp;
+  completedAt?: TimestampString;
+  updatedAt?: TimestampString;
 }
 
 

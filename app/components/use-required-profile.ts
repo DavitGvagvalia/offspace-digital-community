@@ -7,7 +7,7 @@ import { getPortalProfile } from "../_data/portal-access.repository";
 import {
   signOutCurrentUser,
   subscribeToAuthState,
-} from "../_lib/firebase/auth";
+} from "../_lib/supabase/auth";
 import type {
   PortalProfileByRole,
   PortalRole,
@@ -51,7 +51,7 @@ export function useRequiredProfile<T extends PortalRole>(
           setUser(nextUser);
         }
 
-        const nextProfile = await getPortalProfile(role, nextUser.uid);
+        const nextProfile = await getPortalProfile(role, nextUser.id);
 
         if (!nextProfile) {
           await signOutCurrentUser();

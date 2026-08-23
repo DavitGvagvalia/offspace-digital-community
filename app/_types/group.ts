@@ -1,4 +1,4 @@
-import { Timestamp } from "firebase/firestore";
+import type { TimestampString } from "./date";
 
 export interface Group {
   id: string;
@@ -11,8 +11,8 @@ export interface Group {
 
   active: boolean;
 
-  createdAt: Timestamp;
-  updatedAt?: Timestamp;
+  createdAt: TimestampString;
+  updatedAt?: TimestampString;
 }
 
 export type CreateGroup = Omit<

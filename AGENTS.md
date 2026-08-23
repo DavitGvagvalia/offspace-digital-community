@@ -1,153 +1,124 @@
 # AGENTS.md
 
-# Offspace Digital Community - Schedule MVP
-
-This file is the source of truth for AI agents working in this repository. Follow it before making code changes.
-
-For a repository-derived summary of the project's current purpose, usage,
-routes, data model, validation commands, security notes, and owner questions,
-see `Project_general_information.md`. If that summary conflicts with this
-file, treat this file as the agent instruction source of truth and update the
-summary only after confirming the repository evidence.
+This file is the source of truth for AI agents working in this repository.
 
 ## Product Scope
 
-The current product is not the full Offspace platform. The only product functionality in scope is a role-based schedule and attendance web application for Offspace Digital Community.
+The product is a role-based schedule and attendance web application for
+Offspace Digital Community.
 
-The MVP supports two authenticated roles:
+Current roles:
 
 - Student
 - Mentor
+- Super-admin
 
-Do not add admin dashboards, payments, messaging, homework, file uploads, certificates, payroll, parent accounts, notifications, video lessons, complex analytics, a public course marketplace, or broader LMS functionality unless explicitly requested.
+Do not add payments, messaging, homework, file uploads, certificates, payroll,
+parent accounts, notifications, video lessons, complex analytics, public course
+marketplaces, or broad LMS behavior unless explicitly requested.
 
-The current codebase includes a super-admin portal. Treat super-admin features
-as existing repository behavior and as required for account/course assignment
-workflow only where the project owner has explicitly described them. Do not
-expand super-admin scope beyond profile access, course availability, mentor
-course assignment, and student group assignment without a new request.
+Private-student mentor workspaces and public student self-registration are
+deferred.
 
 ## Current Routes
 
-Use the existing Next.js App Router structure unless a requested change clearly requires a route change.
-
-- `/` - public entry point with links to role login pages
+- `/` - public entry point
 - `/student/login` - student login
+- `/student/register` - managed-registration notice
 - `/student` - student hub
 - `/student/lessons` - student lessons and personal attendance
-- `/student/courses` - student enrolled courses
-- `/student/profile` - student profile
+- `/student/courses` - enrolled courses
+- `/student/profile` - read-only student profile
 - `/mentor/login` - mentor login
 - `/mentor` - mentor dashboard
-
-Use `mentor` consistently for routes, UI, services, types, and docs.
+- `/super-admin/login` - super-admin login
+- `/super-admin` - super-admin management portal
 
 ## Authentication And Permissions
 
-Authentication uses Firebase Auth email/password. Authorization must be derived from the authenticated Firebase user, not from route params, search params, or hard-coded IDs.
+Authentication uses Supabase Auth email/password.
 
-- Student Firebase Auth UID must match `Students/{uid}`.
-- Mentor Firebase Auth UID must match `Mentors/{uid}` in the current codebase.
-- Student reads must derive `studentId` from the authenticated user.
-- Mentor reads must derive `mentorId` from the authenticated user.
-- Students must only see their own courses, lessons, and attendance.
-- Mentors must only see assigned groups, private students, schedules, and attendance.
-- Client-side checks are not sufficient for production. Firestore Security Rules are required before production use.
+Authorization is derived from the authenticated Supabase user and Postgres data,
+not from route params, search params, local state, or hard-coded IDs.
+
+- `profiles.id` references `auth.users.id`.
+- Student access requires `profiles.role = 'student'` and a `students` row.
+- Mentor access requires `profiles.role = 'mentor'` and a `mentors` row.
+- Super-admin access requires `profiles.role = 'super_admin'` and a
+  `super_admins` row.
+- Students must only see their own enrollments, lessons, and attendance.
+- Mentors must only see assigned groups, students, lessons, and attendance.
+- Super-admin user creation uses server-only Supabase service-role access.
+- Browser reads and writes must be protected by Supabase Row Level Security.
 
 ## Core Data Model
 
-The current Firestore model is client-read through the Firebase Web SDK.
+The canonical database is Supabase Postgres.
 
-- `Students` - student profiles keyed by Firebase Auth UID
-- `Mentors` - mentor profiles keyed by Firebase Auth UID
-- `Courses` - course definitions; target MVP requires course-level mentor eligibility metadata, likely `mentorIds: string[]` unless a normalized assignment model is chosen before implementation
-- `Courses/{courseId}/Groups` - groups for a course
-- `Courses/{courseId}/Groups/{groupId}/Lessons` - lessons for a group
-- `Enrollments` - top-level student-course links; target MVP must allow an active enrollment before group assignment, with `groupId` empty/null until a mentor or super-admin assigns a group
-- `Attendances` - top-level attendance records linked to student, course, group, and lesson; MVP attendance is boolean attended/not attended
+Core tables:
 
+- `profiles`
+- `students`
+- `mentors`
+- `super_admins`
+- `courses`
+- `course_mentor_eligibility`
+- `groups`
+- `lessons`
+- `enrollments`
+- `attendances`
 
-## Student Experience
+Important conventions:
 
-The student interface is centered on the courses selected by or assigned to the current student.
+- Use snake_case table/column names in SQL.
+- Use camelCase app-level TypeScript types.
+- Keep Supabase access centralized under `app/_lib/supabase`.
+- Keep repository/data modules as the boundary between UI and SQL tables.
+- Timestamps are ISO strings in application types.
+- Attendance is boolean for the MVP: row exists means attended.
+- Important deletes are soft deletes through `deleted_at`.
+- Payments and invoices are intentionally deferred.
 
-- `/student` should show the normal student hub plus a course-selection block when the authenticated student has no existing enrollments.
-- The no-enrollment course-selection block should list active available courses, support selecting multiple courses, and create one active enrollment per selected course.
-- Enrollment status `active` means the student selected the course. It does not guarantee group assignment.
-- Enrollments may exist with no group assigned yet. Student-facing pages must show `Your mentor will assign group soon.` for those courses.
-- `/student/lessons` should show enrolled courses and a vertical timeline of past lessons conducted in the student's assigned group.
-- Lesson timeline items should expose lesson date and the student's attendance status on hover and on tap/click for touch devices.
-- Attendance status is boolean for the MVP: attended or not attended.
-- `/student/courses` should show active course enrollment details and later support enrolling in additional available courses.
-- `/student/profile` should show read-only student profile basics.
-- Students must not see other students' attendance.
+## Experience
 
-Editing selected courses after enrollment is intentionally deferred until after the first MVP behavior is implemented.
+Students can view their hub, courses, profile, assigned lessons, and personal
+attendance. Enrollments can exist before group assignment and must show
+`Your mentor will assign group soon.`
 
-The student course selector should remain clear on small screens. Prefer a compact, scrollable, or vertical timeline-compatible UI over confusing multi-row course navigation.
+Mentors can view assigned groups and mark attendance only for assigned group
+lessons.
 
-## Mentor Experience
-
-The mentor interface is centered on assigned teaching entities.
-
-- The dashboard should expose a clear list/sidebar of assigned groups.
-- Private students are part of the intended MVP, but the current active UI does not implement them.
-- A selected group workspace should show schedule and attendance for that group.
-- The mentor should understand which group, course, lessons, students, and attendance statuses are being viewed.
-- Do not add unrelated group-management or admin tools unless requested.
+Super-admins create student and mentor Supabase Auth accounts and manage the
+MVP setup data needed for courses, groups, lessons, enrollments, and attendance.
+The first super-admin is bootstrapped manually in Supabase.
 
 ## UI Direction
 
-Use the existing Offspace visual system.
-
-- Primary brand color: `#123524`
-- Use existing Tailwind theme tokens in `app/globals.css`.
-- Prefer `shadcn/ui` patterns for new reusable UI components.
-- Use Radix primitives directly when a component needs accessible behavior that is lower-level than a shadcn component.
-- Use `lucide-react` icons for interface actions when an icon exists.
-- Shared shadcn-style UI components should live in `app/components/ui`.
-- Use `cn` from `app/_lib/ui/utils.ts` for conditional class merging.
-- Prefer Tailwind utilities over large custom CSS component classes.
-- Keep the UI calm, practical, modern, friendly, and responsive.
-- Avoid generic enterprise school-dashboard aesthetics, dense unnecessary tables, childish education visuals, and one-off colors.
-- Prioritize data clarity and permissions over decorative polish.
-- Do not add another broad UI suite such as Mantine or MUI unless a specific workflow justifies the dependency, styling, and design-system tradeoff.
+- Use the existing Offspace visual system.
+- Primary brand color: `#123524`.
+- Use Tailwind utilities and existing theme tokens in `app/globals.css`.
+- Use `lucide-react` icons when adding icon actions.
+- Keep the UI calm, practical, responsive, and data-clear.
 
 ## Code Structure Rules
 
-- This is a Next.js App Router project using TypeScript, React, Tailwind CSS, and Firebase.
-- Read relevant local Next.js docs under `node_modules/next/dist/docs/` before changing framework-specific APIs or conventions.
-- Keep runtime code TypeScript-first. Avoid adding new root-level JavaScript files.
-- Keep Firebase initialization and Firestore/Auth access centralized.
-- Do not duplicate Firestore path strings when a shared helper or service boundary already exists.
-- Avoid unchecked casts from Firestore data when changing data access. Prefer typed converters or explicit validation for user-facing data.
-- Keep components small and local to their feature until reuse is proven.
-- Do not create broad abstractions before they remove real duplication or risk.
-- Do not silently expand product scope beyond schedule, attendance, role login, and role dashboards.
+- This is a Next.js App Router project using TypeScript, React, Tailwind CSS,
+  and Supabase.
+- Read relevant local Next.js docs under `node_modules/next/dist/docs/` before
+  changing framework-specific APIs or conventions.
+- Keep runtime code TypeScript-first.
+- Do not add new root-level JavaScript files.
+- Keep Supabase initialization centralized.
+- Do not duplicate table names or query logic when a repository boundary exists.
+- Avoid unchecked casts when changing data access; prefer mappers or generated
+  Supabase types.
+- Keep components small and local until reuse is proven.
 
 ## Validation
 
-Run the narrowest useful validation for the change. For broad or structural edits, use:
-
 ```bash
 npm run lint
-npx tsc --noEmit
+npm run typecheck
 npm test
 npm run build
 ```
-
-## Current Product Definition
-
-A role-based schedule and attendance web application for Offspace Digital Community, where mentors manage schedules and attendance for assigned groups and private students, while students browse their courses and view schedule plus personal attendance for each course.
-
-Treat this definition as the current MVP source of truth unless the project owner explicitly changes it.
-
-<!-- BEGIN:nextjs-agent-rules -->
-
-# This is NOT the Next.js you know
-
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
-
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
-
-<!-- END:nextjs-agent-rules -->

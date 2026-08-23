@@ -1,35 +1,25 @@
-import {
-  collection,
-  collectionGroup,
-  getDocs,
-  query,
-  where,
-} from "firebase/firestore";
-
-import { db } from "../_lib/firebase/client";
+import { createClient } from "../_lib/supabase/client";
 import {
   mapAttendance,
   mapEnrollment,
   mapGroup,
-} from "../_lib/firebase/firestore-mappers";
+} from "../_lib/supabase/mappers";
 import type { Attendance } from "../_types/attendance";
 import type { Enrollment } from "../_types/enrollment";
 import type { Group } from "../_types/group";
-
-const ATTENDANCES_COLLECTION = "Attendances";
-const ENROLLMENTS_COLLECTION = "Enrollments";
-const GROUPS_COLLECTION = "Groups";
+import { throwIfSupabaseError } from "./supabase-errors";
 
 async function getAttendancesByStudent(studentId: string): Promise<Attendance[]> {
-  const attendanceQuery = query(
-    collection(db, ATTENDANCES_COLLECTION),
-    where("studentId", "==", studentId),
-  );
-  const attendanceSnapshot = await getDocs(attendanceQuery);
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("attendances")
+    .select("*")
+    .eq("student_id", studentId)
+    .is("deleted_at", null);
 
-  return attendanceSnapshot.docs
-    .map((document) => mapAttendance(document.id, document.data()))
-    .filter((attendance): attendance is Attendance => Boolean(attendance));
+  throwIfSupabaseError(error);
+
+  return (data ?? []).map(mapAttendance);
 }
 
 async function getAttendancesByStudentGroup(
@@ -37,31 +27,33 @@ async function getAttendancesByStudentGroup(
   courseId: string,
   groupId: string,
 ): Promise<Attendance[]> {
-  const attendanceQuery = query(
-    collection(db, ATTENDANCES_COLLECTION),
-    where("studentId", "==", studentId),
-    where("courseId", "==", courseId),
-    where("groupId", "==", groupId),
-  );
-  const attendanceSnapshot = await getDocs(attendanceQuery);
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("attendances")
+    .select("*")
+    .eq("student_id", studentId)
+    .eq("course_id", courseId)
+    .eq("group_id", groupId)
+    .is("deleted_at", null);
 
-  return attendanceSnapshot.docs
-    .map((document) => mapAttendance(document.id, document.data()))
-    .filter((attendance): attendance is Attendance => Boolean(attendance));
+  throwIfSupabaseError(error);
+
+  return (data ?? []).map(mapAttendance);
 }
 
 async function getEnrollmentsByStudent(
   studentId: string,
 ): Promise<Enrollment[]> {
-  const enrollmentsQuery = query(
-    collection(db, ENROLLMENTS_COLLECTION),
-    where("studentId", "==", studentId),
-  );
-  const enrollmentsSnapshot = await getDocs(enrollmentsQuery);
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("enrollments")
+    .select("*")
+    .eq("student_id", studentId)
+    .is("deleted_at", null);
 
-  return enrollmentsSnapshot.docs
-    .map((document) => mapEnrollment(document.id, document.data()))
-    .filter((enrollment): enrollment is Enrollment => Boolean(enrollment));
+  throwIfSupabaseError(error);
+
+  return (data ?? []).map(mapEnrollment);
 }
 
 async function getEnrollmentsByAssignedGroup(
@@ -69,45 +61,49 @@ async function getEnrollmentsByAssignedGroup(
   groupId: string,
   mentorId: string,
 ): Promise<Enrollment[]> {
-  const enrollmentsQuery = query(
-    collection(db, ENROLLMENTS_COLLECTION),
-    where("courseId", "==", courseId),
-    where("groupId", "==", groupId),
-    where("mentorId", "==", mentorId),
-  );
-  const enrollmentsSnapshot = await getDocs(enrollmentsQuery);
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("enrollments")
+    .select("*")
+    .eq("course_id", courseId)
+    .eq("group_id", groupId)
+    .eq("mentor_id", mentorId)
+    .is("deleted_at", null);
 
-  return enrollmentsSnapshot.docs
-    .map((document) => mapEnrollment(document.id, document.data()))
-    .filter((enrollment): enrollment is Enrollment => Boolean(enrollment));
+  throwIfSupabaseError(error);
+
+  return (data ?? []).map(mapEnrollment);
 }
 
 async function getAttendancesByGroup(
   courseId: string,
   groupId: string,
 ): Promise<Attendance[]> {
-  const attendancesQuery = query(
-    collection(db, ATTENDANCES_COLLECTION),
-    where("courseId", "==", courseId),
-    where("groupId", "==", groupId),
-  );
-  const attendancesSnapshot = await getDocs(attendancesQuery);
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("attendances")
+    .select("*")
+    .eq("course_id", courseId)
+    .eq("group_id", groupId)
+    .is("deleted_at", null);
 
-  return attendancesSnapshot.docs
-    .map((document) => mapAttendance(document.id, document.data()))
-    .filter((attendance): attendance is Attendance => Boolean(attendance));
+  throwIfSupabaseError(error);
+
+  return (data ?? []).map(mapAttendance);
 }
 
 async function getGroupsByMentor(mentorId: string): Promise<Group[]> {
-  const groupsQuery = query(
-    collectionGroup(db, GROUPS_COLLECTION),
-    where("mentorId", "==", mentorId),
-  );
-  const groupsSnapshot = await getDocs(groupsQuery);
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("groups")
+    .select("*")
+    .eq("mentor_id", mentorId)
+    .is("deleted_at", null)
+    .order("created_at");
 
-  return groupsSnapshot.docs
-    .map((document) => mapGroup(document.id, document.data()))
-    .filter((group): group is Group => Boolean(group));
+  throwIfSupabaseError(error);
+
+  return (data ?? []).map(mapGroup);
 }
 
 

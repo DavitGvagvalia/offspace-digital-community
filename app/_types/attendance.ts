@@ -1,4 +1,4 @@
-import { Timestamp } from "firebase/firestore";
+import type { TimestampString } from "./date";
 
 export interface Attendance {
   id: string;
@@ -9,7 +9,7 @@ export interface Attendance {
   groupId: string;
   lessonId: string;
 
-  attendedAt: Timestamp;
+  attendedAt: TimestampString;
 }
 export type CreateAttendance = Omit<
   Attendance,

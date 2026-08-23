@@ -1,42 +1,90 @@
-import { Timestamp } from "firebase/firestore";
+import { nowTimestamp } from "../_lib/dates";
+import { createClient } from "../_lib/supabase/client";
+import { mapGroup } from "../_lib/supabase/mappers";
+import type { CreateGroup } from "../_types/group";
+import { requireSupabaseData, throwIfSupabaseError } from "./supabase-errors";
 
-import { mapGroup } from "../_lib/firebase/firestore-mappers";
-import type { CreateGroup, Group } from "../_types/group";
-import {
-  createDocument,
-  deleteDocument,
-  getDocument,
-  listDocuments,
-  updateDocument,
-} from "../_lib/firebase/firestore-utils";
+const getGroups = async (courseId: string) => {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("groups")
+    .select("*")
+    .eq("course_id", courseId)
+    .is("deleted_at", null)
+    .order("created_at");
 
-const GROUPS_COLLECTION = "Groups";
+  throwIfSupabaseError(error);
 
-function getGroupsCollection(courseId: string) {
-  return ["Courses", courseId, GROUPS_COLLECTION];
-}
+  return (data ?? []).map(mapGroup);
+};
 
-const getGroups = async (courseId: string) =>
-  listDocuments<Group>(getGroupsCollection(courseId), mapGroup);
+const getGroup = async (courseId: string, id: string) => {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("groups")
+    .select("*")
+    .eq("course_id", courseId)
+    .eq("id", id)
+    .is("deleted_at", null)
+    .maybeSingle();
 
-const getGroup = async (courseId: string, id: string) =>
-  getDocument<Group>(getGroupsCollection(courseId), id, mapGroup);
+  throwIfSupabaseError(error);
 
-const addGroup = async (group: CreateGroup) =>
-  createDocument<Group, CreateGroup>(getGroupsCollection(group.courseId), group, {
-    createdAt: Timestamp.now(),
-  });
+  return data ? mapGroup(data) : null;
+};
+
+const addGroup = async (group: CreateGroup) => {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("groups")
+    .insert({
+      course_id: group.courseId,
+      mentor_id: group.mentorId,
+      name: group.name ?? null,
+      active: group.active,
+    })
+    .select()
+    .single();
+
+  throwIfSupabaseError(error);
+
+  return mapGroup(requireSupabaseData(data));
+};
 
 const updateGroup = async (
   courseId: string,
   id: string,
   group: Partial<CreateGroup>,
-) =>
-  updateDocument<Group>(getGroupsCollection(courseId), id, group, {
-    updatedAt: Timestamp.now(),
-  });
+) => {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("groups")
+    .update({
+      ...(group.courseId !== undefined ? { course_id: group.courseId } : {}),
+      ...(group.mentorId !== undefined ? { mentor_id: group.mentorId } : {}),
+      ...(group.name !== undefined ? { name: group.name } : {}),
+      ...(group.active !== undefined ? { active: group.active } : {}),
+      updated_at: nowTimestamp(),
+    })
+    .eq("course_id", courseId)
+    .eq("id", id)
+    .select()
+    .single();
 
-const deleteGroup = async (courseId: string, id: string) =>
-  deleteDocument(getGroupsCollection(courseId), id);
+  throwIfSupabaseError(error);
+
+  return mapGroup(requireSupabaseData(data));
+};
+
+const deleteGroup = async (courseId: string, id: string) => {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("groups")
+    .update({ deleted_at: nowTimestamp() })
+    .eq("course_id", courseId)
+    .eq("id", id);
+
+  throwIfSupabaseError(error);
+};
 
 export { addGroup, deleteGroup, getGroup, getGroups, updateGroup };

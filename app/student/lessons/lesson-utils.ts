@@ -1,6 +1,6 @@
-import type { Timestamp } from "firebase/firestore";
-
+import { formatDateTime, toMillis } from "../../_lib/dates";
 import type { Course } from "../../_types/course";
+import type { TimestampString } from "../../_types/date";
 import type { StudentLesson } from "../_types/lessons";
 
 export function getCourseTitle(course: Course) {
@@ -10,17 +10,11 @@ export function getCourseTitle(course: Course) {
 export function sortStudentLessons(lessons: StudentLesson[]) {
   return [...lessons].sort((firstLesson, secondLesson) => {
     return (
-      firstLesson.lesson.date.toMillis() - secondLesson.lesson.date.toMillis()
+      toMillis(firstLesson.lesson.date) - toMillis(secondLesson.lesson.date)
     );
   });
 }
 
-export function formatLessonDate(date: Timestamp) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(date.toDate());
+export function formatLessonDate(date: TimestampString) {
+  return formatDateTime(date);
 }
