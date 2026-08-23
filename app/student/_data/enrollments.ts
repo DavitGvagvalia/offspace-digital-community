@@ -1,4 +1,3 @@
-import { addEnrollment } from "../../_data/enrollments.repository";
 import { getActiveCourses } from "../../_data/courses.repository";
 import { getEnrollmentsByStudent } from "../../_data/queries.repository";
 import type { Course } from "../../_types/course";
@@ -27,37 +26,6 @@ export async function getStudentEnrollmentState(
     enrollments,
     availableCourses: sortCourses(availableCourses),
   };
-}
-
-export async function enrollStudentInCourses(
-  studentId: string,
-  courseIds: string[],
-): Promise<Enrollment[]> {
-  const uniqueCourseIds = [...new Set(courseIds)].filter(Boolean);
-
-  if (uniqueCourseIds.length === 0) {
-    return [];
-  }
-
-  const activeCourses = await getActiveCourses();
-  const activeCourseIds = new Set(activeCourses.map((course) => course.id));
-  const validCourseIds = uniqueCourseIds.filter((courseId) =>
-    activeCourseIds.has(courseId),
-  );
-
-  if (validCourseIds.length !== uniqueCourseIds.length) {
-    throw new Error("Only active courses can be selected.");
-  }
-
-  return Promise.all(
-    validCourseIds.map((courseId) =>
-      addEnrollment({
-        studentId,
-        courseId,
-        status: "active",
-      }),
-    ),
-  );
 }
 
 function sortCourses(courses: Course[]) {

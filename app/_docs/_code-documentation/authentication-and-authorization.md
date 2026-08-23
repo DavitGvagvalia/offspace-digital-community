@@ -14,6 +14,7 @@ Student self-registration and super-admin student/mentor account creation run
 through server actions using `SUPABASE_SECRET_KEY`.
 
 Students may insert only their own active, unassigned enrollments for active
-courses. Super-admins retain full enrollment management access.
+courses. The app uses a student-authenticated server action for student course
+selection, and super-admins retain full enrollment management access.
 
 The first super-admin is bootstrapped manually in Supabase Dashboard and SQL.

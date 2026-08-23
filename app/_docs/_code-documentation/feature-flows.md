@@ -9,8 +9,8 @@ row before routing into the portal.
 
 Students can self-register, view profile data, enrollments, courses, assigned
 lessons, and personal attendance. If they have no enrollments, they can select
-active courses from the student hub. Pending group assignment displays
-`Your mentor will assign group soon.`
+active courses from the student hub through a student-authenticated server
+action. Pending group assignment displays `Your mentor will assign group soon.`
 
 ## Mentor
 

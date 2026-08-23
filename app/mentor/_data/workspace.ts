@@ -1,14 +1,18 @@
-import { getCourse, getCourses } from "../../_data/courses.repository";
-import { getLessons } from "../../_data/lessons.repository";
+"use server";
+
+import { createAdminSupabaseClient } from "../../_lib/supabase/admin";
+import { createServerSupabaseClient } from "../../_lib/supabase/server";
 import {
-  getAttendancesByGroup,
-  getEnrollmentsByAssignedGroup,
-  getGroupsByMentor,
-  getUnassignedActiveEnrollmentsByCourses,
-} from "../../_data/queries.repository";
-import { getStudent } from "../../_data/students.repository";
+  mapAttendance,
+  mapCourse,
+  mapEnrollment,
+  mapGroup,
+  mapLesson,
+  mapStudent,
+} from "../../_lib/supabase/mappers";
 import { toMillis } from "../../_lib/dates";
 import type { Course } from "../../_types/course";
+import type { Enrollment } from "../../_types/enrollment";
 import type { Lesson } from "../../_types/lesson";
 import type { Student } from "../../_types/student";
 import type {
@@ -17,19 +21,20 @@ import type {
   MentorPendingEnrollment,
 } from "../_types/workspace";
 
-export async function getMentorDashboardWorkspace(
+async function getMentorDashboardWorkspace(
   mentorId: string,
 ): Promise<MentorDashboardWorkspace> {
-  const [workspaces, allCourses] = await Promise.all([
-    getMentorGroupWorkspaces(mentorId),
-    getCourses(),
+  const currentMentorId = await assertCurrentUserIsActiveMentor();
+
+  if (mentorId !== currentMentorId) {
+    throw new Error("This mentor workspace is not available for your account.");
+  }
+
+  const eligibleCourses = await getEligibleCourses(currentMentorId);
+  const [workspaces, pendingEnrollments] = await Promise.all([
+    getMentorGroupWorkspaces(currentMentorId),
+    getMentorPendingEnrollments(eligibleCourses),
   ]);
-  const eligibleCourses = sortCourses(
-    allCourses.filter((course) => course.active && course.mentorIds.includes(mentorId)),
-  );
-  const pendingEnrollments = await getMentorPendingEnrollments(
-    eligibleCourses,
-  );
 
   return {
     workspaces,
@@ -38,50 +43,151 @@ export async function getMentorDashboardWorkspace(
   };
 }
 
-export async function getMentorGroupWorkspaces(
+async function getMentorGroupWorkspaces(
   mentorId: string,
 ): Promise<MentorGroupWorkspace[]> {
-  const groups = await getGroupsByMentor(mentorId);
+  const admin = createAdminSupabaseClient();
+  const { data: groups, error: groupsError } = await admin
+    .from("groups")
+    .select("*")
+    .eq("mentor_id", mentorId)
+    .is("deleted_at", null)
+    .order("created_at");
+
+  if (groupsError) {
+    throw groupsError;
+  }
 
   return Promise.all(
-    groups.map(async (group) => {
+    (groups ?? []).map(async (group) => {
       const [course, lessons, enrollments, attendances] = await Promise.all([
-        getCourse(group.courseId),
-        getLessons(group.courseId, group.id),
-        getEnrollmentsByAssignedGroup(group.courseId, group.id, group.mentorId),
-        getAttendancesByGroup(group.courseId, group.id),
+        getCourse(group.course_id),
+        getGroupLessons(group.course_id, group.id),
+        getAssignedGroupEnrollments(group.course_id, group.id, mentorId),
+        getGroupAttendances(group.course_id, group.id),
       ]);
-      const students = await Promise.all(
-        enrollments.map((enrollment) => getStudent(enrollment.studentId)),
+      const students = await getStudentsByIds(
+        enrollments.map((enrollment) => enrollment.studentId),
       );
 
       return {
-        group,
+        group: mapGroup(group),
         course,
         lessons: sortLessons(lessons),
-        students: students.filter(
-          (student): student is Student => Boolean(student),
-        ),
+        students,
         attendances,
       };
     }),
   );
 }
 
+async function assertCurrentUserIsActiveMentor() {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    throw new Error("You must be signed in as a mentor.");
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", user.id)
+    .eq("role", "mentor")
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (profileError || !profile) {
+    throw new Error("This account does not have mentor access.");
+  }
+
+  const { data: mentor, error: mentorError } = await supabase
+    .from("mentors")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .eq("active", true)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (mentorError || !mentor) {
+    throw new Error("This mentor account is not active.");
+  }
+
+  return user.id;
+}
+
+async function getEligibleCourses(mentorId: string): Promise<Course[]> {
+  const admin = createAdminSupabaseClient();
+  const { data: eligibilityRows, error: eligibilityError } = await admin
+    .from("course_mentor_eligibility")
+    .select("course_id")
+    .eq("mentor_id", mentorId)
+    .is("deleted_at", null);
+
+  if (eligibilityError) {
+    throw eligibilityError;
+  }
+
+  const courseIds = (eligibilityRows ?? []).map((row) => row.course_id);
+
+  if (courseIds.length === 0) {
+    return [];
+  }
+
+  const { data: courses, error: coursesError } = await admin
+    .from("courses")
+    .select("*")
+    .in("id", courseIds)
+    .eq("active", true)
+    .is("deleted_at", null)
+    .order("name");
+
+  if (coursesError) {
+    throw coursesError;
+  }
+
+  return (courses ?? []).map((course) => mapCourse(course, [mentorId]));
+}
+
 async function getMentorPendingEnrollments(
   eligibleCourses: Course[],
 ): Promise<MentorPendingEnrollment[]> {
+  if (eligibleCourses.length === 0) {
+    return [];
+  }
+
+  const admin = createAdminSupabaseClient();
   const coursesById = new Map(
     eligibleCourses.map((course) => [course.id, course] as const),
   );
-  const enrollments = await getUnassignedActiveEnrollmentsByCourses(
-    eligibleCourses.map((course) => course.id),
+  const { data: enrollments, error: enrollmentsError } = await admin
+    .from("enrollments")
+    .select("*")
+    .in("course_id", eligibleCourses.map((course) => course.id))
+    .eq("status", "active")
+    .is("group_id", null)
+    .is("mentor_id", null)
+    .is("deleted_at", null)
+    .order("enrolled_at");
+
+  if (enrollmentsError) {
+    throw enrollmentsError;
+  }
+
+  const mappedEnrollments = (enrollments ?? []).map(mapEnrollment);
+  const studentsById = new Map(
+    (await getStudentsByIds(
+      mappedEnrollments.map((enrollment) => enrollment.studentId),
+    )).map((student) => [student.id, student] as const),
   );
 
-  const pendingEnrollments = await Promise.all(
-    enrollments.map(async (enrollment) => {
+  return mappedEnrollments
+    .map((enrollment) => {
       const course = coursesById.get(enrollment.courseId);
-      const student = await getStudent(enrollment.studentId);
+      const student = studentsById.get(enrollment.studentId);
 
       if (!course || !student) {
         return null;
@@ -92,15 +198,106 @@ async function getMentorPendingEnrollments(
         course,
         student,
       };
-    }),
-  );
-
-  return pendingEnrollments
+    })
     .filter(
       (pendingEnrollment): pendingEnrollment is MentorPendingEnrollment =>
         Boolean(pendingEnrollment),
     )
     .sort(comparePendingEnrollments);
+}
+
+async function getCourse(courseId: string): Promise<Course | null> {
+  const admin = createAdminSupabaseClient();
+  const { data: course, error: courseError } = await admin
+    .from("courses")
+    .select("*")
+    .eq("id", courseId)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (courseError) {
+    throw courseError;
+  }
+
+  return course ? mapCourse(course) : null;
+}
+
+async function getGroupLessons(
+  courseId: string,
+  groupId: string,
+): Promise<Lesson[]> {
+  const admin = createAdminSupabaseClient();
+  const { data: lessons, error: lessonsError } = await admin
+    .from("lessons")
+    .select("*")
+    .eq("course_id", courseId)
+    .eq("group_id", groupId)
+    .is("deleted_at", null);
+
+  if (lessonsError) {
+    throw lessonsError;
+  }
+
+  return (lessons ?? []).map(mapLesson);
+}
+
+async function getAssignedGroupEnrollments(
+  courseId: string,
+  groupId: string,
+  mentorId: string,
+): Promise<Enrollment[]> {
+  const admin = createAdminSupabaseClient();
+  const { data: enrollments, error: enrollmentsError } = await admin
+    .from("enrollments")
+    .select("*")
+    .eq("course_id", courseId)
+    .eq("group_id", groupId)
+    .eq("mentor_id", mentorId)
+    .is("deleted_at", null);
+
+  if (enrollmentsError) {
+    throw enrollmentsError;
+  }
+
+  return (enrollments ?? []).map(mapEnrollment);
+}
+
+async function getGroupAttendances(courseId: string, groupId: string) {
+  const admin = createAdminSupabaseClient();
+  const { data: attendances, error: attendancesError } = await admin
+    .from("attendances")
+    .select("*")
+    .eq("course_id", courseId)
+    .eq("group_id", groupId)
+    .is("deleted_at", null);
+
+  if (attendancesError) {
+    throw attendancesError;
+  }
+
+  return (attendances ?? []).map(mapAttendance);
+}
+
+async function getStudentsByIds(studentIds: string[]): Promise<Student[]> {
+  const uniqueStudentIds = [...new Set(studentIds)].filter(Boolean);
+
+  if (uniqueStudentIds.length === 0) {
+    return [];
+  }
+
+  const admin = createAdminSupabaseClient();
+  const { data: students, error: studentsError } = await admin
+    .from("profiles")
+    .select("*")
+    .in("id", uniqueStudentIds)
+    .eq("role", "student")
+    .is("deleted_at", null);
+
+  if (studentsError) {
+    throw studentsError;
+  }
+
+  return (students ?? []).map(mapStudent).sort(compareStudents);
 }
 
 function sortLessons(lessons: Lesson[]) {
@@ -109,9 +306,9 @@ function sortLessons(lessons: Lesson[]) {
   });
 }
 
-function sortCourses(courses: Course[]) {
-  return [...courses].sort((firstCourse, secondCourse) =>
-    firstCourse.name.localeCompare(secondCourse.name),
+function compareStudents(firstStudent: Student, secondStudent: Student) {
+  return `${firstStudent.lastName} ${firstStudent.name}`.localeCompare(
+    `${secondStudent.lastName} ${secondStudent.name}`,
   );
 }
 
@@ -127,7 +324,10 @@ function comparePendingEnrollments(
     return courseComparison;
   }
 
-  return `${firstPendingEnrollment.student.lastName} ${firstPendingEnrollment.student.name}`.localeCompare(
-    `${secondPendingEnrollment.student.lastName} ${secondPendingEnrollment.student.name}`,
+  return compareStudents(
+    firstPendingEnrollment.student,
+    secondPendingEnrollment.student,
   );
 }
+
+export { getMentorDashboardWorkspace, getMentorGroupWorkspaces };

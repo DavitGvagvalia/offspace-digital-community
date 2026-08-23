@@ -8,10 +8,8 @@ import { StatePanel } from "../components/state-panel";
 import { useRequiredProfile } from "../components/use-required-profile";
 import type { Course } from "../_types/course";
 import type { Enrollment } from "../_types/enrollment";
-import {
-  enrollStudentInCourses,
-  getStudentEnrollmentState,
-} from "./_data/enrollments";
+import { enrollCurrentStudentInCourses } from "./_data/enrollment-actions";
+import { getStudentEnrollmentState } from "./_data/enrollments";
 
 const navItems = [
   {
@@ -89,10 +87,8 @@ export default function StudentPage() {
       setIsSubmittingCourses(true);
       setEnrollmentError(null);
 
-      const createdEnrollments = await enrollStudentInCourses(
-        user.id,
-        selectedCourseIds,
-      );
+      const createdEnrollments =
+        await enrollCurrentStudentInCourses(selectedCourseIds);
 
       setEnrollments(createdEnrollments);
       setAvailableCourses([]);
