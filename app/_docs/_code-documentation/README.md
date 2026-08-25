@@ -1,5 +1,14 @@
 # Code Documentation
 
+Start here:
+
+- `project-structure.md` explains what each major directory and file does.
+- `application-architecture.md` explains the main code boundaries.
+- `authentication-and-authorization.md` explains portal access rules.
+- `data-model.md` explains the canonical Supabase tables.
+- `feature-flows.md` explains current role behavior.
+- `setup-and-validation.md` explains environment and validation commands.
+
 Use these rules when changing code:
 
 - Supabase access is centralized under `app/_lib/supabase`.

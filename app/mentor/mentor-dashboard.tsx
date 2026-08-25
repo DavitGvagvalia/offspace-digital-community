@@ -1,12 +1,20 @@
 "use client";
 
+<<<<<<< HEAD
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+=======
+import { useMemo, useState } from "react";
+>>>>>>> 33d4dbc (Refactor student and super-admin portals to use session caching for data fetching)
 
 import { AccessError, LoadingState } from "../components/auth-states";
 import { StatePanel } from "../components/state-panel";
 import { useRequiredProfile } from "../components/use-required-profile";
+<<<<<<< HEAD
 import type { Course } from "../_types/course";
 import { createMentorGroup } from "./_data/group-actions";
+=======
+import { useSessionCachedQuery } from "../_lib/session-cache";
+>>>>>>> 33d4dbc (Refactor student and super-admin portals to use session caching for data fetching)
 import { addAttendance, deleteAttendance } from "./_data/attendance";
 <<<<<<< HEAD
 import { getMentorDashboardWorkspace } from "./_data/workspace";
@@ -31,9 +39,12 @@ import {
   type LessonUpdateRequest,
 } from "./mentor-workspace-components";
 
+const emptyWorkspaces: MentorGroupWorkspace[] = [];
+
 export function MentorDashboard() {
   const { user, profile, isLoading: isAuthLoading, error: authError } =
     useRequiredProfile("mentor");
+<<<<<<< HEAD
   const [workspaces, setWorkspaces] = useState<MentorGroupWorkspace[]>([]);
   const [eligibleCourses, setEligibleCourses] = useState<Course[]>([]);
   const [pendingEnrollments, setPendingEnrollments] = useState<
@@ -49,6 +60,9 @@ export function MentorDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [error, setError] = useState<string | null>(null);
+=======
+  const [selectedGroupId, setSelectedGroupId] = useState("");
+>>>>>>> 33d4dbc (Refactor student and super-admin portals to use session caching for data fetching)
   const [actionError, setActionError] = useState<string | null>(null);
   const [groupCreationError, setGroupCreationError] = useState<string | null>(
     null,
@@ -58,6 +72,7 @@ export function MentorDashboard() {
   const [pendingLessonCreateGroupIds, setPendingLessonCreateGroupIds] = useState<
     string[]
   >([]);
+<<<<<<< HEAD
 
   const applyMentorDashboardWorkspace = useCallback(
     (nextWorkspace: MentorDashboardWorkspace, preferredGroupId?: string) => {
@@ -103,10 +118,17 @@ export function MentorDashboard() {
     let isMounted = true;
 
     async function loadMentorGroups() {
+=======
+  const workspacesQuery = useSessionCachedQuery<MentorGroupWorkspace[]>({
+    key: user ? `mentor:${user.id}:group-workspaces` : null,
+    enabled: Boolean(user),
+    fetcher: () => {
+>>>>>>> 33d4dbc (Refactor student and super-admin portals to use session caching for data fetching)
       if (!user) {
-        return;
+        return Promise.resolve([]);
       }
 
+<<<<<<< HEAD
       try {
         setIsLoading(true);
         setError(null);
@@ -135,10 +157,23 @@ export function MentorDashboard() {
       isMounted = false;
     };
   }, [applyMentorDashboardWorkspace, user]);
+=======
+      return getMentorGroupWorkspaces(user.id);
+    },
+  });
+  const workspaces = workspacesQuery.data ?? emptyWorkspaces;
+  const activeSelectedGroupId = workspaces.some(
+    (workspace) => workspace.group.id === selectedGroupId,
+  )
+    ? selectedGroupId
+    : workspaces[0]?.group.id ?? "";
+>>>>>>> 33d4dbc (Refactor student and super-admin portals to use session caching for data fetching)
 
   const selectedWorkspace = useMemo(() => {
-    return workspaces.find((workspace) => workspace.group.id === selectedGroupId);
-  }, [selectedGroupId, workspaces]);
+    return workspaces.find(
+      (workspace) => workspace.group.id === activeSelectedGroupId,
+    );
+  }, [activeSelectedGroupId, workspaces]);
 
   const pendingEnrollmentsForSelectedCourse = useMemo(() => {
     return pendingEnrollments.filter(
@@ -249,8 +284,8 @@ export function MentorDashboard() {
       if (existingAttendance) {
         await deleteAttendance(existingAttendance.id);
 
-        setWorkspaces((currentWorkspaces) =>
-          currentWorkspaces.map((currentWorkspace) => {
+        workspacesQuery.setLocalData((currentWorkspaces) =>
+          (currentWorkspaces ?? []).map((currentWorkspace) => {
             if (currentWorkspace.group.id !== workspace.group.id) {
               return currentWorkspace;
             }
@@ -271,8 +306,8 @@ export function MentorDashboard() {
           lessonId: request.lessonId,
         });
 
-        setWorkspaces((currentWorkspaces) =>
-          currentWorkspaces.map((currentWorkspace) => {
+        workspacesQuery.setLocalData((currentWorkspaces) =>
+          (currentWorkspaces ?? []).map((currentWorkspace) => {
             if (currentWorkspace.group.id !== workspace.group.id) {
               return currentWorkspace;
             }
@@ -338,8 +373,8 @@ export function MentorDashboard() {
         description: request.description,
       });
 
-      setWorkspaces((currentWorkspaces) =>
-        currentWorkspaces.map((currentWorkspace) => {
+      workspacesQuery.setLocalData((currentWorkspaces) =>
+        (currentWorkspaces ?? []).map((currentWorkspace) => {
           if (currentWorkspace.group.id !== workspace.group.id) {
             return currentWorkspace;
           }
@@ -423,8 +458,8 @@ export function MentorDashboard() {
       const failedAttendanceCount =
         attendanceResults.length - createdAttendances.length;
 
-      setWorkspaces((currentWorkspaces) =>
-        currentWorkspaces.map((currentWorkspace) => {
+      workspacesQuery.setLocalData((currentWorkspaces) =>
+        (currentWorkspaces ?? []).map((currentWorkspace) => {
           if (currentWorkspace.group.id !== workspace.group.id) {
             return currentWorkspace;
           }
@@ -496,10 +531,17 @@ export function MentorDashboard() {
           </p>
         </header>
 
-        {isLoading ? (
+        {workspacesQuery.isLoading ? (
           <StatePanel title="Loading groups" text="Checking your assigned groups." />
+<<<<<<< HEAD
         ) : error ? (
           <StatePanel title="Workspace unavailable" text={error} />
+=======
+        ) : workspacesQuery.error ? (
+          <StatePanel title="Workspace unavailable" text="We could not load your mentor workspace right now." />
+        ) : workspaces.length === 0 ? (
+          <StatePanel title="No assigned groups" text="No groups were found for this mentor account yet." />
+>>>>>>> 33d4dbc (Refactor student and super-admin portals to use session caching for data fetching)
         ) : (
 <<<<<<< HEAD
           <>
@@ -520,7 +562,7 @@ export function MentorDashboard() {
           <section className="grid gap-5 lg:grid-cols-[18rem_minmax(0,1fr)]">
             <MentorGroupList
               workspaces={workspaces}
-              selectedGroupId={selectedGroupId}
+              selectedGroupId={activeSelectedGroupId}
               onSelectGroup={setSelectedGroupId}
             />
 

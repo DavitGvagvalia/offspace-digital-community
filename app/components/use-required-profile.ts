@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 
 import { getPortalProfile } from "../_data/portal-access.repository";
 import {
+  clearSessionDataCache,
+  useSessionCachedQuery,
+} from "../_lib/session-cache";
+import {
   signOutCurrentUser,
   subscribeToAuthState,
 } from "../_lib/supabase/auth";
@@ -25,58 +29,40 @@ export function useRequiredProfile<T extends PortalRole>(
 ): RequiredProfileState<T> {
   const router = useRouter();
   const [user, setUser] = useState<RequiredProfileState<T>["user"]>(null);
-  const [profile, setProfile] = useState<PortalProfileByRole<T> | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const profileQuery = useSessionCachedQuery<PortalProfileByRole<T> | null>({
+    key: user ? `portal-profile:${role}:${user.id}` : null,
+    enabled: Boolean(user) && !error,
+    fetcher: () => {
+      if (!user) {
+        return Promise.resolve(null);
+      }
+
+      return getPortalProfile(role, user.id);
+    },
+  });
 
   useEffect(() => {
     let isMounted = true;
 
-    const unsubscribe = subscribeToAuthState(async (nextUser) => {
+    const unsubscribe = subscribeToAuthState((nextUser) => {
       if (!nextUser) {
+        clearSessionDataCache();
+
         if (isMounted) {
           setUser(null);
-          setProfile(null);
-          setIsLoading(false);
+          setIsAuthLoading(false);
         }
 
         router.replace(loginPath[role]);
         return;
       }
 
-      try {
-        if (isMounted) {
-          setIsLoading(true);
-          setError(null);
-          setUser(nextUser);
-        }
-
-        const nextProfile = await getPortalProfile(role, nextUser.id);
-
-        if (!nextProfile) {
-          await signOutCurrentUser();
-
-          if (isMounted) {
-            setUser(null);
-            setProfile(null);
-            setError("This account does not have access to this portal.");
-            setIsLoading(false);
-          }
-
-          return;
-        }
-
-        if (isMounted) {
-          setProfile(nextProfile);
-          setIsLoading(false);
-        }
-      } catch (profileError) {
-        console.error(profileError);
-
-        if (isMounted) {
-          setError("We could not verify your account access.");
-          setIsLoading(false);
-        }
+      if (isMounted) {
+        setError(null);
+        setUser(nextUser);
+        setIsAuthLoading(false);
       }
     });
 
@@ -86,10 +72,47 @@ export function useRequiredProfile<T extends PortalRole>(
     };
   }, [role, router]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    async function signOutUnauthorizedUser() {
+      if (
+        !user ||
+        profileQuery.isLoading ||
+        profileQuery.error ||
+        profileQuery.data !== null
+      ) {
+        return;
+      }
+
+      await signOutCurrentUser();
+      clearSessionDataCache();
+
+      if (isMounted) {
+        setUser(null);
+        setError("This account does not have access to this portal.");
+      }
+    }
+
+    signOutUnauthorizedUser().catch((signOutError) => {
+      console.error(signOutError);
+
+      if (isMounted) {
+        setError("We could not verify your account access.");
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [profileQuery.data, profileQuery.error, profileQuery.isLoading, user]);
+
   return {
     user,
-    profile,
-    isLoading,
-    error,
+    profile: profileQuery.data,
+    isLoading: isAuthLoading || (Boolean(user) && profileQuery.isLoading),
+    error:
+      error ??
+      (profileQuery.error ? "We could not verify your account access." : null),
   };
 }

@@ -6,7 +6,14 @@ import { AccessError, LoadingState } from "../components/auth-states";
 import { StatePanel } from "../components/state-panel";
 import { useRequiredProfile } from "../components/use-required-profile";
 import { formatDate, formatDateTime as formatTimestampDateTime } from "../_lib/dates";
+<<<<<<< HEAD
 import type { Course } from "../_types/course";
+=======
+import {
+  loadSessionCachedData,
+  useSessionCachedQuery,
+} from "../_lib/session-cache";
+>>>>>>> 33d4dbc (Refactor student and super-admin portals to use session caching for data fetching)
 import type { TimestampString } from "../_types/date";
 import type { Mentor } from "../_types/mentor";
 import type { Student } from "../_types/student";
@@ -30,6 +37,11 @@ type ActionState = {
   type: "success" | "error";
   message: string;
 } | null;
+
+type PeopleState = {
+  students: Student[];
+  mentors: Mentor[];
+};
 
 type SelectedPerson =
   | {
@@ -60,6 +72,7 @@ const emptyDetailState: DetailState = {
 export function SuperAdminDashboard() {
   const { profile, isLoading: isAuthLoading, error: authError } =
     useRequiredProfile("super-admin");
+<<<<<<< HEAD
   const [students, setStudents] = useState<Student[]>([]);
   const [mentors, setMentors] = useState<Mentor[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -73,13 +86,26 @@ export function SuperAdminDashboard() {
     null,
   );
   const [loadError, setLoadError] = useState<string | null>(null);
+=======
+  const [isSubmitting, setIsSubmitting] = useState<ManagedRole | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+>>>>>>> 33d4dbc (Refactor student and super-admin portals to use session caching for data fetching)
   const [actionState, setActionState] = useState<ActionState>(null);
   const [selectedPerson, setSelectedPerson] = useState<SelectedPerson | null>(
     null,
   );
   const [detailState, setDetailState] =
     useState<DetailState>(emptyDetailState);
+  const peopleQuery = useSessionCachedQuery<PeopleState>({
+    key: profile ? `super-admin:${profile.id}:people` : null,
+    enabled: Boolean(profile),
+    fetcher: async () => {
+      const [nextStudents, nextMentors] = await Promise.all([
+        getStudents(),
+        getMentors(),
+      ]);
 
+<<<<<<< HEAD
   useEffect(() => {
     let isMounted = true;
 
@@ -122,6 +148,16 @@ export function SuperAdminDashboard() {
       isMounted = false;
     };
   }, [profile]);
+=======
+      return {
+        students: sortStudents(nextStudents),
+        mentors: sortMentors(nextMentors),
+      };
+    },
+  });
+  const students = peopleQuery.data?.students ?? [];
+  const mentors = peopleQuery.data?.mentors ?? [];
+>>>>>>> 33d4dbc (Refactor student and super-admin portals to use session caching for data fetching)
 
   useEffect(() => {
     if (!selectedPerson) {
@@ -161,9 +197,13 @@ export function SuperAdminDashboard() {
 
       const result = await createStudentAuthAndProfile(input);
 
-      setStudents((currentStudents) =>
-        sortStudents([...currentStudents, result.student]),
-      );
+      peopleQuery.setLocalData((currentPeople) => ({
+        students: sortStudents([
+          ...(currentPeople?.students ?? []),
+          result.student,
+        ]),
+        mentors: currentPeople?.mentors ?? mentors,
+      }));
       setActionState({
         type: "success",
         message: `Created student account for ${result.email}.`,
@@ -195,9 +235,10 @@ export function SuperAdminDashboard() {
 
       const result = await createMentorAuthAndProfile(input);
 
-      setMentors((currentMentors) =>
-        sortMentors([...currentMentors, result.mentor]),
-      );
+      peopleQuery.setLocalData((currentPeople) => ({
+        students: currentPeople?.students ?? students,
+        mentors: sortMentors([...(currentPeople?.mentors ?? []), result.mentor]),
+      }));
       setActionState({
         type: "success",
         message: `Created mentor account for ${result.email}.`,
@@ -229,14 +270,20 @@ export function SuperAdminDashboard() {
 
       if (role === "student") {
         await deleteStudent(personId);
-        setStudents((currentStudents) =>
-          currentStudents.filter((student) => student.id !== personId),
-        );
+        peopleQuery.setLocalData((currentPeople) => ({
+          students: (currentPeople?.students ?? []).filter(
+            (student) => student.id !== personId,
+          ),
+          mentors: currentPeople?.mentors ?? mentors,
+        }));
       } else {
         await deleteMentor(personId);
-        setMentors((currentMentors) =>
-          currentMentors.filter((mentor) => mentor.id !== personId),
-        );
+        peopleQuery.setLocalData((currentPeople) => ({
+          students: currentPeople?.students ?? students,
+          mentors: (currentPeople?.mentors ?? []).filter(
+            (mentor) => mentor.id !== personId,
+          ),
+        }));
       }
 
       setActionState({
@@ -265,33 +312,35 @@ export function SuperAdminDashboard() {
     });
 
     try {
-      if (selection.role === "student") {
-        const studentCourses = await getStudentCourseDetails(
-          selection.person.id,
-        );
+      const details = await loadSessionCachedData(
+        `super-admin:person-details:${detailKey}`,
+        async () => {
+          if (selection.role === "student") {
+            return {
+              studentCourses: await getStudentCourseDetails(
+                selection.person.id,
+              ),
+              mentorGroups: [],
+            };
+          }
 
-        setDetailState((currentDetailState) =>
-          currentDetailState.key === detailKey
-            ? {
-                ...emptyDetailState,
-                key: detailKey,
-                studentCourses,
-              }
-            : currentDetailState,
-        );
-      } else {
-        const mentorGroups = await getMentorGroupDetails(selection.person.id);
+          return {
+            studentCourses: [],
+            mentorGroups: await getMentorGroupDetails(selection.person.id),
+          };
+        },
+      );
 
-        setDetailState((currentDetailState) =>
-          currentDetailState.key === detailKey
-            ? {
-                ...emptyDetailState,
-                key: detailKey,
-                mentorGroups,
-              }
-            : currentDetailState,
-        );
-      }
+      setDetailState((currentDetailState) =>
+        currentDetailState.key === detailKey
+          ? {
+              ...emptyDetailState,
+              key: detailKey,
+              studentCourses: details.studentCourses,
+              mentorGroups: details.mentorGroups,
+            }
+          : currentDetailState,
+      );
     } catch (detailsError) {
       console.error(detailsError);
       setDetailState((currentDetailState) =>
@@ -400,10 +449,10 @@ export function SuperAdminDashboard() {
           />
         </section>
 
-        {isLoadingPeople ? (
+        {peopleQuery.isLoading ? (
           <StatePanel title="Loading people" text="Checking portal profiles." />
-        ) : loadError ? (
-          <StatePanel title="Profiles unavailable" text={loadError} />
+        ) : peopleQuery.error ? (
+          <StatePanel title="Profiles unavailable" text="We could not load students and mentors right now." />
         ) : (
           <section className="grid gap-5 lg:grid-cols-2">
             <PeopleList
