@@ -1,65 +1,42 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 
 import { AccessError, LoadingState } from "../../components/auth-states";
 import { useRequiredProfile } from "../../components/use-required-profile";
+import { useSessionCachedQuery } from "../../_lib/session-cache";
 import { getStudentLessonCourses } from "../_data/lessons";
 import type { StudentCourse } from "../_types/lessons";
 import { CourseTabs, LessonsPanel, StatePanel } from "./lesson-components";
 import { sortStudentLessons } from "./lesson-utils";
 
+const emptyStudentCourses: StudentCourse[] = [];
+
 export function StudentLessonsView() {
   const { user, profile, isLoading: isAuthLoading, error: authError } =
     useRequiredProfile("student");
-  const [studentCourses, setStudentCourses] = useState<StudentCourse[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadStudentCourses() {
+  const studentCoursesQuery = useSessionCachedQuery<StudentCourse[]>({
+    key: user ? `student:${user.id}:lesson-courses` : null,
+    enabled: Boolean(user),
+    fetcher: () => {
       if (!user) {
-        return;
+        return Promise.resolve([]);
       }
 
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const nextStudentCourses = await getStudentLessonCourses(user.id);
-
-        if (!isMounted) {
-          return;
-        }
-
-        setStudentCourses(nextStudentCourses);
-        setSelectedCourseId(nextStudentCourses[0]?.id ?? "");
-      } catch (loadError) {
-        console.error(loadError);
-
-        if (isMounted) {
-          setError("We could not load your lessons right now.");
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    loadStudentCourses();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [user]);
+      return getStudentLessonCourses(user.id);
+    },
+  });
+  const studentCourses = studentCoursesQuery.data ?? emptyStudentCourses;
+  const activeSelectedCourseId = studentCourses.some(
+    (course) => course.id === selectedCourseId,
+  )
+    ? selectedCourseId
+    : studentCourses[0]?.id ?? "";
 
   const selectedCourse = studentCourses.find(
-    (item) => item.id === selectedCourseId,
+    (item) => item.id === activeSelectedCourseId,
   );
 
   const selectedLessons = useMemo(() => {
@@ -97,10 +74,10 @@ export function StudentLessonsView() {
           </p>
         </header>
 
-        {isLoading ? (
+        {studentCoursesQuery.isLoading ? (
           <StatePanel title="Loading lessons" text="Checking your courses and lesson history." />
-        ) : error ? (
-          <StatePanel title="Lessons unavailable" text={error} />
+        ) : studentCoursesQuery.error ? (
+          <StatePanel title="Lessons unavailable" text="We could not load your lessons right now." />
         ) : studentCourses.length === 0 ? (
           <StatePanel
             title="No enrolled courses"
@@ -110,7 +87,7 @@ export function StudentLessonsView() {
           <>
             <CourseTabs
               studentCourses={studentCourses}
-              selectedCourseId={selectedCourseId}
+              selectedCourseId={activeSelectedCourseId}
               onSelectCourse={setSelectedCourseId}
             />
             <LessonsPanel selectedCourse={selectedCourse} lessons={selectedLessons} />

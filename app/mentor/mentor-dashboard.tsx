@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { AccessError, LoadingState } from "../components/auth-states";
 import { StatePanel } from "../components/state-panel";
 import { useRequiredProfile } from "../components/use-required-profile";
+import { useSessionCachedQuery } from "../_lib/session-cache";
 import { addAttendance, deleteAttendance } from "./_data/attendance";
 import { createLessonWithDetails, updateLessonDetails } from "./_data/lessons";
 import { getMentorGroupWorkspaces } from "./_data/workspace";
@@ -17,61 +18,41 @@ import {
   type LessonUpdateRequest,
 } from "./mentor-workspace-components";
 
+const emptyWorkspaces: MentorGroupWorkspace[] = [];
+
 export function MentorDashboard() {
   const { user, profile, isLoading: isAuthLoading, error: authError } =
     useRequiredProfile("mentor");
-  const [workspaces, setWorkspaces] = useState<MentorGroupWorkspace[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [pendingAttendanceIds, setPendingAttendanceIds] = useState<string[]>([]);
   const [pendingLessonIds, setPendingLessonIds] = useState<string[]>([]);
   const [pendingLessonCreateGroupIds, setPendingLessonCreateGroupIds] = useState<
     string[]
   >([]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadMentorGroups() {
+  const workspacesQuery = useSessionCachedQuery<MentorGroupWorkspace[]>({
+    key: user ? `mentor:${user.id}:group-workspaces` : null,
+    enabled: Boolean(user),
+    fetcher: () => {
       if (!user) {
-        return;
+        return Promise.resolve([]);
       }
 
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const nextWorkspaces = await getMentorGroupWorkspaces(user.id);
-
-        if (isMounted) {
-          setWorkspaces(nextWorkspaces);
-          setSelectedGroupId(nextWorkspaces[0]?.group.id ?? "");
-        }
-      } catch (loadError) {
-        console.error(loadError);
-
-        if (isMounted) {
-          setError("We could not load your mentor workspace right now.");
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    loadMentorGroups();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [user]);
+      return getMentorGroupWorkspaces(user.id);
+    },
+  });
+  const workspaces = workspacesQuery.data ?? emptyWorkspaces;
+  const activeSelectedGroupId = workspaces.some(
+    (workspace) => workspace.group.id === selectedGroupId,
+  )
+    ? selectedGroupId
+    : workspaces[0]?.group.id ?? "";
 
   const selectedWorkspace = useMemo(() => {
-    return workspaces.find((workspace) => workspace.group.id === selectedGroupId);
-  }, [selectedGroupId, workspaces]);
+    return workspaces.find(
+      (workspace) => workspace.group.id === activeSelectedGroupId,
+    );
+  }, [activeSelectedGroupId, workspaces]);
 
   async function handleToggleAttendance(request: AttendanceToggleRequest) {
     if (!user) {
@@ -119,8 +100,8 @@ export function MentorDashboard() {
       if (existingAttendance) {
         await deleteAttendance(existingAttendance.id);
 
-        setWorkspaces((currentWorkspaces) =>
-          currentWorkspaces.map((currentWorkspace) => {
+        workspacesQuery.setLocalData((currentWorkspaces) =>
+          (currentWorkspaces ?? []).map((currentWorkspace) => {
             if (currentWorkspace.group.id !== workspace.group.id) {
               return currentWorkspace;
             }
@@ -141,8 +122,8 @@ export function MentorDashboard() {
           lessonId: request.lessonId,
         });
 
-        setWorkspaces((currentWorkspaces) =>
-          currentWorkspaces.map((currentWorkspace) => {
+        workspacesQuery.setLocalData((currentWorkspaces) =>
+          (currentWorkspaces ?? []).map((currentWorkspace) => {
             if (currentWorkspace.group.id !== workspace.group.id) {
               return currentWorkspace;
             }
@@ -208,8 +189,8 @@ export function MentorDashboard() {
         description: request.description,
       });
 
-      setWorkspaces((currentWorkspaces) =>
-        currentWorkspaces.map((currentWorkspace) => {
+      workspacesQuery.setLocalData((currentWorkspaces) =>
+        (currentWorkspaces ?? []).map((currentWorkspace) => {
           if (currentWorkspace.group.id !== workspace.group.id) {
             return currentWorkspace;
           }
@@ -293,8 +274,8 @@ export function MentorDashboard() {
       const failedAttendanceCount =
         attendanceResults.length - createdAttendances.length;
 
-      setWorkspaces((currentWorkspaces) =>
-        currentWorkspaces.map((currentWorkspace) => {
+      workspacesQuery.setLocalData((currentWorkspaces) =>
+        (currentWorkspaces ?? []).map((currentWorkspace) => {
           if (currentWorkspace.group.id !== workspace.group.id) {
             return currentWorkspace;
           }
@@ -366,17 +347,17 @@ export function MentorDashboard() {
           </p>
         </header>
 
-        {isLoading ? (
+        {workspacesQuery.isLoading ? (
           <StatePanel title="Loading groups" text="Checking your assigned groups." />
-        ) : error ? (
-          <StatePanel title="Workspace unavailable" text={error} />
+        ) : workspacesQuery.error ? (
+          <StatePanel title="Workspace unavailable" text="We could not load your mentor workspace right now." />
         ) : workspaces.length === 0 ? (
           <StatePanel title="No assigned groups" text="No groups were found for this mentor account yet." />
         ) : (
           <section className="grid gap-5 lg:grid-cols-[18rem_minmax(0,1fr)]">
             <MentorGroupList
               workspaces={workspaces}
-              selectedGroupId={selectedGroupId}
+              selectedGroupId={activeSelectedGroupId}
               onSelectGroup={setSelectedGroupId}
             />
 

@@ -11,9 +11,6 @@ Role-based schedule and attendance web app for Offspace Digital Community.
 - Supabase Postgres with Row Level Security
 - Supabase Free plan for MVP launch
 
-Firebase has been removed from the active runtime, dependency list, and deploy
-configuration. Existing Firebase data was test data only and no rollback path is
-required.
 
 ## Product Scope
 
@@ -24,6 +21,11 @@ Deferred: public student self-registration, payments, invoices, private-student
 mentor workspaces, messaging, homework, file uploads, certificates, payroll,
 parent accounts, notifications, video lessons, analytics, and broad LMS
 features.
+
+## Project Map
+
+For a file-by-file explanation of the app structure, start with
+`app/_docs/_code-documentation/project-structure.md`.
 
 ## Setup
 

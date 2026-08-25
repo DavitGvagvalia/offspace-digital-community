@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 import { AccessError, LoadingState } from "../../components/auth-states";
 import { StatePanel } from "../../components/state-panel";
 import { useRequiredProfile } from "../../components/use-required-profile";
+import { useSessionCachedQuery } from "../../_lib/session-cache";
 import { getStudentCourseSummaries } from "../_data/courses";
 import type { StudentCourseSummary } from "../_types/course-summary";
 import { CourseCard } from "./course-card";
@@ -13,46 +13,18 @@ import { CourseCard } from "./course-card";
 export function StudentCoursesView() {
   const { user, profile, isLoading: isAuthLoading, error: authError } =
     useRequiredProfile("student");
-  const [courses, setCourses] = useState<StudentCourseSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadCourses() {
+  const coursesQuery = useSessionCachedQuery<StudentCourseSummary[]>({
+    key: user ? `student:${user.id}:course-summaries` : null,
+    enabled: Boolean(user),
+    fetcher: () => {
       if (!user) {
-        return;
+        return Promise.resolve([]);
       }
 
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const summaries = await getStudentCourseSummaries(user.id);
-
-        if (isMounted) {
-          setCourses(summaries);
-        }
-      } catch (loadError) {
-        console.error(loadError);
-
-        if (isMounted) {
-          setError("We could not load your courses right now.");
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    loadCourses();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [user]);
+      return getStudentCourseSummaries(user.id);
+    },
+  });
+  const courses = coursesQuery.data ?? [];
 
   if (isAuthLoading) {
     return <LoadingState title="Loading courses" />;
@@ -85,10 +57,10 @@ export function StudentCoursesView() {
           </p>
         </header>
 
-        {isLoading ? (
+        {coursesQuery.isLoading ? (
           <StatePanel title="Loading courses" text="Checking your enrollments." />
-        ) : error ? (
-          <StatePanel title="Courses unavailable" text={error} />
+        ) : coursesQuery.error ? (
+          <StatePanel title="Courses unavailable" text="We could not load your courses right now." />
         ) : courses.length === 0 ? (
           <StatePanel title="No courses found" text="No enrollments were found for this student yet." />
         ) : (
