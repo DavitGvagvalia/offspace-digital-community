@@ -55,7 +55,18 @@ export function PortalLogin({ role }: { role: PortalRole }) {
       setError(null);
 
       const user = await loginWithEmailAndPassword(email, password);
-      const roleExists = await hasPortalAccess(role, user.id);
+      let roleExists = false;
+
+      try {
+        roleExists = await hasPortalAccess(role, user.id);
+      } catch (accessError) {
+        console.error(accessError);
+        await signOutCurrentUser();
+        setError(
+          "You signed in, but we could not verify portal access. Check Supabase table policies and profile rows.",
+        );
+        return;
+      }
 
       if (!roleExists) {
         await signOutCurrentUser();
@@ -65,6 +76,7 @@ export function PortalLogin({ role }: { role: PortalRole }) {
 
       router.push(copy.destination);
     } catch (loginError) {
+      console.error(loginError);
       setError(getSupabaseAuthMessage(loginError));
     } finally {
       setIsSubmitting(false);
