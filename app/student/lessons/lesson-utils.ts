@@ -1,4 +1,4 @@
-import { formatDateTime, toMillis } from "../../_lib/dates";
+import { formatDateTime, formatShortDateTime, toMillis } from "../../_lib/dates";
 import type { Course } from "../../_types/course";
 import type { TimestampString } from "../../_types/date";
 import type { StudentLesson } from "../_types/lessons";
@@ -17,4 +17,8 @@ export function sortStudentLessons(lessons: StudentLesson[]) {
 
 export function formatLessonDate(date: TimestampString) {
   return formatDateTime(date);
+}
+
+export function formatLessonTimelineDate(date: TimestampString) {
+  return formatShortDateTime(date);
 }

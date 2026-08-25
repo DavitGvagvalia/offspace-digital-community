@@ -39,10 +39,20 @@ function formatShortDate(timestamp: TimestampString): string {
   }).format(toDate(timestamp));
 }
 
+function formatShortDateTime(timestamp: TimestampString): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(toDate(timestamp));
+}
+
 export {
   formatDate,
   formatDateTime,
   formatShortDate,
+  formatShortDateTime,
   nowTimestamp,
   toDate,
   toMillis,
