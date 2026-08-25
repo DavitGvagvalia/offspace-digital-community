@@ -3,7 +3,11 @@
 import { useState } from "react";
 
 import type { StudentCourse, StudentLesson } from "../_types/lessons";
-import { formatLessonDate, getCourseTitle } from "./lesson-utils";
+import {
+  formatLessonDate,
+  formatLessonTimelineDate,
+  getCourseTitle,
+} from "./lesson-utils";
 
 export function CourseTabs({
   studentCourses,
@@ -80,7 +84,7 @@ export function LessonsPanel({
           text="This course is connected to your group, but no past lessons were found yet."
         />
       ) : (
-        <div className="relative space-y-4 before:absolute before:bottom-4 before:left-3 before:top-4 before:w-px before:bg-sage-200">
+        <div className="space-y-4">
           {lessons.map((lesson) => (
             <LessonCard key={lesson.lesson.id} lesson={lesson} />
           ))}
@@ -95,48 +99,60 @@ export function LessonCard({ lesson }: { lesson: StudentLesson }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <article className="group relative pl-10">
-      <span
-        className={`absolute left-0 top-4 z-10 h-6 w-6 rounded-full border-4 border-offwhite ${
-          attended ? "bg-success" : "bg-stone-300"
-        }`}
-        aria-hidden="true"
-      />
+    <article className="group grid grid-cols-[4.75rem_1.25rem_minmax(0,1fr)] gap-3 sm:grid-cols-[7rem_1.5rem_minmax(0,1fr)] sm:gap-4">
+      <time
+        dateTime={lesson.lesson.date}
+        className="pt-4 text-right text-xs font-bold leading-5 text-ink-soft sm:text-sm"
+      >
+        {formatLessonTimelineDate(lesson.lesson.date)}
+      </time>
+
+      <div className="relative flex justify-center">
+        <span className="absolute bottom-0 top-0 w-px bg-sage-200" aria-hidden="true" />
+        <span
+          className={`relative mt-4 h-4 w-4 rounded-full border-4 border-offwhite ${
+            attended ? "bg-success" : "bg-stone-300"
+          }`}
+          aria-hidden="true"
+        />
+      </div>
+
       <button
         type="button"
         onClick={() => setIsOpen((currentValue) => !currentValue)}
-        className="w-full rounded-sm border border-stone-200 bg-ivory-light p-4 text-left transition hover:border-sage-300 focus:outline-none focus:ring-2 focus:ring-forest/20"
+        className="min-w-0 rounded-sm border border-stone-200 bg-ivory-light p-4 text-left transition hover:border-sage-300 focus:outline-none focus:ring-2 focus:ring-forest/20"
         aria-expanded={isOpen}
       >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="font-semibold text-ink">
-            {lesson.lesson.title ?? `Lesson ID: ${lesson.lesson.id}`}
-          </p>
-          {lesson.lesson.description ? (
-            <p className="mt-1 text-sm text-ink-soft">
-              {lesson.lesson.description}
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="font-semibold text-ink">
+              {lesson.lesson.title ?? `Lesson ID: ${lesson.lesson.id}`}
             </p>
-          ) : null}
+            {lesson.lesson.description ? (
+              <p className="mt-1 text-sm leading-6 text-ink-soft">
+                {lesson.lesson.description}
+              </p>
+            ) : null}
+          </div>
+          <span
+            className={`inline-flex min-h-8 shrink-0 items-center rounded-xs px-3 py-1 text-xs font-bold ring-1 ${
+              attended
+                ? "bg-success/10 text-success ring-success/20"
+                : "bg-stone-100 text-stone-600 ring-stone-200"
+            }`}
+          >
+            {attended ? "Attended" : "Not attended"}
+          </span>
         </div>
-        <span
-          className={`inline-flex min-h-8 items-center rounded-xs px-3 py-1 text-xs font-bold ring-1 ${
-            attended
-              ? "bg-success/10 text-success ring-success/20"
-              : "bg-stone-100 text-stone-600 ring-stone-200"
+
+        <div
+          className={`mt-3 rounded-xs border border-stone-200 bg-offwhite px-3 py-2 text-sm text-ink-soft  ${
+            isOpen ? "block" : "hidden group-hover:block group-focus-within:block"
           }`}
         >
-          {attended ? "Attended" : "Not attended"}
-        </span>
-      </div>
-      <div
-        className={`mt-3 rounded-xs border border-stone-200 bg-offwhite px-3 py-2 text-sm text-ink-soft ${
-          isOpen ? "block" : "hidden group-hover:block group-focus-within:block"
-        }`}
-      >
-        <p>Date: {formatLessonDate(lesson.lesson.date)}</p>
-        <p>Attendance: {attended ? "Attended" : "Not attended"}</p>
-      </div>
+          <p>Date: {formatLessonDate(lesson.lesson.date)}</p>
+          <p>Attendance: {attended ? "Attended" : "Not attended"}</p>
+        </div>
       </button>
     </article>
   );

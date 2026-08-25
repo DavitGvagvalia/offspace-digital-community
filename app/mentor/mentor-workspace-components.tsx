@@ -1,5 +1,13 @@
+"use client";
+
+import { useMemo, useState, type FormEvent } from "react";
+
 import type { Attendance } from "../_types/attendance";
-import { formatDateTime, formatShortDate } from "../_lib/dates";
+import {
+  formatDateTime,
+  formatShortDate,
+  formatShortDateTime,
+} from "../_lib/dates";
 import type { Lesson } from "../_types/lesson";
 import type { MentorGroupWorkspace } from "./_types/workspace";
 import type { Student } from "../_types/student";
@@ -8,6 +16,21 @@ export type AttendanceToggleRequest = {
   groupId: string;
   studentId: string;
   lessonId: string;
+};
+
+export type LessonUpdateRequest = {
+  groupId: string;
+  lessonId: string;
+  title: string;
+  description: string;
+};
+
+export type LessonCreateRequest = {
+  groupId: string;
+  title: string;
+  description: string;
+  date: string;
+  attendedStudentIds: string[];
 };
 
 export function MentorGroupList({
@@ -69,12 +92,20 @@ export function GroupWorkspace({
   workspace,
   actionError,
   pendingAttendanceIds,
+  pendingLessonIds,
+  pendingLessonCreateGroupIds,
+  onCreateLesson,
   onToggleAttendance,
+  onUpdateLesson,
 }: {
   workspace: MentorGroupWorkspace;
   actionError: string | null;
   pendingAttendanceIds: string[];
+  pendingLessonIds: string[];
+  pendingLessonCreateGroupIds: string[];
+  onCreateLesson: (request: LessonCreateRequest) => Promise<void> | void;
   onToggleAttendance: (request: AttendanceToggleRequest) => void;
+  onUpdateLesson: (request: LessonUpdateRequest) => Promise<void> | void;
 }) {
   const lessonIds = new Set(workspace.lessons.map((lesson) => lesson.id));
   const studentIds = new Set(workspace.students.map((student) => student.id));
@@ -121,7 +152,17 @@ export function GroupWorkspace({
       ) : null}
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <SchedulePanel lessons={workspace.lessons} />
+        <SchedulePanel
+          workspace={workspace}
+          pendingAttendanceIds={pendingAttendanceIds}
+          pendingLessonIds={pendingLessonIds}
+          isPendingLessonCreate={pendingLessonCreateGroupIds.includes(
+            workspace.group.id,
+          )}
+          onCreateLesson={onCreateLesson}
+          onToggleAttendance={onToggleAttendance}
+          onUpdateLesson={onUpdateLesson}
+        />
         <AttendancePanel
           workspace={workspace}
           pendingAttendanceIds={pendingAttendanceIds}
@@ -143,28 +184,400 @@ function Metric({ label, value }: { label: string; value: number | string }) {
   );
 }
 
-function SchedulePanel({ lessons }: { lessons: Lesson[] }) {
+function SchedulePanel({
+  workspace,
+  pendingAttendanceIds,
+  pendingLessonIds,
+  isPendingLessonCreate,
+  onCreateLesson,
+  onToggleAttendance,
+  onUpdateLesson,
+}: {
+  workspace: MentorGroupWorkspace;
+  pendingAttendanceIds: string[];
+  pendingLessonIds: string[];
+  isPendingLessonCreate: boolean;
+  onCreateLesson: (request: LessonCreateRequest) => Promise<void> | void;
+  onToggleAttendance: (request: AttendanceToggleRequest) => void;
+  onUpdateLesson: (request: LessonUpdateRequest) => Promise<void> | void;
+}) {
   return (
-    <section>
+    <section className="min-w-0">
       <h3 className="mb-3 text-xl font-semibold text-ink">Schedule</h3>
-      {lessons.length === 0 ? (
+      <CreateLessonForm
+        key={workspace.group.id}
+        workspace={workspace}
+        isPending={isPendingLessonCreate}
+        onCreateLesson={onCreateLesson}
+      />
+      {workspace.lessons.length === 0 ? (
         <EmptyBox text="No lessons were found for this group." />
       ) : (
-        <div className="space-y-3">
-          {lessons.map((lesson) => (
-            <article
+        <div className="mt-4 space-y-4">
+          {workspace.lessons.map((lesson) => (
+            <MentorLessonCard
               key={lesson.id}
-              className="rounded-sm border border-stone-200 bg-ivory-light p-4"
-            >
-              <p className="font-semibold text-ink">{formatLessonDate(lesson.date)}</p>
-              <p className="mt-1 text-sm text-ink-soft">
-                {lesson.title ?? `Lesson ID: ${lesson.id}`}
-              </p>
-            </article>
+              lesson={lesson}
+              workspace={workspace}
+              isPendingLessonSave={pendingLessonIds.includes(lesson.id)}
+              pendingAttendanceIds={pendingAttendanceIds}
+              onToggleAttendance={onToggleAttendance}
+              onUpdateLesson={onUpdateLesson}
+            />
           ))}
         </div>
       )}
     </section>
+  );
+}
+
+function CreateLessonForm({
+  workspace,
+  isPending,
+  onCreateLesson,
+}: {
+  workspace: MentorGroupWorkspace;
+  isPending: boolean;
+  onCreateLesson: (request: LessonCreateRequest) => Promise<void> | void;
+}) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [dateInput, setDateInput] = useState(formatCurrentLocalDateTimeInput);
+  const [attendedStudentIds, setAttendedStudentIds] = useState<string[]>([]);
+  const parsedDate = parseLocalDateTimeInput(dateInput);
+  const hasStudents = workspace.students.length > 0;
+  const canSave = Boolean(title.trim()) && Boolean(parsedDate) && hasStudents && !isPending;
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!parsedDate || !canSave) {
+      return;
+    }
+
+    try {
+      await onCreateLesson({
+        groupId: workspace.group.id,
+        title,
+        description,
+        date: parsedDate.toISOString(),
+        attendedStudentIds,
+      });
+      setTitle("");
+      setDescription("");
+      setDateInput(formatCurrentLocalDateTimeInput());
+      setAttendedStudentIds([]);
+    } catch {
+      // The parent workspace owns the user-facing action error.
+    }
+  }
+
+  function handleMarkEverybodyAttended() {
+    setAttendedStudentIds(workspace.students.map((student) => student.id));
+  }
+
+  function handleToggleStudent(studentId: string) {
+    setAttendedStudentIds((currentIds) => {
+      if (currentIds.includes(studentId)) {
+        return currentIds.filter((currentId) => currentId !== studentId);
+      }
+
+      return [...currentIds, studentId];
+    });
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="mb-4 rounded-sm border border-stone-200 bg-ivory-light p-4"
+    >
+      <div className="grid gap-3">
+        <label className="block text-sm font-semibold text-ink">
+          Lesson name
+          <input
+            required
+            value={title}
+            disabled={isPending}
+            onChange={(event) => setTitle(event.target.value)}
+            className="mt-1 w-full rounded-xs border border-stone-200 bg-offwhite px-3 py-2 text-sm font-normal text-ink outline-none transition focus:border-forest focus:ring-2 focus:ring-forest/10 disabled:cursor-wait disabled:opacity-70"
+          />
+        </label>
+
+        <label className="block text-sm font-semibold text-ink">
+          Description
+          <textarea
+            value={description}
+            disabled={isPending}
+            onChange={(event) => setDescription(event.target.value)}
+            rows={3}
+            className="mt-1 w-full resize-y rounded-xs border border-stone-200 bg-offwhite px-3 py-2 text-sm font-normal text-ink outline-none transition focus:border-forest focus:ring-2 focus:ring-forest/10 disabled:cursor-wait disabled:opacity-70"
+          />
+        </label>
+
+        <label className="block text-sm font-semibold text-ink">
+          Date
+          <input
+            required
+            type="datetime-local"
+            value={dateInput}
+            disabled={isPending}
+            onChange={(event) => setDateInput(event.target.value)}
+            className="mt-1 w-full rounded-xs border border-stone-200 bg-offwhite px-3 py-2 text-sm font-normal text-ink outline-none transition focus:border-forest focus:ring-2 focus:ring-forest/10 disabled:cursor-wait disabled:opacity-70"
+          />
+        </label>
+      </div>
+
+      <div className="mt-4 rounded-xs border border-stone-200 bg-offwhite p-3">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-semibold text-ink">Attendance</p>
+          <button
+            type="button"
+            disabled={isPending || !hasStudents}
+            onClick={handleMarkEverybodyAttended}
+            className="inline-flex min-h-8 items-center justify-center rounded-xs border border-stone-200 bg-ivory-light px-3 py-1 text-xs font-bold text-ink-soft transition hover:border-sage-300 hover:text-ink disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Everybody attended
+          </button>
+        </div>
+
+        {!hasStudents ? (
+          <EmptyBox text="Students must be assigned before creating a lesson." />
+        ) : (
+          <div className="space-y-2">
+            {workspace.students.map((student) => {
+              const checked = attendedStudentIds.includes(student.id);
+
+              return (
+                <label
+                  key={student.id}
+                  className="flex min-h-10 items-center justify-between gap-3 rounded-xs border border-stone-200 bg-ivory-light px-3 py-2 text-sm font-semibold text-ink"
+                >
+                  <span className="min-w-0">{getStudentName(student)}</span>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    disabled={isPending}
+                    onChange={() => handleToggleStudent(student.id)}
+                    className="h-4 w-4 accent-forest disabled:cursor-wait"
+                  />
+                </label>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <button
+        type="submit"
+        disabled={!canSave}
+        className="mt-4 inline-flex min-h-10 w-full items-center justify-center rounded-xs bg-forest px-4 py-2 text-sm font-bold text-ivory transition hover:bg-forest-light disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {isPending ? "Saving" : "Save lesson"}
+      </button>
+    </form>
+  );
+}
+
+function MentorLessonCard({
+  lesson,
+  workspace,
+  isPendingLessonSave,
+  pendingAttendanceIds,
+  onToggleAttendance,
+  onUpdateLesson,
+}: {
+  lesson: Lesson;
+  workspace: MentorGroupWorkspace;
+  isPendingLessonSave: boolean;
+  pendingAttendanceIds: string[];
+  onToggleAttendance: (request: AttendanceToggleRequest) => void;
+  onUpdateLesson: (request: LessonUpdateRequest) => Promise<void> | void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [title, setTitle] = useState(lesson.title ?? "");
+  const [description, setDescription] = useState(lesson.description ?? "");
+  const attendancesByStudentId = useMemo(() => {
+    return new Map(
+      workspace.attendances
+        .filter((attendance) => attendance.lessonId === lesson.id)
+        .map((attendance) => [attendance.studentId, attendance] as const),
+    );
+  }, [lesson.id, workspace.attendances]);
+  const presentCount = workspace.students.filter((student) =>
+    attendancesByStudentId.has(student.id),
+  ).length;
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    try {
+      await onUpdateLesson({
+        groupId: workspace.group.id,
+        lessonId: lesson.id,
+        title,
+        description,
+      });
+      setIsEditing(false);
+    } catch {
+      // The parent workspace owns the user-facing action error.
+    }
+  }
+
+  function handleCancelEdit() {
+    setTitle(lesson.title ?? "");
+    setDescription(lesson.description ?? "");
+    setIsEditing(false);
+  }
+
+  function handleStartEdit() {
+    setTitle(lesson.title ?? "");
+    setDescription(lesson.description ?? "");
+    setIsEditing(true);
+  }
+
+  return (
+    <article className="grid grid-cols-[4.75rem_1.25rem_minmax(0,1fr)] gap-3 sm:grid-cols-[7rem_1.5rem_minmax(0,1fr)] sm:gap-4">
+      <time
+        dateTime={lesson.date}
+        className="pt-4 text-right text-xs font-bold leading-5 text-ink-soft sm:text-sm"
+      >
+        {formatLessonTimelineDate(lesson.date)}
+      </time>
+
+      <div className="relative flex justify-center">
+        <span className="absolute bottom-0 top-0 w-px bg-sage-200" aria-hidden="true" />
+        <span
+          className="relative mt-4 h-4 w-4 rounded-full border-4 border-offwhite bg-forest"
+          aria-hidden="true"
+        />
+      </div>
+
+      <div className="min-w-0 rounded-sm border border-stone-200 bg-ivory-light p-4">
+        <button
+          type="button"
+          onClick={() => setIsOpen((currentValue) => !currentValue)}
+          className="w-full text-left focus:outline-none focus:ring-2 focus:ring-forest/20"
+          aria-expanded={isOpen}
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="font-semibold text-ink">
+                {lesson.title ?? `Lesson ID: ${lesson.id}`}
+              </p>
+              {lesson.description ? (
+                <p className="mt-1 text-sm leading-6 text-ink-soft">
+                  {lesson.description}
+                </p>
+              ) : null}
+            </div>
+            <span className="inline-flex min-h-8 shrink-0 items-center rounded-xs bg-sage-50 px-3 py-1 text-xs font-bold text-ink-soft ring-1 ring-sage-200">
+              {presentCount}/{workspace.students.length} present
+            </span>
+          </div>
+        </button>
+
+        {isOpen ? (
+          <div className="mt-4 space-y-4 border-t border-stone-200 pt-4">
+            {isEditing ? (
+              <form className="space-y-3" onSubmit={handleSubmit}>
+                <label className="block text-sm font-semibold text-ink">
+                  Lesson name
+                  <input
+                    value={title}
+                    disabled={isPendingLessonSave}
+                    onChange={(event) => setTitle(event.target.value)}
+                    className="mt-1 w-full rounded-xs border border-stone-200 bg-offwhite px-3 py-2 text-sm font-normal text-ink outline-none transition focus:border-forest focus:ring-2 focus:ring-forest/10 disabled:cursor-wait disabled:opacity-70"
+                    placeholder={`Lesson ID: ${lesson.id}`}
+                  />
+                </label>
+
+                <label className="block text-sm font-semibold text-ink">
+                  Description
+                  <textarea
+                    value={description}
+                    disabled={isPendingLessonSave}
+                    onChange={(event) => setDescription(event.target.value)}
+                    rows={3}
+                    className="mt-1 w-full resize-y rounded-xs border border-stone-200 bg-offwhite px-3 py-2 text-sm font-normal text-ink outline-none transition focus:border-forest focus:ring-2 focus:ring-forest/10 disabled:cursor-wait disabled:opacity-70"
+                    placeholder="No description yet."
+                  />
+                </label>
+
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="submit"
+                    disabled={isPendingLessonSave}
+                    className="inline-flex min-h-9 items-center justify-center rounded-xs bg-forest px-4 py-2 text-sm font-bold text-ivory transition hover:bg-forest-light disabled:cursor-wait disabled:opacity-70"
+                  >
+                    {isPendingLessonSave ? "Saving" : "Save"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isPendingLessonSave}
+                    onClick={handleCancelEdit}
+                    className="inline-flex min-h-9 items-center justify-center rounded-xs border border-stone-200 bg-offwhite px-4 py-2 text-sm font-bold text-ink-soft transition hover:border-sage-300 hover:text-ink disabled:cursor-wait disabled:opacity-70"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xs border border-stone-200 bg-offwhite px-3 py-2 text-sm text-ink-soft">
+                <div>
+                  <p>Date: {formatLessonDate(lesson.date)}</p>
+                  <p>
+                    Description:{" "}
+                    {lesson.description ? lesson.description : "No description yet."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleStartEdit}
+                  className="inline-flex min-h-8 items-center justify-center rounded-xs border border-stone-200 bg-ivory-light px-3 py-1 text-xs font-bold text-ink-soft transition hover:border-sage-300 hover:text-ink"
+                >
+                  Edit
+                </button>
+              </div>
+            )}
+
+            <div>
+              <p className="mb-2 text-sm font-semibold text-ink">Students</p>
+              {workspace.students.length === 0 ? (
+                <EmptyBox text="No students are assigned to this group yet." />
+              ) : (
+                <div className="space-y-2">
+                  {workspace.students.map((student) => {
+                    const attendance = attendancesByStudentId.get(student.id);
+                    const pendingId =
+                      attendance?.id ?? `${student.id}_${lesson.id}`;
+
+                    return (
+                      <div
+                        key={student.id}
+                        className="flex flex-wrap items-center justify-between gap-3 rounded-xs border border-stone-200 bg-offwhite px-3 py-2"
+                      >
+                        <p className="min-w-0 text-sm font-semibold text-ink">
+                          {getStudentName(student)}
+                        </p>
+                        <AttendanceButton
+                          attendance={attendance}
+                          student={student}
+                          lesson={lesson}
+                          groupId={workspace.group.id}
+                          isPending={pendingAttendanceIds.includes(pendingId)}
+                          onToggleAttendance={onToggleAttendance}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </article>
   );
 }
 
@@ -201,15 +614,14 @@ function AttendancePanel({
               {workspace.students.map((student) => (
                 <tr key={student.id} className="border-t border-stone-200">
                   <td className="sticky left-0 z-10 bg-offwhite px-4 py-3 font-semibold text-ink">
-                    {student.name} {student.lastName}
+                    {getStudentName(student)}
                   </td>
                   {workspace.lessons.map((lesson) => {
-                    const attendance = workspace.attendances.find((currentAttendance) => {
-                      return (
-                        currentAttendance.studentId === student.id &&
-                        currentAttendance.lessonId === lesson.id
-                      );
-                    });
+                    const attendance = getAttendanceForStudentLesson(
+                      workspace.attendances,
+                      student.id,
+                      lesson.id,
+                    );
                     const pendingId = attendance?.id ?? `${student.id}_${lesson.id}`;
 
                     return (
@@ -268,7 +680,9 @@ function AttendanceButton({
           ? "bg-success/10 text-success ring-success/20 hover:bg-success/15"
           : "bg-stone-100 text-stone-600 ring-stone-200 hover:bg-stone-200"
       }`}
-      aria-label={`${attended ? "Clear" : "Mark"} attendance for ${student.name} ${student.lastName} on ${formatShortLessonDate(lesson.date)}`}
+      aria-label={`${attended ? "Clear" : "Mark"} attendance for ${getStudentName(
+        student,
+      )} on ${formatShortLessonDate(lesson.date)}`}
     >
       {isPending ? "Saving" : attended ? "Present" : "Not marked"}
     </button>
@@ -283,8 +697,54 @@ function EmptyBox({ text }: { text: string }) {
   );
 }
 
+function getAttendanceForStudentLesson(
+  attendances: Attendance[],
+  studentId: string,
+  lessonId: string,
+) {
+  return attendances.find((attendance) => {
+    return attendance.studentId === studentId && attendance.lessonId === lessonId;
+  });
+}
+
+function getStudentName(student: Student) {
+  return `${student.name} ${student.lastName}`;
+}
+
+function formatCurrentLocalDateTimeInput() {
+  const now = new Date();
+
+  now.setSeconds(0, 0);
+
+  return formatLocalDateTimeInput(now);
+}
+
+function formatLocalDateTimeInput(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+function parseLocalDateTimeInput(value: string) {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 function formatLessonDate(date: Lesson["date"]) {
   return formatDateTime(date);
+}
+
+function formatLessonTimelineDate(date: Lesson["date"]) {
+  return formatShortDateTime(date);
 }
 
 function formatShortLessonDate(date: Lesson["date"]) {
