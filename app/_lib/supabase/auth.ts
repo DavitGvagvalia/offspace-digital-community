@@ -43,12 +43,27 @@ async function signOutCurrentUser() {
 
 function getSupabaseAuthMessage(error: unknown) {
   const authError = error as Partial<AuthError>;
+  const errorMessage =
+    error instanceof Error ? error.message : authError.message ?? "";
+  const normalizedMessage = errorMessage.toLowerCase();
 
   if (
-    authError.message?.toLowerCase().includes("invalid login credentials") ||
-    authError.message?.toLowerCase().includes("email not confirmed")
+    normalizedMessage.includes("invalid login credentials") ||
+    normalizedMessage.includes("email not confirmed")
   ) {
     return "The email or password is incorrect.";
+  }
+
+  if (normalizedMessage.includes("missing supabase public configuration")) {
+    return "Supabase is not configured for this deployment. Check the public Supabase environment variables in Vercel and redeploy.";
+  }
+
+  if (
+    normalizedMessage.includes("failed to fetch") ||
+    normalizedMessage.includes("fetch failed") ||
+    normalizedMessage.includes("networkerror")
+  ) {
+    return "We could not reach Supabase Auth. Check the deployed Supabase URL and publishable key.";
   }
 
   return "We could not sign you in right now. Please try again.";
