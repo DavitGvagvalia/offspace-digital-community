@@ -28,7 +28,7 @@ export function CourseCard({ summary }: { summary: StudentCourseSummary }) {
               </p>
               <p className="mt-1 text-sm text-ink-soft">
                 Mentor:
-                 {mentor ?`${mentor?.name} ${mentor?.last_name}` : "Not assigned"}
+                 {mentor ?`${mentor?.name} ${mentor?.lastName}` : "Not assigned"}
               </p>
             </>
           )}

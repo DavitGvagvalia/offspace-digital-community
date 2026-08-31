@@ -340,7 +340,7 @@ export function MentorDashboard() {
             Mentor hub
           </p>
           <h1 className="mt-2 text-3xl font-semibold text-ink sm:text-4xl">
-            {profile.name} {profile.last_name}
+            {profile.name} {profile.lastName}
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-ink-soft">
             Your workspace only includes groups assigned to your mentor account.
