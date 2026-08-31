@@ -5,7 +5,7 @@ import { MascotBackground } from "./components/mascot-background";
 export default function Home() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-ivory text-ink">
-      <MascotBackground className="-right-40 bottom-20 h-[26rem] w-[52rem] rotate-[-4deg] opacity-[0.1]" />
+      <MascotBackground className="-right-40 bottom-20 h-[26rem] w-[52rem] rotate-[-4deg] opacity-[0.1] rotate-y-180" />
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -right-24 top-8 h-72 w-[36rem] bg-contain bg-center bg-no-repeat opacity-20"
