@@ -47,19 +47,16 @@ const getMentor = async (id: string) => {
   if (!data) {
     return null;
   }
-  console.log("this is mentor ",data)
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("*")
-    // .eq("id", id)
+    .eq("id", id)
     .eq("role", "mentor")
-    // .is("deleted_at", null)
+    .is("deleted_at", null)
     .maybeSingle();
-    
 
   throwIfSupabaseError(profileError);
-  console.log("this is profile of mentor ", profile)
   return profile ? mapMentor(profile, { active: data.active }) : null;
 };
 
