@@ -7,10 +7,11 @@ row before routing into the portal.
 
 ## Student
 
-Students can register at `/student/register`, then sign in at
-`/student/login`. They can view profile data, enrollments, courses, assigned
-lessons, and personal attendance. Pending group assignment displays
-`Your mentor will assign group soon.`
+Visitors can browse active courses at `/courses` before logging in. Students
+can register at `/student/register`, then sign in at `/student/login`. They can
+view profile data, enrollments, courses, assigned lessons, and personal
+attendance. Pending group assignment displays `Your mentor will assign group
+soon.`
 
 ## Mentor
 

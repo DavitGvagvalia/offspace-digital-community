@@ -27,6 +27,7 @@ app/
   _lib/                 Shared runtime helpers and Supabase clients
   _types/               Shared app-level TypeScript types
   components/           Shared UI/client components
+  courses/              Public course list
   mentor/               Mentor portal routes, UI, and data composition
   student/              Student portal routes, UI, and data composition
   super-admin/          Super-admin portal routes, UI, and data composition
@@ -41,6 +42,7 @@ routes; they hold shared code, docs, or types.
 ## Routes
 
 - `app/page.tsx` - public entry point at `/`.
+- `app/courses/page.tsx` - public active course list at `/courses`.
 - `app/student/login/page.tsx` - student login route.
 - `app/student/register/page.tsx` - public student registration route.
 - `app/student/page.tsx` - student hub route.

@@ -17,6 +17,7 @@ Important rules:
 
 - `profiles.id` references `auth.users.id`.
 - Course mentor eligibility is a join table.
+- Courses can expose an optional public `price`.
 - Enrollments allow pending group assignment with null `group_id` and
   `mentor_id`.
 - Attendance is boolean: an `attendances` row means attended.

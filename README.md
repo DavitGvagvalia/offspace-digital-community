@@ -17,10 +17,9 @@ Role-based schedule and attendance web app for Offspace Digital Community.
 The active MVP supports student, mentor, and super-admin portals for courses,
 groups, lessons, enrollments, and boolean attendance.
 
-Deferred: public student self-registration, payments, invoices, private-student
-mentor workspaces, messaging, homework, file uploads, certificates, payroll,
-parent accounts, notifications, video lessons, analytics, and broad LMS
-features.
+Deferred: payments, invoices, private-student mentor workspaces, messaging,
+homework, file uploads, certificates, payroll, parent accounts, notifications,
+video lessons, analytics, and broad LMS features.
 
 ## Project Map
 

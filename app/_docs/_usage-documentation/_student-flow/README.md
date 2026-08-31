@@ -1,6 +1,7 @@
 # Student Flow
 
-Students register at `/student/register` and sign in at `/student/login`.
+Visitors can browse public active courses at `/courses`. Students register at
+`/student/register` and sign in at `/student/login`.
 
 Students can:
 
