@@ -75,7 +75,7 @@ const updateMentor = async (id: string, mentor: Partial<CreateMentor>) => {
 
   if (
     mentor.name !== undefined ||
-    mentor.last_name !== undefined ||
+    mentor.lastName !== undefined ||
     mentor.email !== undefined ||
     mentor.phone !== undefined
   ) {
@@ -83,8 +83,8 @@ const updateMentor = async (id: string, mentor: Partial<CreateMentor>) => {
       .from("profiles")
       .update({
         ...(mentor.name !== undefined ? { name: mentor.name } : {}),
-        ...(mentor.last_name !== undefined
-          ? { last_name: mentor.last_name }
+        ...(mentor.lastName !== undefined
+          ? { last_name: mentor.lastName }
           : {}),
         ...(mentor.email !== undefined ? { email: mentor.email } : {}),
         ...(mentor.phone !== undefined ? { phone: mentor.phone } : {}),

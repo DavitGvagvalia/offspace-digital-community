@@ -34,7 +34,7 @@ function mapMentor(profile: ProfileRow, mentor: Pick<MentorRow, "active">): Ment
   return {
     id: profile.id,
     name: profile.name,
-    last_name: profile.last_name,
+    lastName: profile.last_name,
     ...(profile.email ? { email: profile.email } : {}),
     ...(profile.phone ? { phone: profile.phone } : {}),
     active: mentor.active,
