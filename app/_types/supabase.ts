@@ -435,6 +435,14 @@ export type Database = {
     }
     Functions: {
       is_group_mentor: { Args: { target_group_id: string }; Returns: boolean }
+      get_my_enrollment_mentors: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          last_name: string
+          mentor_id: string
+          name: string
+        }[]
+      }
       is_student_assigned_to_group: {
         Args: { target_group_id: string; target_student_id: string }
         Returns: boolean

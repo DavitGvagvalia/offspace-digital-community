@@ -5,7 +5,6 @@ import type { StudentCourseSummary } from "../_types/course-summary";
 export function CourseCard({ summary }: { summary: StudentCourseSummary }) {
   const { enrollment, course, group, mentor } = summary;
   const isPendingGroupAssignment = !enrollment.groupId;
-  console.log(summary)
 
   return (
     <article className="rounded-md border border-stone-200 bg-offwhite p-5 shadow-sm">
@@ -27,8 +26,8 @@ export function CourseCard({ summary }: { summary: StudentCourseSummary }) {
                 Group: {group?.name ?? "Not assigned"}
               </p>
               <p className="mt-1 text-sm text-ink-soft">
-                Mentor:
-                 {mentor ?`${mentor?.name} ${mentor?.lastName}` : "Not assigned"}
+                Mentor:{" "}
+                {mentor ? `${mentor.name} ${mentor.lastName}` : "Not assigned"}
               </p>
             </>
           )}
