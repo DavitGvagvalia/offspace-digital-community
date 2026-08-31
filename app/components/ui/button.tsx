@@ -12,11 +12,12 @@ export const buttonVariants = cva(
         secondary:
           "border border-stone-200 bg-offwhite text-forest shadow-sm hover:border-sage-300 hover:bg-ivory-light",
         quiet: "bg-sage-50 text-forest hover:bg-sage-100",
-        discord: "bg-discord text-ivory hover:bg-discord/20",
+        discord: "bg-discord text-ivory hover:bg-discord-active hover:text-ivory",
       },
       size: {
         default: "min-h-12 px-5 py-3",
         sm: "min-h-10 px-4 py-2 text-xs",
+        xl: "min-h-12 px-5 py-3 min-w-20",
       },
     },
     defaultVariants: {

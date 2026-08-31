@@ -47,17 +47,19 @@ const getMentor = async (id: string) => {
   if (!data) {
     return null;
   }
+  console.log("this is mentor ",data)
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("*")
-    .eq("id", id)
+    // .eq("id", id)
     .eq("role", "mentor")
-    .is("deleted_at", null)
+    // .is("deleted_at", null)
     .maybeSingle();
+    
 
   throwIfSupabaseError(profileError);
-
+  console.log("this is profile of mentor ", profile)
   return profile ? mapMentor(profile, { active: data.active }) : null;
 };
 
@@ -73,7 +75,7 @@ const updateMentor = async (id: string, mentor: Partial<CreateMentor>) => {
 
   if (
     mentor.name !== undefined ||
-    mentor.lastName !== undefined ||
+    mentor.last_name !== undefined ||
     mentor.email !== undefined ||
     mentor.phone !== undefined
   ) {
@@ -81,8 +83,8 @@ const updateMentor = async (id: string, mentor: Partial<CreateMentor>) => {
       .from("profiles")
       .update({
         ...(mentor.name !== undefined ? { name: mentor.name } : {}),
-        ...(mentor.lastName !== undefined
-          ? { last_name: mentor.lastName }
+        ...(mentor.last_name !== undefined
+          ? { last_name: mentor.last_name }
           : {}),
         ...(mentor.email !== undefined ? { email: mentor.email } : {}),
         ...(mentor.phone !== undefined ? { phone: mentor.phone } : {}),

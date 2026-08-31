@@ -10,7 +10,7 @@ export function getCourseTitle(course: Course) {
 export function sortStudentLessons(lessons: StudentLesson[]) {
   return [...lessons].sort((firstLesson, secondLesson) => {
     return (
-      toMillis(firstLesson.lesson.date) - toMillis(secondLesson.lesson.date)
+     toMillis(secondLesson.lesson.date) -toMillis(firstLesson.lesson.date)  
     );
   });
 }

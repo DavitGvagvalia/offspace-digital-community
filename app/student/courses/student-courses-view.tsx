@@ -1,13 +1,12 @@
 "use client";
 
-import Link from "next/link";
-
 import { AccessError, LoadingState } from "../../components/auth-states";
 import { StatePanel } from "../../components/state-panel";
 import { useRequiredProfile } from "../../components/use-required-profile";
 import { useSessionCachedQuery } from "../../_lib/session-cache";
 import { getStudentCourseSummaries } from "../_data/courses";
 import type { StudentCourseSummary } from "../_types/course-summary";
+import { StudentNavigation } from "../student-navigation";
 import { CourseCard } from "./course-card";
 
 export function StudentCoursesView() {
@@ -43,10 +42,7 @@ export function StudentCoursesView() {
     <main className="min-h-screen bg-ivory px-4 py-6 text-ink sm:px-6 lg:px-8">
       <section className="mx-auto flex max-w-5xl flex-col gap-6">
         <header className="rounded-md border border-stone-200 bg-offwhite p-5 shadow-sm">
-          <Link href="/student" className="text-sm font-semibold text-forest hover:text-forest-light">
-            Student hub
-          </Link>
-          <p className="mt-4 text-xs font-bold uppercase tracking-[0.18em] text-ink-muted">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-ink-muted">
             Student courses
           </p>
           <h1 className="mt-2 text-3xl font-semibold text-ink sm:text-4xl">
@@ -56,6 +52,8 @@ export function StudentCoursesView() {
             Courses are loaded from enrollments assigned to your student account.
           </p>
         </header>
+
+        <StudentNavigation />
 
         {coursesQuery.isLoading ? (
           <StatePanel title="Loading courses" text="Checking your enrollments." />
