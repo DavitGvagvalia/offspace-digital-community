@@ -42,7 +42,7 @@ routes; they hold shared code, docs, or types.
 
 - `app/page.tsx` - public entry point at `/`.
 - `app/student/login/page.tsx` - student login route.
-- `app/student/register/page.tsx` - managed-registration notice route.
+- `app/student/register/page.tsx` - public student registration route.
 - `app/student/page.tsx` - student hub route.
 - `app/student/lessons/page.tsx` - student lessons and attendance route.
 - `app/student/courses/page.tsx` - student courses route.
@@ -134,8 +134,8 @@ composition.
 
 - `page.tsx` - student hub page.
 - `login/page.tsx` - student login page.
-- `register/page.tsx` and `register/student-registration.tsx` - notice that
-  public self-registration is managed/disabled.
+- `register/page.tsx`, `register/student-registration.tsx`, and
+  `register/actions.ts` - public student registration form and server action.
 - `profile/page.tsx` - read-only student profile page.
 - `courses/page.tsx` - route wrapper for student courses.
 - `courses/student-courses-view.tsx` - student courses client UI.

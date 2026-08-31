@@ -17,14 +17,14 @@ Do not add payments, messaging, homework, file uploads, certificates, payroll,
 parent accounts, notifications, video lessons, complex analytics, public course
 marketplaces, or broad LMS behavior unless explicitly requested.
 
-Private-student mentor workspaces and public student self-registration are
-deferred.
+Private-student mentor workspaces are deferred. Public student
+self-registration is supported through `/student/register`.
 
 ## Current Routes
 
 - `/` - public entry point
 - `/student/login` - student login
-- `/student/register` - managed-registration notice
+- `/student/register` - public student registration
 - `/student` - student hub
 - `/student/lessons` - student lessons and personal attendance
 - `/student/courses` - enrolled courses
@@ -48,7 +48,7 @@ not from route params, search params, local state, or hard-coded IDs.
   `super_admins` row.
 - Students must only see their own enrollments, lessons, and attendance.
 - Mentors must only see assigned groups, students, lessons, and attendance.
-- Super-admin user creation uses server-only Supabase secret-key access.
+- Privileged Auth/profile creation uses server-only Supabase secret-key access.
 - Browser reads and writes must be protected by Supabase Row Level Security.
 
 ## Core Data Model
@@ -88,9 +88,10 @@ attendance. Enrollments can exist before group assignment and must show
 Mentors can view assigned groups and mark attendance only for assigned group
 lessons.
 
-Super-admins create student and mentor Supabase Auth accounts and manage the
-MVP setup data needed for courses, groups, lessons, enrollments, and attendance.
-The first super-admin is bootstrapped manually in Supabase.
+Students can self-register student Supabase Auth accounts. Super-admins create
+mentor Supabase Auth accounts and can still manage MVP setup data needed for
+courses, groups, lessons, enrollments, and attendance. The first super-admin is
+bootstrapped manually in Supabase.
 
 ## UI Direction
 

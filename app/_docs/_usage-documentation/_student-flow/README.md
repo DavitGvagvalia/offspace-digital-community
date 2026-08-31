@@ -1,6 +1,6 @@
 # Student Flow
 
-Students sign in at `/student/login`.
+Students register at `/student/register` and sign in at `/student/login`.
 
 Students can:
 
@@ -10,5 +10,5 @@ Students can:
 - View personal attendance.
 - View their read-only profile.
 
-Public self-registration is disabled. Student accounts are created by a
-super-admin.
+Self-registration creates a student portal account. If email confirmation is
+enabled in Supabase Auth, students must confirm their email before logging in.
