@@ -17,13 +17,22 @@ Do not add payments, messaging, homework, file uploads, certificates, payroll,
 parent accounts, notifications, video lessons, complex analytics, public course
 marketplaces, or broad LMS behavior unless explicitly requested.
 
+<<<<<<< HEAD
 Private-student mentor workspaces are deferred.
+=======
+Private-student mentor workspaces are deferred. Public student
+self-registration is supported through `/student/register`.
+>>>>>>> 4e832f9 (feat: implement public student registration functionality and update related documentation)
 
 ## Current Routes
 
 - `/` - public entry point
 - `/student/login` - student login
+<<<<<<< HEAD
 - `/student/register` - public student self-registration
+=======
+- `/student/register` - public student registration
+>>>>>>> 4e832f9 (feat: implement public student registration functionality and update related documentation)
 - `/student` - student hub
 - `/student/lessons` - student lessons and personal attendance
 - `/student/courses` - enrolled courses
@@ -47,9 +56,13 @@ not from route params, search params, local state, or hard-coded IDs.
   `super_admins` row.
 - Students must only see their own enrollments, lessons, and attendance.
 - Mentors must only see assigned groups, students, lessons, and attendance.
+<<<<<<< HEAD
 - Super-admin user creation uses server-only Supabase secret-key access.
 - Student self-registration creates Supabase Auth, `profiles`, and `students`
   records through a server action.
+=======
+- Privileged Auth/profile creation uses server-only Supabase secret-key access.
+>>>>>>> 4e832f9 (feat: implement public student registration functionality and update related documentation)
 - Browser reads and writes must be protected by Supabase Row Level Security.
 
 ## Core Data Model
@@ -91,10 +104,17 @@ Mentors can create groups for courses they are eligible to teach, view active
 unassigned enrollments for those courses, assign selected pending students while
 creating a group, and mark attendance only for assigned group lessons.
 
+<<<<<<< HEAD
 Super-admins can create student and mentor Supabase Auth accounts and manage
 the MVP setup data needed for courses, groups, lessons, enrollments, and
 attendance. Super-admins assign the courses a mentor can teach from the mentor
 details modal. The first super-admin is bootstrapped manually in Supabase.
+=======
+Students can self-register student Supabase Auth accounts. Super-admins create
+mentor Supabase Auth accounts and can still manage MVP setup data needed for
+courses, groups, lessons, enrollments, and attendance. The first super-admin is
+bootstrapped manually in Supabase.
+>>>>>>> 4e832f9 (feat: implement public student registration functionality and update related documentation)
 
 ## UI Direction
 

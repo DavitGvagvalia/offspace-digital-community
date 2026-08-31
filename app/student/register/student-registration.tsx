@@ -6,12 +6,22 @@ import { useActionState } from "react";
 import { MascotBackground } from "../../components/mascot-background";
 import {
   registerStudent,
+<<<<<<< HEAD
   type RegistrationActionState,
 } from "./actions";
 
 const initialRegistrationState: RegistrationActionState = {
   status: "idle",
   message: null,
+=======
+  type StudentRegistrationState,
+} from "./actions";
+
+const initialRegistrationState: StudentRegistrationState = {
+  status: "idle",
+  message: "",
+  canOpenHub: false,
+>>>>>>> 4e832f9 (feat: implement public student registration functionality and update related documentation)
   fields: {
     name: "",
     lastName: "",
@@ -51,8 +61,14 @@ export function StudentRegistration() {
               Student registration
             </h1>
             <p className="mt-4 max-w-xl text-base leading-7 text-ink-soft">
+<<<<<<< HEAD
               Create your student account, then choose available courses from
               the student hub after signing in.
+=======
+              Create your student account with email and password. After
+              registration, you can choose available courses from your student
+              hub.
+>>>>>>> 4e832f9 (feat: implement public student registration functionality and update related documentation)
             </p>
           </div>
 
@@ -60,6 +76,7 @@ export function StudentRegistration() {
             action={formAction}
             className="rounded-md border border-stone-200 bg-offwhite p-5 shadow-md sm:p-6"
           >
+<<<<<<< HEAD
             <div className="mb-5">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-ink-muted">
                 Student portal
@@ -70,6 +87,19 @@ export function StudentRegistration() {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
+=======
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-ink-muted">
+              Student account
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold text-ink">
+              Create account
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-ink-soft">
+              Use the same email and password later on the student login page.
+            </p>
+
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+>>>>>>> 4e832f9 (feat: implement public student registration functionality and update related documentation)
               <label className="block">
                 <span className="text-sm font-semibold text-ink">Name</span>
                 <input
@@ -83,9 +113,13 @@ export function StudentRegistration() {
               </label>
 
               <label className="block">
+<<<<<<< HEAD
                 <span className="text-sm font-semibold text-ink">
                   Last name
                 </span>
+=======
+                <span className="text-sm font-semibold text-ink">Last name</span>
+>>>>>>> 4e832f9 (feat: implement public student registration functionality and update related documentation)
                 <input
                   type="text"
                   name="lastName"
@@ -122,9 +156,13 @@ export function StudentRegistration() {
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <label className="block">
+<<<<<<< HEAD
                 <span className="text-sm font-semibold text-ink">
                   Password
                 </span>
+=======
+                <span className="text-sm font-semibold text-ink">Password</span>
+>>>>>>> 4e832f9 (feat: implement public student registration functionality and update related documentation)
                 <input
                   type="password"
                   name="password"
@@ -152,6 +190,10 @@ export function StudentRegistration() {
 
             {state.message ? (
               <p
+<<<<<<< HEAD
+=======
+                aria-live="polite"
+>>>>>>> 4e832f9 (feat: implement public student registration functionality and update related documentation)
                 className={`mt-4 rounded-sm border px-3 py-2 text-sm ${
                   state.status === "success"
                     ? "border-success/20 bg-success/10 text-success"
@@ -164,12 +206,17 @@ export function StudentRegistration() {
 
             <button
               type="submit"
+<<<<<<< HEAD
               disabled={isPending || state.status === "success"}
+=======
+              disabled={isPending}
+>>>>>>> 4e832f9 (feat: implement public student registration functionality and update related documentation)
               className="mt-6 w-full rounded-sm bg-forest px-4 py-3 text-sm font-bold text-ivory transition hover:bg-forest-light disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isPending ? "Creating account..." : "Create student account"}
             </button>
 
+<<<<<<< HEAD
             <p className="mt-4 text-center text-sm text-ink-soft">
               Already registered?{" "}
               <Link
@@ -179,6 +226,14 @@ export function StudentRegistration() {
                 Go to student login
               </Link>
             </p>
+=======
+            <Link
+              href={state.canOpenHub ? "/student" : "/student/login"}
+              className="mt-3 inline-flex w-full justify-center rounded-sm border border-stone-200 bg-offwhite px-4 py-3 text-sm font-bold text-forest transition hover:border-sage-300 hover:bg-ivory-light"
+            >
+              {state.canOpenHub ? "Open student hub" : "Go to student login"}
+            </Link>
+>>>>>>> 4e832f9 (feat: implement public student registration functionality and update related documentation)
           </form>
         </section>
       </div>

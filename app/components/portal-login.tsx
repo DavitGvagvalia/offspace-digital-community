@@ -165,12 +165,20 @@ export function PortalLogin({ role }: { role: PortalRole }) {
 
             {role === "student" ? (
               <p className="mt-4 text-center text-sm text-ink-soft">
+<<<<<<< HEAD
                 New student?{" "}
+=======
+                Need an account?{" "}
+>>>>>>> 4e832f9 (feat: implement public student registration functionality and update related documentation)
                 <Link
                   href="/student/register"
                   className="font-semibold text-forest hover:text-forest-light"
                 >
+<<<<<<< HEAD
                   Create an account
+=======
+                  Register as a student.
+>>>>>>> 4e832f9 (feat: implement public student registration functionality and update related documentation)
                 </Link>
               </p>
             ) : null}
