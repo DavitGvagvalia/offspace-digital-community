@@ -15,22 +15,52 @@ import {
 } from "../components/ui/card";
 
 type CourseRow = Database["public"]["Tables"]["courses"]["Row"];
-type PublicCourse = Pick<CourseRow, "id" | "name" | "description">;
+type PublicCourse = Pick<CourseRow, "id" | "name" | "description" | "price">;
+
+export const dynamic = "force-dynamic";
 
 async function getPublicCourses(): Promise<PublicCourse[]> {
   const supabase = createAdminSupabaseClient();
   const { data, error } = await supabase
     .from("courses")
-    .select("id,name,description")
+    .select("id,name,description,price")
     .eq("active", true)
     .is("deleted_at", null)
     .order("name");
+
+  if (error && isMissingPriceColumnError(error.message)) {
+    const { data: coursesWithoutPrice, error: coursesWithoutPriceError } =
+      await supabase
+        .from("courses")
+        .select("id,name,description")
+        .eq("active", true)
+        .is("deleted_at", null)
+        .order("name");
+
+    if (coursesWithoutPriceError) {
+      throw new Error(coursesWithoutPriceError.message);
+    }
+
+    return (coursesWithoutPrice ?? []).map((course) => ({
+      ...course,
+      price: null,
+    }));
+  }
 
   if (error) {
     throw new Error(error.message);
   }
 
   return data ?? [];
+}
+
+function isMissingPriceColumnError(message: string) {
+  const normalizedMessage = message.toLowerCase();
+
+  return (
+    normalizedMessage.includes("courses.price") &&
+    normalizedMessage.includes("does not exist")
+  );
 }
 
 export default async function CoursesPage() {
@@ -68,8 +98,8 @@ export default async function CoursesPage() {
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-ink-soft">
                 Browse active courses before signing in. Enrolling opens the
-                student login flow so your course choice stays connected to your
-                student account.
+                student login flow so you can continue from your student
+                account.
               </p>
             </div>
             <Link
@@ -123,7 +153,7 @@ export default async function CoursesPage() {
                       Price
                     </span>
                     <span className="text-sm font-semibold text-ink-soft">
-                      Not published
+                      {formatCoursePrice(course.price)}
                     </span>
                   </div>
 
@@ -142,4 +172,15 @@ export default async function CoursesPage() {
       </div>
     </main>
   );
+}
+
+function formatCoursePrice(price: number | null) {
+  if (price === null) {
+    return "Not published";
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: Number.isInteger(price) ? 0 : 2,
+  }).format(price);
 }

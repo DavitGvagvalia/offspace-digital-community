@@ -27,6 +27,7 @@ self-registration is supported through `/student/register`.
 ## Current Routes
 
 - `/` - public entry point
+- `/courses` - public active course list
 - `/student/login` - student login
 <<<<<<< HEAD
 - `/student/register` - public student self-registration

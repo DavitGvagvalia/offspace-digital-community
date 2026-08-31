@@ -58,6 +58,7 @@ function mapCourse(row: CourseRow, mentorIds: string[] = []): Course {
     id: row.id,
     name: row.name,
     ...(row.description ? { description: row.description } : {}),
+    ...(row.price !== null ? { price: row.price } : {}),
     mentorIds,
     active: row.active,
     createdAt: row.created_at,

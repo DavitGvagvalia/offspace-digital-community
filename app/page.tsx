@@ -202,7 +202,8 @@ function HeroSection() {
         </h1>
 
         <p className="mt-6 max-w-2xl text-base leading-7 text-ink-soft sm:text-lg">
-          Join/login our platform to get all the information you need.
+          Log in to your student platform or browse available courses before
+          enrolling.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -211,11 +212,8 @@ function HeroSection() {
               href="/student/login"
               className={buttonVariants({})}
             >
-              Log in
-              <ArrowRight
-                aria-hidden="true"
-                className="h-4 w-4 transition group-hover:translate-x-0.5"
-              />
+              Student Portal
+
             </Link>
             <Link
               href="/courses"
@@ -224,10 +222,7 @@ function HeroSection() {
               })}
             >
               View courses
-              <ArrowRight
-                aria-hidden="true"
-                className="h-4 w-4 transition group-hover:translate-x-0.5"
-              />
+
             </Link>
           </div>
           <Link
@@ -237,7 +232,7 @@ function HeroSection() {
             className={buttonVariants({variant:"discord" })}
           >
             <DiscordIcon className="h-4 w-4" />
-            Our Discord Community
+            Join Our Community
           </Link>
         </div>
       </div>

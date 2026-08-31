@@ -1,11 +1,16 @@
 # Student Flow
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 Students create accounts at `/student/register` and sign in at
 `/student/login`.
 =======
 Students register at `/student/register` and sign in at `/student/login`.
 >>>>>>> 4e832f9 (feat: implement public student registration functionality and update related documentation)
+=======
+Visitors can browse public active courses at `/courses`. Students register at
+`/student/register` and sign in at `/student/login`.
+>>>>>>> b4c7db1 (feat: add price field to courses and update related documentation and UI)
 
 Students can:
 

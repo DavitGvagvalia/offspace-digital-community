@@ -73,6 +73,7 @@ const addCourse = async (course: CreateCourse) => {
     .insert({
       name: course.name,
       description: course.description ?? null,
+      price: course.price ?? null,
       active: course.active,
     })
     .select()
@@ -106,6 +107,7 @@ const updateCourse = async (id: string, course: Partial<CreateCourse>) => {
       ...(course.description !== undefined
         ? { description: course.description }
         : {}),
+      ...(course.price !== undefined ? { price: course.price } : {}),
       ...(course.active !== undefined ? { active: course.active } : {}),
       updated_at: nowTimestamp(),
     })
