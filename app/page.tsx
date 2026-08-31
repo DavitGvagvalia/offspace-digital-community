@@ -76,7 +76,6 @@ export default function Home() {
       <HomeNavigation />
       <HeroSection />
       <AboutSection />
-      <CommunitySection />
     </main>
   );
 }
@@ -86,15 +85,13 @@ function HomeNavigation() {
     <header className="relative z-10 px-4 pt-4 sm:px-6 lg:px-8">
       <nav
         aria-label="Main navigation"
-        className="relative mx-auto flex w-full max-w-7xl items-center justify-between rounded-md border border-stone-200 bg-offwhite/85 p-3 shadow-sm backdrop-blur"
+        className="relative mx-auto flex w-full max-w-7xl items-center justify-between rounded-md border  p-3 shadow-sm backdrop-blur"
       >
         <Link
           href="/"
           className="flex min-h-11 min-w-0 items-center gap-3 rounded-xs px-2 text-forest transition hover:text-forest-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-xs bg-forest text-sm font-bold text-ivory">
-            O
-          </span>
+
           <span className="truncate text-sm font-bold">
             Offspace Digital Community
           </span>
@@ -192,10 +189,7 @@ function HeroSection() {
   return (
     <section className="relative mx-auto grid w-full max-w-7xl gap-10 px-4 pb-16 pt-10 sm:px-6 sm:pb-20 sm:pt-14 lg:grid-cols-[1.08fr_0.92fr] lg:px-8 lg:pb-24 lg:pt-20">
       <div className="flex min-h-[30rem] flex-col justify-center">
-        <Badge>
-          <span className="h-2 w-2 rounded-full bg-success" />
-          Offspace Digital Community
-        </Badge>
+
 
         <h1 className="mt-6 max-w-4xl text-5xl font-semibold leading-[1.02] text-ink text-balance sm:text-6xl lg:text-7xl">
           Your space to learn and connect
@@ -207,6 +201,15 @@ function HeroSection() {
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <Link
+            href="https://discord.gg/ZmsGE26psx"
+            target="_blank"
+            rel="noreferrer"
+            className={buttonVariants({variant:"discord" })}
+          >
+            <DiscordIcon className="h-4 w-4" />
+            Join Our Community
+          </Link>
           <div className="flex justify-center align-middle gap-3 sm:gap-6">
             <Link
               href="/student/login"
@@ -219,51 +222,18 @@ function HeroSection() {
               href="/courses"
               className={buttonVariants({
                 variant: "secondary",
+                size: "xl",
               })}
             >
               View courses
 
             </Link>
           </div>
-          <Link
-            href="https://discord.gg/ZmsGE26psx"
-            target="_blank"
-            rel="noreferrer"
-            className={buttonVariants({variant:"discord" })}
-          >
-            <DiscordIcon className="h-4 w-4" />
-            Join Our Community
-          </Link>
+      
         </div>
       </div>
 
-      <div className="flex items-center lg:justify-end">
-        <Card className="w-full max-w-xl overflow-hidden bg-offwhite/90 shadow-xl backdrop-blur">
-          <CardHeader className="border-b border-stone-100">
-            <Badge variant="muted" className="w-fit">
-              Community platform
-            </Badge>
-            <CardTitle className="max-w-md text-2xl">
-              Everything feels calmer when the right information has a place.
-            </CardTitle>
-            <CardDescription>
-              Offspace brings essential learning details into a focused
-              workspace for the people who use them every day.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3 pt-5">
-            {communityPoints.map((point) => (
-              <div
-                key={point}
-                className="flex items-center gap-3 rounded-xs border border-stone-100 bg-ivory-light p-3"
-              >
-                <CircleCheck aria-hidden="true" className="h-5 w-5 text-forest" />
-                <span className="text-sm font-bold text-ink">{point}</span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
+     
     </section>
   );
 }
@@ -275,18 +245,18 @@ function AboutSection() {
       className="relative scroll-mt-8 border-y border-stone-200 bg-offwhite/70 px-4 py-16 sm:px-6 lg:px-8"
     >
       <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.8fr_1.2fr]">
-        <div>
-          <Badge variant="muted">About us</Badge>
-          <h2 className="mt-5 max-w-xl text-4xl font-semibold leading-tight text-ink text-balance sm:text-5xl">
-            A soft digital home for creative-tech learning.
-          </h2>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-ink-soft">
-            Offspace Digital Community is built for people who want learning to
-            feel clear, human, and connected. Students get an organized
-            environment where every course touchpoint can support steady
-            progress.
-          </p>
-        </div>
+          <div>
+            <Badge variant="muted">About us</Badge>
+            <h2 className="mt-5 max-w-xl text-4xl font-semibold leading-tight text-ink text-balance sm:text-5xl">
+              A soft digital home for creative-tech learning.
+            </h2>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-ink-soft">
+              Offspace Digital Community is built for people who want learning to
+              feel clear, human, and connected. Students get an organized
+              environment where every course touchpoint can support steady
+              progress.
+            </p>
+          </div>
 
         <div className="grid gap-4 md:grid-cols-3">
           {aboutCards.map((item) => {
@@ -313,58 +283,7 @@ function AboutSection() {
   );
 }
 
-function CommunitySection() {
-  return (
-    <section className="relative px-4 py-16 sm:px-6 lg:px-8">
-      <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[1fr_1fr]">
-        <Card className="bg-forest text-ivory shadow-xl">
-          <CardHeader className="p-6 sm:p-8">
-            <Sparkles aria-hidden="true" className="h-6 w-6 text-sage-200" />
-            <CardTitle className="text-3xl text-ivory">
-              Start from your space.
-            </CardTitle>
-            <CardDescription className="max-w-xl text-sage-100">
-              Log in for your student workspace, sign in through managed access,
-              or step into the wider Offspace community when the Discord invite
-              is connected.
-            </CardDescription>
-          </CardHeader>
-        </Card>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Link
-            href="/student/login"
-            className="rounded-xs border border-stone-200 bg-offwhite p-5 shadow-sm transition hover:border-sage-300 hover:shadow-md"
-          >
-            <p className="text-sm font-bold uppercase tracking-[0.14em] text-forest">
-              Students
-            </p>
-            <h3 className="mt-3 text-2xl font-semibold text-ink">
-              Open your learning hub
-            </h3>
-            <p className="mt-3 text-sm leading-6 text-ink-soft">
-              Reach your course, profile, lesson, and attendance information.
-            </p>
-          </Link>
-          <div
-            className="rounded-xs border border-stone-200 bg-offwhite p-5 shadow-sm"
-          >
-            <p className="text-sm font-bold uppercase tracking-[0.14em] text-forest">
-              Community
-            </p>
-            <h3 className="mt-3 text-2xl font-semibold text-ink">
-              Join the conversation
-            </h3>
-            <p className="mt-3 text-sm leading-6 text-ink-soft">
-              Connect with the wider Offspace student community once the Discord
-              invite is available.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 function DiscordIcon({ className = "" }: { className?: string }) {
   return (

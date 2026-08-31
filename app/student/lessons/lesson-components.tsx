@@ -63,9 +63,7 @@ export function LessonsPanel({
             {getCourseTitle(selectedCourse.course)}
           </h2>
           <p className="mt-1 text-sm text-ink-soft">
-            {selectedCourse.groupId
-              ? `Group ${selectedCourse.groupId}`
-              : "Pending group assignment"}
+            {!selectedCourse.groupId &&"Pending group assignment"}
           </p>
         </div>
         <span className="rounded-xs bg-sage-50 px-3 py-2 text-xs font-bold text-ink-soft ring-1 ring-sage-200">
@@ -147,7 +145,7 @@ export function LessonCard({ lesson }: { lesson: StudentLesson }) {
 
         <div
           className={`mt-3 rounded-xs border border-stone-200 bg-offwhite px-3 py-2 text-sm text-ink-soft  ${
-            isOpen ? "block" : "hidden group-hover:block group-focus-within:block"
+            isOpen ? "block" : "hidden group-active:block group-focus-within:block"
           }`}
         >
           <p>Date: {formatLessonDate(lesson.lesson.date)}</p>

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 
 import { AccessError, LoadingState } from "../components/auth-states";
@@ -18,6 +17,7 @@ import {
   getStudentEnrollmentState,
   type StudentEnrollmentState,
 } from "./_data/enrollments";
+<<<<<<< HEAD
 >>>>>>> 33d4dbc (Refactor student and super-admin portals to use session caching for data fetching)
 
 const navItems = [
@@ -37,6 +37,9 @@ const navItems = [
     text: "View the basic student information connected to your account.",
   },
 ];
+=======
+import { StudentNavigation } from "./student-navigation";
+>>>>>>> 350f812 (feat: enhance student registration and navigation experience)
 
 export default function StudentPage() {
   const { user, profile, isLoading, error } = useRequiredProfile("student");
@@ -126,20 +129,7 @@ export default function StudentPage() {
           </p>
         </header>
 
-        <nav className="grid gap-3 md:grid-cols-3" aria-label="Student navigation">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="rounded-md border border-stone-200 bg-offwhite p-5 shadow-sm transition hover:border-sage-300 hover:shadow-md"
-            >
-              <span className="text-xl font-semibold text-ink">{item.title}</span>
-              <span className="mt-2 block text-sm leading-6 text-ink-soft">
-                {item.text}
-              </span>
-            </Link>
-          ))}
-        </nav>
+        <StudentNavigation />
 
         {enrollmentStateQuery.isLoading ? (
           <StatePanel

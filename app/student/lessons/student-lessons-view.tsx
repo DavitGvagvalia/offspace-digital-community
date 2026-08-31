@@ -1,13 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 
 import { AccessError, LoadingState } from "../../components/auth-states";
 import { useRequiredProfile } from "../../components/use-required-profile";
 import { useSessionCachedQuery } from "../../_lib/session-cache";
 import { getStudentLessonCourses } from "../_data/lessons";
 import type { StudentCourse } from "../_types/lessons";
+import { StudentNavigation } from "../student-navigation";
 import { CourseTabs, LessonsPanel, StatePanel } from "./lesson-components";
 import { sortStudentLessons } from "./lesson-utils";
 
@@ -60,9 +60,6 @@ export function StudentLessonsView() {
     <main className="min-h-screen bg-ivory px-4 py-6 text-ink sm:px-6 lg:px-8">
       <section className="mx-auto flex max-w-5xl flex-col gap-6">
         <header className="rounded-md border border-stone-200 bg-offwhite p-5 shadow-sm">
-          <Link href="/student" className="text-sm font-semibold text-forest hover:text-forest-light">
-            Student hub
-          </Link>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-ink-muted">
             Student lessons
           </p>
@@ -73,6 +70,8 @@ export function StudentLessonsView() {
             Choose an enrolled course to see scheduled lessons and your attendance.
           </p>
         </header>
+
+        <StudentNavigation />
 
         {studentCoursesQuery.isLoading ? (
           <StatePanel title="Loading lessons" text="Checking your courses and lesson history." />
