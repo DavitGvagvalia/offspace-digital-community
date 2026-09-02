@@ -25,7 +25,9 @@ export function StudentLessonsView() {
         return Promise.resolve([]);
       }
 
-      return getStudentLessonCourses(user.id);
+      return getStudentLessonCourses(user.id, {
+        includeFutureLessons: true,
+      });
     },
   });
   const studentCourses = studentCoursesQuery.data ?? emptyStudentCourses;
@@ -79,7 +81,10 @@ export function StudentLessonsView() {
               selectedCourseId={activeSelectedCourseId}
               onSelectCourse={setSelectedCourseId}
             />
-            <LessonsPanel selectedCourse={selectedCourse} lessons={selectedLessons} />
+            <LessonsPanel
+              selectedCourse={selectedCourse}
+              lessons={selectedLessons}
+            />
           </>
         ) : (
           <StatePanel

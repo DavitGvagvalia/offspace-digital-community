@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { toMillis } from "../../_lib/dates";
 import type { StudentCourse, StudentLesson } from "../_types/lessons";
 import {
   formatLessonDate,
@@ -78,8 +79,8 @@ export function LessonsPanel({
         />
       ) : lessons.length === 0 ? (
         <StatePanel
-          title="No past lessons"
-          text="This course is connected to your group, but no past lessons were found yet."
+          title="No lessons"
+          text="This course is connected to your group, but no lessons were found yet."
         />
       ) : (
         <div className="space-y-4">
@@ -93,7 +94,7 @@ export function LessonsPanel({
 }
 
 export function LessonCard({ lesson }: { lesson: StudentLesson }) {
-  const attended = Boolean(lesson.attendance);
+  const attendanceStatus = getAttendanceStatus(lesson);
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -109,7 +110,7 @@ export function LessonCard({ lesson }: { lesson: StudentLesson }) {
         <span className="absolute bottom-0 top-0 w-px bg-sage-200" aria-hidden="true" />
         <span
           className={`relative mt-4 h-4 w-4 rounded-full border-4 border-offwhite ${
-            attended ? "bg-success" : "bg-stone-300"
+            attendanceStatus.dotClassName
           }`}
           aria-hidden="true"
         />
@@ -134,12 +135,10 @@ export function LessonCard({ lesson }: { lesson: StudentLesson }) {
           </div>
           <span
             className={`inline-flex min-h-8 shrink-0 items-center rounded-xs px-3 py-1 text-xs font-bold ring-1 ${
-              attended
-                ? "bg-success/10 text-success ring-success/20"
-                : "bg-stone-100 text-stone-600 ring-stone-200"
+              attendanceStatus.badgeClassName
             }`}
           >
-            {attended ? "Attended" : "Not attended"}
+            {attendanceStatus.label}
           </span>
         </div>
 
@@ -149,11 +148,35 @@ export function LessonCard({ lesson }: { lesson: StudentLesson }) {
           }`}
         >
           <p>Date: {formatLessonDate(lesson.lesson.date)}</p>
-          <p>Attendance: {attended ? "Attended" : "Not attended"}</p>
+          <p>Attendance: {attendanceStatus.label}</p>
         </div>
       </button>
     </article>
   );
+}
+
+function getAttendanceStatus(lesson: StudentLesson) {
+  if (lesson.attendance) {
+    return {
+      label: "Attended",
+      dotClassName: "bg-success",
+      badgeClassName: "bg-success/10 text-success ring-success/20",
+    };
+  }
+
+  if (toMillis(lesson.lesson.date) > Date.now()) {
+    return {
+      label: "Awaiting",
+      dotClassName: "bg-warning",
+      badgeClassName: "bg-warning/10 text-warning ring-warning/20",
+    };
+  }
+
+  return {
+    label: "Absent",
+    dotClassName: "bg-danger",
+    badgeClassName: "bg-danger/10 text-danger ring-danger/20",
+  };
 }
 
 export function StatePanel({ title, text }: { title: string; text: string }) {

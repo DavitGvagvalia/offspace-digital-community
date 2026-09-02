@@ -23,15 +23,15 @@ export function NextLessonSection({
           </p>
           {nextLesson ? (
             <>
-              <h2 className="mt-2 break-words text-2xl font-semibold text-ink">
-                {nextLesson.lesson.title ?? nextLesson.course.name}
-              </h2>
-              <p className="mt-2 text-sm font-semibold text-ink-soft">
+              <h2 className="mt-2 text-2xl font-semibold text-ink-soft">
                 {formatDateTime(nextLesson.lesson.date)}
-              </p>
+              </h2>
               <p className="mt-1 text-sm text-ink-soft">
                 Course: {nextLesson.course.name}
               </p>
+              <h2 className="mt-2 break-words text-2xl font-semibold text-ink">
+                {nextLesson.lesson.title ?? nextLesson.course.name}
+              </h2>
               {nextLesson.lesson.description ? (
                 <p className="mt-3 text-sm leading-6 text-ink-soft">
                   {nextLesson.lesson.description}
