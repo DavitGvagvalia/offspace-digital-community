@@ -33,10 +33,10 @@ export function UngroupedStudentsSection({
         </div>
 
         <Link
-          href="/mentor/courses"
+          href="/mentor/groups"
           className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-sm bg-forest px-4 py-2 text-sm font-bold text-ivory transition hover:bg-forest-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest"
         >
-          <span>Open courses</span>
+          <span>Open groups</span>
           <ArrowRight aria-hidden="true" className="h-4 w-4" />
         </Link>
       </div>
