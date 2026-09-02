@@ -8,18 +8,20 @@ import { portalLoginPath } from "../_lib/portal-routes";
 import { clearSessionDataCache } from "../_lib/session-cache";
 import { signOutCurrentUser } from "../_lib/supabase/auth";
 import type { PortalRole } from "../_types/auth";
-import { Button } from "./ui/button";
+import { Button, type ButtonVariant } from "./ui/button";
 
 export function PortalLogoutButton({
   role,
   className,
   label = "Log out",
   pendingLabel = "Signing out...",
+  variant = "secondary",
 }: {
   role: PortalRole;
   className?: string;
   label?: string;
   pendingLabel?: string;
+  variant?: ButtonVariant;
 }) {
   const router = useRouter();
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -43,7 +45,7 @@ export function PortalLogoutButton({
   return (
     <Button
       type="button"
-      variant="secondary"
+      variant={variant}
       onClick={handleLogout}
       disabled={isSigningOut}
       className={className}

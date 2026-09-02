@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 
 import { AccessError, LoadingState } from "../components/auth-states";
-import { PortalHeader } from "../components/portal-header";
 import { StatePanel } from "../components/state-panel";
 import { useRequiredProfile } from "../components/use-required-profile";
 import { useSessionCachedQuery } from "../_lib/session-cache";
@@ -336,12 +335,6 @@ export function MentorDashboard() {
   return (
     <main className="min-h-screen bg-ivory px-4 py-6 text-ink sm:px-6 lg:px-8">
       <section className="mx-auto flex max-w-7xl flex-col gap-6">
-        <PortalHeader
-          role="mentor"
-          eyebrow="Mentor hub"
-          title={`${profile.name} ${profile.lastName}`}
-          text="Your workspace only includes groups assigned to your mentor account."
-        />
 
         {workspacesQuery.isLoading ? (
           <StatePanel title="Loading groups" text="Checking your assigned groups." />

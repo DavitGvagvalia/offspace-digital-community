@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import { AccessError, LoadingState } from "../components/auth-states";
-import { PortalHeader } from "../components/portal-header";
 import { StatePanel } from "../components/state-panel";
 import { useRequiredProfile } from "../components/use-required-profile";
 import { useSessionCachedQuery } from "../_lib/session-cache";
@@ -94,12 +93,7 @@ export default function StudentPage() {
     <main className="min-h-screen bg-ivory px-4 py-6 text-ink sm:px-6 lg:px-8">
       <section className="mx-auto flex max-w-5xl flex-col gap-6">
         <StudentNavigation />
-        <PortalHeader
-          role="student"
-          eyebrow="Student hub"
-          title={`${profile.name} ${profile.lastName}`}
-          text="Open your lessons, enrolled courses, or profile."
-        />
+
 
 
         {enrollmentStateQuery.isLoading ? (

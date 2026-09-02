@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 
 import { AccessError, LoadingState } from "../../components/auth-states";
-import { PortalHeader } from "../../components/portal-header";
 import { useRequiredProfile } from "../../components/use-required-profile";
 import { useSessionCachedQuery } from "../../_lib/session-cache";
 import { getStudentLessonCourses } from "../_data/lessons";
@@ -60,12 +59,7 @@ export function StudentLessonsView() {
   return (
     <main className="min-h-screen bg-ivory px-4 py-6 text-ink sm:px-6 lg:px-8">
       <section className="mx-auto flex max-w-5xl flex-col gap-6">
-        <PortalHeader
-          role="student"
-          eyebrow="Student lessons"
-          title={`${profile.name} ${profile.lastName}`}
-          text="Choose an enrolled course to see scheduled lessons and your attendance."
-        />
+
 
         <StudentNavigation />
 

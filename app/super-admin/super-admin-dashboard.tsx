@@ -1,9 +1,8 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 import { AccessError, LoadingState } from "../components/auth-states";
-import { PortalHeader } from "../components/portal-header";
 import { StatePanel } from "../components/state-panel";
 import { useRequiredProfile } from "../components/use-required-profile";
 import { formatDate, formatDateTime as formatTimestampDateTime } from "../_lib/dates";
@@ -111,14 +110,6 @@ export function SuperAdminDashboard() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [selectedPerson]);
-
-  const adminName = useMemo(() => {
-    if (!profile?.name && !profile?.lastName) {
-      return "Super-admin";
-    }
-
-    return [profile.name, profile.lastName].filter(Boolean).join(" ");
-  }, [profile]);
 
   async function handleCreateStudent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -311,12 +302,7 @@ export function SuperAdminDashboard() {
   return (
     <main className="min-h-screen bg-ivory px-4 py-6 text-ink sm:px-6 lg:px-8">
       <section className="mx-auto flex max-w-7xl flex-col gap-6">
-        <PortalHeader
-          role="super-admin"
-          eyebrow="Super-admin portal"
-          title={adminName}
-          text="Manage student and mentor profile access for the schedule and attendance app."
-        />
+
 
         {actionState ? (
           <p

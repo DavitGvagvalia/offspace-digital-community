@@ -12,6 +12,8 @@ export const buttonVariants = cva(
         secondary:
           "border border-stone-200 bg-offwhite text-forest shadow-sm hover:border-sage-300 hover:bg-ivory-light",
         quiet: "bg-sage-50 text-forest hover:bg-sage-100",
+        danger:
+          "border border-danger bg-danger text-ivory shadow-sm hover:bg-danger/90 focus-visible:outline-danger",
         discord: "bg-discord text-ivory hover:bg-discord-active hover:text-ivory",
       },
       size: {
@@ -26,6 +28,10 @@ export const buttonVariants = cva(
     },
   },
 );
+
+export type ButtonVariant = NonNullable<
+  VariantProps<typeof buttonVariants>["variant"]
+>;
 
 export function Button({
   className,
