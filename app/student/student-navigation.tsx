@@ -13,7 +13,7 @@ import { cn } from "../_lib/ui/utils";
 
 const studentNavItems = [
   {
-    href: "/student",
+    href: "/student/hub",
     label: "Hub",
     icon: Home,
   },
@@ -46,7 +46,7 @@ export function StudentNavigation() {
         {studentNavItems.map((item) => {
           const isActive =
             pathname === item.href ||
-            (item.href !== "/student" && pathname.startsWith(`${item.href}/`));
+            pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
 
           return (

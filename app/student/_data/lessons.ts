@@ -10,8 +10,10 @@ import type { StudentCourse } from "../_types/lessons";
 
 export async function getStudentLessonCourses(
   studentId: string,
+  options: { includeFutureLessons?: boolean } = {},
 ): Promise<StudentCourse[]> {
   const enrollments = await getEnrollmentsByStudent(studentId);
+  const now = Date.now();
 
   return Promise.all(
     enrollments.map(async (enrollment) => {
@@ -40,7 +42,10 @@ export async function getStudentLessonCourses(
         enrollment,
         groupId: enrollment.groupId,
         lessons: scheduledLessons
-          .filter((lesson) => toMillis(lesson.date) <= Date.now())
+          .filter(
+            (lesson) =>
+              options.includeFutureLessons || toMillis(lesson.date) <= now,
+          )
           .map((lesson) => ({
             lesson,
             attendance: attendanceByLessonId.get(lesson.id) ?? null,
