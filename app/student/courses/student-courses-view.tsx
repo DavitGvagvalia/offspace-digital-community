@@ -1,6 +1,7 @@
 "use client";
 
 import { AccessError, LoadingState } from "../../components/auth-states";
+import { PortalHeader } from "../../components/portal-header";
 import { StatePanel } from "../../components/state-panel";
 import { useRequiredProfile } from "../../components/use-required-profile";
 import { useSessionCachedQuery } from "../../_lib/session-cache";
@@ -41,17 +42,12 @@ export function StudentCoursesView() {
   return (
     <main className="min-h-screen bg-ivory px-4 py-6 text-ink sm:px-6 lg:px-8">
       <section className="mx-auto flex max-w-5xl flex-col gap-6">
-        <header className="rounded-md border border-stone-200 bg-offwhite p-5 shadow-sm">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-ink-muted">
-            Student courses
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold text-ink sm:text-4xl">
-            My enrolled courses
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-ink-soft">
-            Courses are loaded from enrollments assigned to your student account.
-          </p>
-        </header>
+        <PortalHeader
+          role="student"
+          eyebrow="Student courses"
+          title={`${profile.name} ${profile.lastName}`}
+          text="Courses are loaded from enrollments assigned to your student account."
+        />
 
         <StudentNavigation />
 

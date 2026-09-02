@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { getPortalProfile } from "../_data/portal-access.repository";
+import { portalLoginPath } from "../_lib/portal-routes";
 import {
   clearSessionDataCache,
   useSessionCachedQuery,
@@ -17,12 +18,6 @@ import type {
   PortalRole,
   RequiredProfileState,
 } from "../_types/auth";
-
-const loginPath: Record<PortalRole, string> = {
-  student: "/student/login",
-  mentor: "/mentor/login",
-  "super-admin": "/super-admin/login",
-};
 
 export function useRequiredProfile<T extends PortalRole>(
   role: T,
@@ -55,7 +50,7 @@ export function useRequiredProfile<T extends PortalRole>(
           setIsAuthLoading(false);
         }
 
-        router.replace(loginPath[role]);
+        router.replace(portalLoginPath[role]);
         return;
       }
 

@@ -10,14 +10,16 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useId, useState } from "react";
+import { FormEvent, useEffect, useId, useState } from "react";
 
+import { hasPortalAccess } from "../_data/portal-access.repository";
+import { portalDashboardPath } from "../_lib/portal-routes";
 import {
+  getCurrentAuthUser,
   getSupabaseAuthMessage,
   loginWithEmailAndPassword,
   signOutCurrentUser,
 } from "../_lib/supabase/auth";
-import { hasPortalAccess } from "../_data/portal-access.repository";
 import type { PortalCopy, PortalRole } from "../_types/auth";
 import { MascotBackground } from "./mascot-background";
 import { Badge } from "./ui/badge";
@@ -38,21 +40,21 @@ const portalCopy: Record<PortalRole, PortalCopy> = {
     title: "Student login",
     text: "Sign in to open your lessons, enrolled courses, and profile.",
     emailLabel: "Student email",
-    destination: "/student",
+    destination: portalDashboardPath.student,
   },
   mentor: {
     label: "Mentor portal",
     title: "Mentor login",
     text: "Sign in to open your assigned groups, schedules, and attendance workspace.",
     emailLabel: "Mentor email",
-    destination: "/mentor",
+    destination: portalDashboardPath.mentor,
   },
   "super-admin": {
     label: "Super-admin portal",
     title: "Super-admin login",
     text: "Sign in to manage portal access for students and mentors.",
     emailLabel: "Super-admin email",
-    destination: "/super-admin",
+    destination: portalDashboardPath["super-admin"],
   },
 };
 
@@ -65,6 +67,34 @@ export function PortalLogin({ role }: { role: PortalRole }) {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const copy = portalCopy[role];
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function redirectAuthorizedSession() {
+      try {
+        const user = await getCurrentAuthUser();
+
+        if (!user) {
+          return;
+        }
+
+        const roleExists = await hasPortalAccess(role, user.id);
+
+        if (isMounted && roleExists) {
+          router.replace(copy.destination);
+        }
+      } catch (sessionError) {
+        console.error(sessionError);
+      }
+    }
+
+    redirectAuthorizedSession();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [copy.destination, role, router]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

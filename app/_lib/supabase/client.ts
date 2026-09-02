@@ -11,7 +11,13 @@ function createClient() {
   const { url, publishableKey } = getSupabasePublicConfig();
 
   if (!browserClient) {
-    browserClient = createBrowserClient<Database>(url, publishableKey);
+    browserClient = createBrowserClient<Database>(url, publishableKey, {
+      auth: {
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        persistSession: true,
+      },
+    });
   }
 
   return browserClient;

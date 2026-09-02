@@ -20,6 +20,17 @@ async function loginWithEmailAndPassword(email: string, password: string) {
   return data.user;
 }
 
+async function getCurrentAuthUser() {
+  const supabase = createClient();
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error) {
+    throw error;
+  }
+
+  return data.user ?? null;
+}
+
 function subscribeToAuthState(callback: (user: User | null) => void) {
   const supabase = createClient();
 
@@ -70,6 +81,7 @@ function getSupabaseAuthMessage(error: unknown) {
 }
 
 export {
+  getCurrentAuthUser,
   getSupabaseAuthMessage,
   loginWithEmailAndPassword,
   signOutCurrentUser,

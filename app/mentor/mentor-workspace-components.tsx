@@ -8,6 +8,7 @@ import {
   formatShortDate,
   formatShortDateTime,
 } from "../_lib/dates";
+import { cn } from "../_lib/ui/utils";
 import type { Lesson } from "../_types/lesson";
 import type { MentorGroupWorkspace } from "./_types/workspace";
 import type { Student } from "../_types/student";
@@ -43,46 +44,59 @@ export function MentorGroupList({
   onSelectGroup: (groupId: string) => void;
 }) {
   return (
-    <aside className="rounded-md border border-stone-200 bg-offwhite p-4 shadow-sm">
-      <h2 className="text-2xl font-semibold text-ink">My groups</h2>
-      <p className="mt-1 text-sm text-ink-soft">
-        Private student assignments are not modeled yet.
-      </p>
-      <div className="mt-5 space-y-2">
-        {workspaces.map((workspace) => {
-          const isSelected = workspace.group.id === selectedGroupId;
+    <aside className="rounded-md border border-stone-200 bg-offwhite p-3 shadow-sm lg:p-4">
+      <div className="flex items-end justify-between gap-3 px-1 lg:block lg:px-0">
+        <div>
+          <h2 className="text-xl font-semibold text-ink lg:text-2xl">
+            My groups
+          </h2>
+          <p className="mt-1 text-sm text-ink-soft">
+            Private student assignments are not modeled yet.
+          </p>
+        </div>
+        <span className="shrink-0 rounded-xs bg-sage-50 px-3 py-2 text-xs font-bold text-ink-soft ring-1 ring-sage-200 lg:hidden">
+          {workspaces.length}
+        </span>
+      </div>
+      <div className="-mx-3 mt-4 overflow-x-auto px-3 pb-1 [scrollbar-width:none] lg:mx-0 lg:overflow-visible lg:px-0 lg:pb-0 [&::-webkit-scrollbar]:hidden">
+        <div className="flex gap-2 lg:block lg:space-y-2">
+          {workspaces.map((workspace) => {
+            const isSelected = workspace.group.id === selectedGroupId;
 
-          return (
-            <button
-              key={workspace.group.id}
-              type="button"
-              onClick={() => onSelectGroup(workspace.group.id)}
-              className={`w-full rounded-sm border px-3 py-3 text-left transition ${
-                isSelected
-                  ? "border-forest bg-forest text-ivory"
-                  : "border-stone-200 bg-ivory-light text-ink-soft hover:border-sage-300 hover:text-ink"
-              }`}
-            >
-              <span className="block text-sm font-semibold">
-                {workspace.group.name ?? workspace.group.id}
-              </span>
-              <span
-                className={`mt-1 block text-xs ${
-                  isSelected ? "text-ivory-dark" : "text-ink-muted"
-                }`}
+            return (
+              <button
+                key={workspace.group.id}
+                type="button"
+                onClick={() => onSelectGroup(workspace.group.id)}
+                className={cn(
+                  "min-w-56 rounded-sm border px-3 py-3 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest lg:w-full lg:min-w-0",
+                  isSelected
+                    ? "border-forest bg-forest text-ivory shadow-sm"
+                    : "border-stone-200 bg-ivory-light text-ink-soft hover:border-sage-300 hover:bg-sage-50 hover:text-ink",
+                )}
               >
-                {workspace.course?.name ?? workspace.group.courseId}
-              </span>
-              <span
-                className={`mt-3 block text-xs ${
-                  isSelected ? "text-ivory-dark" : "text-ink-muted"
-                }`}
-              >
-                {workspace.students.length} students / {workspace.lessons.length} lessons
-              </span>
-            </button>
-          );
-        })}
+                <span className="block text-sm font-semibold">
+                  {workspace.group.name ?? workspace.group.id}
+                </span>
+                <span
+                  className={`mt-1 block text-xs ${
+                    isSelected ? "text-ivory-dark" : "text-ink-muted"
+                  }`}
+                >
+                  {workspace.course?.name ?? workspace.group.courseId}
+                </span>
+                <span
+                  className={`mt-3 block text-xs ${
+                    isSelected ? "text-ivory-dark" : "text-ink-muted"
+                  }`}
+                >
+                  {workspace.students.length} students /{" "}
+                  {workspace.lessons.length} lessons
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </aside>
   );
