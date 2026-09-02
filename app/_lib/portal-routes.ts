@@ -2,7 +2,7 @@ import type { PortalRole } from "../_types/auth";
 
 const portalDashboardPath: Record<PortalRole, string> = {
   student: "/student",
-  mentor: "/mentor",
+  mentor: "/mentor/hub",
   "super-admin": "/super-admin",
 };
 

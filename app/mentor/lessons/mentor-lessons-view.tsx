@@ -2,25 +2,26 @@
 
 import { useMemo, useState } from "react";
 
-import { AccessError, LoadingState } from "../components/auth-states";
-import { StatePanel } from "../components/state-panel";
-import { useRequiredProfile } from "../components/use-required-profile";
-import { useSessionCachedQuery } from "../_lib/session-cache";
-import { addAttendance, deleteAttendance } from "./_data/attendance";
-import { createLessonWithDetails, updateLessonDetails } from "./_data/lessons";
-import { getMentorGroupWorkspaces } from "./_data/workspace";
-import type { MentorGroupWorkspace } from "./_types/workspace";
-import {
-  GroupWorkspace,
-  MentorGroupList,
-  type AttendanceToggleRequest,
-  type LessonCreateRequest,
-  type LessonUpdateRequest,
-} from "./mentor-workspace-components";
+import { AccessError, LoadingState } from "../../components/auth-states";
+import { StatePanel } from "../../components/state-panel";
+import { useRequiredProfile } from "../../components/use-required-profile";
+import { useSessionCachedQuery } from "../../_lib/session-cache";
+import { addAttendance, deleteAttendance } from "../_data/attendance";
+import { createLessonWithDetails, updateLessonDetails } from "../_data/lessons";
+import { getMentorGroupWorkspaces } from "../_data/workspace";
+import type { MentorGroupWorkspace } from "../_types/workspace";
+import { MentorNavigation, MentorPageTitle } from "../mentor-navigation";
+import { AttendanceSection } from "./attendance-section";
+import type { AttendanceToggleRequest } from "./attendance-button";
+import type { LessonCreateRequest } from "./create-lesson-form";
+import { MentorGroupTabs } from "./group-tabs";
+import { LessonScheduleSection } from "./lesson-schedule-section";
+import type { LessonUpdateRequest } from "./lesson-card";
+import { sortLessonsByDate } from "./lesson-utils";
 
 const emptyWorkspaces: MentorGroupWorkspace[] = [];
 
-export function MentorDashboard() {
+export function MentorLessonsView() {
   const { user, profile, isLoading: isAuthLoading, error: authError } =
     useRequiredProfile("mentor");
   const [selectedGroupId, setSelectedGroupId] = useState("");
@@ -47,7 +48,6 @@ export function MentorDashboard() {
   )
     ? selectedGroupId
     : workspaces[0]?.group.id ?? "";
-
   const selectedWorkspace = useMemo(() => {
     return workspaces.find(
       (workspace) => workspace.group.id === activeSelectedGroupId,
@@ -76,7 +76,9 @@ export function MentorDashboard() {
     );
 
     if (!studentIsAssigned || !lessonIsInGroup) {
-      setActionError("Attendance can only be changed for this group's students and lessons.");
+      setActionError(
+        "Attendance can only be changed for this group's students and lessons.",
+      );
       return;
     }
 
@@ -142,7 +144,9 @@ export function MentorDashboard() {
       }
     } catch (toggleError) {
       console.error(toggleError);
-      setActionError("We could not update attendance. Check your connection and try again.");
+      setActionError(
+        "We could not update attendance. Check your connection and try again.",
+      );
     } finally {
       setPendingAttendanceIds((currentIds) =>
         currentIds.filter((currentId) => currentId !== pendingId),
@@ -169,7 +173,9 @@ export function MentorDashboard() {
     );
 
     if (!lesson) {
-      setActionError("Lesson details can only be changed for this group's lessons.");
+      setActionError(
+        "Lesson details can only be changed for this group's lessons.",
+      );
       return;
     }
 
@@ -198,7 +204,9 @@ export function MentorDashboard() {
           return {
             ...currentWorkspace,
             lessons: currentWorkspace.lessons.map((currentLesson) =>
-              currentLesson.id === updatedLesson.id ? updatedLesson : currentLesson,
+              currentLesson.id === updatedLesson.id
+                ? updatedLesson
+                : currentLesson,
             ),
           };
         }),
@@ -229,7 +237,9 @@ export function MentorDashboard() {
     }
 
     if (workspace.students.length === 0) {
-      setActionError("Lessons can be created after students are assigned to this group.");
+      setActionError(
+        "Lessons can be created after students are assigned to this group.",
+      );
       throw new Error("No assigned students");
     }
 
@@ -292,7 +302,8 @@ export function MentorDashboard() {
               ...currentWorkspace.attendances.filter(
                 (attendance) =>
                   !createdAttendances.some(
-                    (createdAttendance) => createdAttendance.id === attendance.id,
+                    (createdAttendance) =>
+                      createdAttendance.id === attendance.id,
                   ),
               ),
               ...createdAttendances,
@@ -320,7 +331,7 @@ export function MentorDashboard() {
   }
 
   if (isAuthLoading) {
-    return <LoadingState title="Loading mentor hub" />;
+    return <LoadingState title="Loading lessons" />;
   }
 
   if (authError || !user || !profile) {
@@ -335,46 +346,64 @@ export function MentorDashboard() {
   return (
     <main className="min-h-screen bg-ivory px-4 py-6 text-ink sm:px-6 lg:px-8">
       <section className="mx-auto flex max-w-7xl flex-col gap-6">
+        <MentorNavigation />
+        <MentorPageTitle
+          title="Lessons"
+          text="Create lessons, update lesson details, and mark attendance for your groups."
+        />
 
         {workspacesQuery.isLoading ? (
           <StatePanel title="Loading groups" text="Checking your assigned groups." />
         ) : workspacesQuery.error ? (
-          <StatePanel title="Workspace unavailable" text="We could not load your mentor workspace right now." />
+          <StatePanel
+            title="Lessons unavailable"
+            text="We could not load your mentor lessons right now."
+          />
         ) : workspaces.length === 0 ? (
-          <StatePanel title="No assigned groups" text="No groups were found for this mentor account yet." />
-        ) : (
-          <section className="grid gap-5 lg:grid-cols-[18rem_minmax(0,1fr)]">
-            <MentorGroupList
+          <StatePanel
+            title="No assigned groups"
+            text="Create a group before adding lessons."
+          />
+        ) : selectedWorkspace ? (
+          <>
+            <MentorGroupTabs
               workspaces={workspaces}
               selectedGroupId={activeSelectedGroupId}
               onSelectGroup={setSelectedGroupId}
             />
 
-            {selectedWorkspace ? (
-              <GroupWorkspace
+            {actionError ? (
+              <p className="rounded-sm border border-danger/20 bg-danger/10 px-4 py-3 text-sm font-semibold text-danger">
+                {actionError}
+              </p>
+            ) : null}
+
+            <section className="grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+              <LessonScheduleSection
                 workspace={selectedWorkspace}
-                actionError={actionError}
                 pendingAttendanceIds={pendingAttendanceIds}
                 pendingLessonIds={pendingLessonIds}
-                pendingLessonCreateGroupIds={pendingLessonCreateGroupIds}
+                isPendingLessonCreate={pendingLessonCreateGroupIds.includes(
+                  selectedWorkspace.group.id,
+                )}
                 onCreateLesson={handleCreateLesson}
                 onToggleAttendance={handleToggleAttendance}
                 onUpdateLesson={handleUpdateLesson}
               />
-            ) : (
-              <StatePanel title="No group selected" text="Choose a group to see schedule and attendance." />
-            )}
-          </section>
+              <AttendanceSection
+                workspace={selectedWorkspace}
+                pendingAttendanceIds={pendingAttendanceIds}
+                onToggleAttendance={handleToggleAttendance}
+              />
+            </section>
+          </>
+        ) : (
+          <StatePanel
+            title="No group selected"
+            text="Choose a group to see schedule and attendance."
+          />
         )}
       </section>
     </main>
   );
-}
-
-function sortLessonsByDate(lessons: MentorGroupWorkspace["lessons"]) {
-  return [...lessons].sort((firstLesson, secondLesson) => {
-    return (
-      new Date(firstLesson.date).getTime() - new Date(secondLesson.date).getTime()
-    );
-  });
 }

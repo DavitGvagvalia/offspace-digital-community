@@ -1,5 +1,5 @@
-import { MentorDashboard } from "./mentor-dashboard";
+import { redirect } from "next/navigation";
 
 export default function MentorPage() {
-  return <MentorDashboard />;
+  redirect("/mentor/hub");
 }

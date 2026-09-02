@@ -8,8 +8,10 @@ import {
 import { getStudent } from "../../_data/students.repository";
 import { toMillis } from "../../_lib/dates";
 import type { Lesson } from "../../_types/lesson";
-import type { Student } from "../../_types/student";
-import type { MentorGroupWorkspace } from "../_types/workspace";
+import type {
+  MentorEnrollmentStudent,
+  MentorGroupWorkspace,
+} from "../_types/workspace";
 
 export async function getMentorGroupWorkspaces(
   mentorId: string,
@@ -27,14 +29,25 @@ export async function getMentorGroupWorkspaces(
       const students = await Promise.all(
         enrollments.map((enrollment) => getStudent(enrollment.studentId)),
       );
+      const enrollmentStudents = enrollments.reduce<MentorEnrollmentStudent[]>(
+        (items, enrollment, index) => {
+          const student = students[index];
+
+          if (student) {
+            items.push({ enrollment, student });
+          }
+
+          return items;
+        },
+        [],
+      );
 
       return {
         group,
         course,
         lessons: sortLessons(lessons),
-        students: students.filter(
-          (student): student is Student => Boolean(student),
-        ),
+        enrollmentStudents,
+        students: enrollmentStudents.map((item) => item.student),
         attendances,
       };
     }),

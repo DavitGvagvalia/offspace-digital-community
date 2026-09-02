@@ -31,7 +31,12 @@ self-registration is supported through `/student/register`.
 - `/student/courses` - enrolled courses
 - `/student/profile` - read-only student profile
 - `/mentor/login` - mentor login
-- `/mentor` - mentor dashboard
+- `/mentor` - redirects to mentor hub
+- `/mentor/hub` - mentor hub
+- `/mentor/lessons` - mentor lesson and attendance workspace
+- `/mentor/courses` - mentor course rosters and group assignment
+- `/mentor/groups` - mentor group management
+- `/mentor/profile` - read-only mentor profile
 - `/super-admin/login` - super-admin login
 - `/super-admin` - super-admin management portal
 
@@ -86,8 +91,9 @@ Students can view their hub, courses, profile, assigned lessons, and personal
 attendance. Enrollments can exist before group assignment and must show
 `Your mentor will assign group soon.`
 
-Mentors can view assigned groups and mark attendance only for assigned group
-lessons.
+Mentors can view assigned groups, create and update groups for eligible
+courses, assign ungrouped eligible students, and mark attendance only for
+assigned group lessons.
 
 Students can self-register student Supabase Auth accounts. Super-admins create
 mentor Supabase Auth accounts and can still manage MVP setup data needed for

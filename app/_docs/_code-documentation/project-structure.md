@@ -50,7 +50,12 @@ routes; they hold shared code, docs, or types.
 - `app/student/courses/page.tsx` - student courses route.
 - `app/student/profile/page.tsx` - read-only student profile route.
 - `app/mentor/login/page.tsx` - mentor login route.
-- `app/mentor/page.tsx` - mentor dashboard route.
+- `app/mentor/page.tsx` - redirect to `/mentor/hub`.
+- `app/mentor/hub/page.tsx` - mentor hub route.
+- `app/mentor/lessons/page.tsx` - mentor lesson and attendance route.
+- `app/mentor/courses/page.tsx` - mentor course roster route.
+- `app/mentor/groups/page.tsx` - mentor group management route.
+- `app/mentor/profile/page.tsx` - read-only mentor profile route.
 - `app/super-admin/login/page.tsx` - super-admin login route.
 - `app/super-admin/page.tsx` - super-admin management portal route.
 
@@ -163,17 +168,25 @@ params or local state alone.
 `app/mentor` owns mentor-facing routes, UI, and assigned-group data
 composition.
 
-- `page.tsx` - mentor dashboard route.
+- `page.tsx` - redirect to `/mentor/hub`.
 - `login/page.tsx` - mentor login page.
-- `mentor-dashboard.tsx` - mentor dashboard client UI.
-- `mentor-workspace-components.tsx` - mentor workspace display components.
+- `mentor-navigation.tsx` - mentor route navigation.
+- `hub/` - mentor hub route and sections.
+- `lessons/` - mentor lesson creation, editing, and attendance route.
+- `courses/` - mentor eligible-course rosters and group assignment route.
+- `groups/` - mentor group creation, editing, and student assignment route.
+- `profile/` - read-only mentor profile route.
 - `_data/auth.ts` - mentor profile lookup after auth.
 - `_data/workspace.ts` - builds mentor group workspace data.
+- `_data/courses.ts` - mentor eligible courses, rosters, and group assignment
+  actions.
+- `_data/hub.ts` - mentor upcoming lesson and ungrouped student state.
 - `_data/lessons.ts` - lesson create/update actions for assigned groups.
 - `_data/attendance.ts` - attendance add/delete actions.
 - `_types/workspace.ts` - mentor workspace view types.
 
-Mentor behavior must stay scoped to groups assigned to the authenticated mentor.
+Mentor behavior must stay scoped to eligible courses and groups assigned to the
+authenticated mentor.
 
 ## Super-Admin Portal
 

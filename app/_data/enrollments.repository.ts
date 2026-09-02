@@ -4,6 +4,14 @@ import { createClient } from "../_lib/supabase/client";
 import { mapEnrollment } from "../_lib/supabase/mappers";
 import { requireSupabaseData, throwIfSupabaseError } from "./supabase-errors";
 
+type UpdateEnrollment = Partial<
+  Omit<CreateEnrollment, "groupId" | "mentorId" | "completedAt">
+> & {
+  groupId?: string | null;
+  mentorId?: string | null;
+  completedAt?: string | null;
+};
+
 const getEnrollments = async () => {
   const supabase = createClient();
   const { data, error } = await supabase
@@ -53,7 +61,7 @@ const addEnrollment = async (enrollment: CreateEnrollment) => {
 
 const updateEnrollment = async (
   id: string,
-  enrollment: Partial<CreateEnrollment>,
+  enrollment: UpdateEnrollment,
 ) => {
   const supabase = createClient();
   const { data, error } = await supabase
